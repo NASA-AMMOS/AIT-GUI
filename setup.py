@@ -11,6 +11,6 @@ setup(
 
     include_package_data = True,
 
-    scripts = ['./bin/bliss-gui'],
+    scripts = ['./bin/bliss_gui.py'],
     install_requires = ['bliss-core'],
 )
