@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 """
 Usage:
   bliss-gui.py [<port> --host=<host> --browser=<browser>]
