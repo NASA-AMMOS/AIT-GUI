@@ -37,9 +37,10 @@ if 'gui' in bliss.config and 'html_root' in bliss.config.gui:
 
     HTMLRoot = os.path.normpath(HTMLRoot)
 else:
-    HTMLRoot = os.path.join(bliss.config._ROOT_DIR, 'bliss/gui')
+    import pkg_resources
+    HTMLRoot = pkg_resources.resource_filename('bliss.gui', 'gui/')
 
-App      = bottle.Bottle()
+App = bottle.Bottle()
 
 bottle.debug(True)
 bottle.TEMPLATE_PATH.append(HTMLRoot)

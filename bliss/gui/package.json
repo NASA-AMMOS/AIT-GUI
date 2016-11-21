@@ -1,0 +1,18 @@
+{
+  "name": "bliss-gui",
+  "version": "0.1.0",
+  "description": "BLISS GUI",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "author": "bliss@jpl.nasa.gov",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "lodash": "^4.16.6",
+    "mithril": "^0.2.5",
+    "mocha": "^3.1.2",
+    "sinon": "^1.17.6"
+  }
+}
