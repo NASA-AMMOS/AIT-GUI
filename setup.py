@@ -5,30 +5,58 @@ from setuptools.command.develop import develop
 import os
 import subprocess
 
-def extra_install_tasks(cmd_cls):
-    """"""
-    orig_run = cmd_cls.run
+def install_ui_deps():
+    try:
+        FNULL = open(os.devnull, 'wb')
+        subprocess.check_call("npm", stdout=FNULL, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError:
+        print subprocess.check_output("cd bliss/gui; npm install", shell=True)
+    except OSError:
+        print "Unable to locate npm on system. Skipping dependency installation"
+    finally:
+        FNULL.close()
 
-    def extras_run(self):
-        try:
-            subprocess.check_call("npm")
-        except subprocess.CalledProcessError:
-            print subprocess.check_output("cd bliss/gui; npm install", shell=True)
-        except OSError:
-            print "Unable to locate npm on system. Skipping dependency installation"
-
-        orig_run(self)
-
-    cmd_cls.run = extras_run
-    return cmd_cls
-
-@extra_install_tasks
 class CustomDevelopCmd(develop):
-    pass
+    user_options = develop.user_options + [
+        ('with-ui-deps=', None, "Toggle UI dependency installation")
+    ]
 
-@extra_install_tasks
+    def initialize_options(self):
+        develop.initialize_options(self)
+        self.with_ui_deps = False
+
+    def finalize_options(self):
+        develop.finalize_options(self)
+
+    def run(self):
+        if self.with_ui_deps:
+            print "UI Dependency installation requested. Running ..."
+            install_ui_deps()
+        else:
+            print "UI Dependency installation not requested. Skipping ..."
+
+        develop.run(self)
+
 class CustomInstallCmd(install):
-    pass
+    user_options = install.user_options + [
+        ('with-ui-deps=', None, "Toggle UI dependency installation")
+    ]
+
+    def initialize_options(self):
+        install.initialize_options(self)
+        self.with_ui_deps = False
+
+    def finalize_options(self):
+        install.finalize_options(self)
+
+    def run(self):
+        if self.with_ui_deps:
+            print "UI Dependency installation requested. Running ..."
+            install_ui_deps()
+        else:
+            print "UI Dependency installation not requested. Skipping ..."
+
+        install.run(self)
 
 
 setup(
@@ -41,7 +69,7 @@ setup(
     include_package_data = True,
 
     scripts = ['./bin/bliss_gui.py'],
-    install_requires = ['bliss-core'],
+    # install_requires = ['bliss-core'],
 
     cmdclass = {
         "install": CustomInstallCmd,
