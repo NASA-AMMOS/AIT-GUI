@@ -10,7 +10,7 @@ def install_ui_deps():
         FNULL = open(os.devnull, 'wb')
         subprocess.check_call("npm", stdout=FNULL, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError:
-        print subprocess.check_output("cd bliss/gui; npm install", shell=True)
+        print subprocess.check_output("cd bliss/gui/static; npm install", shell=True)
     except OSError:
         print "Unable to locate npm on system. Skipping dependency installation"
     finally:
@@ -69,7 +69,7 @@ setup(
     include_package_data = True,
 
     scripts = ['./bin/bliss_gui.py'],
-    # install_requires = ['bliss-core'],
+    install_requires = ['bliss-core'],
 
     cmdclass = {
         "install": CustomInstallCmd,
