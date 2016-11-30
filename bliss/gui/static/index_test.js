@@ -1,5 +1,7 @@
 m = require("./node_modules/mithril/mithril.js")
-//m = require("./mithril.js")
+
+//import styles from './index_test.css'
+require('./index_test.css')
 
 //this application only has one component: todo
 var todo = {};
@@ -48,7 +50,9 @@ todo.controller = function() {
 //here's the view
 todo.view = function() {
     return [
-        m("input", {onchange: m.withAttr("value", todo.vm.description), value: todo.vm.description()}),
+        m("span", {class: "glyphicon glyphicon-star"}),
+        m("div", {class: "header"}, "TODOS:"),
+        m("input", {class: "form-control", onchange: m.withAttr("value", todo.vm.description), value: todo.vm.description()}),
         m("button", {onclick: todo.vm.add}, "Add"),
         m("table", [
             todo.vm.list.map(function(task, index) {
