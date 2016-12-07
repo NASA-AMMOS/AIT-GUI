@@ -19,11 +19,11 @@ import geventwebsocket
 
 gevent.monkey.patch_all()
 
-import bliss
+import bliss.core
 import bliss.gui
 
 try:
-    bliss.log.begin()
+    bliss.core.log.begin()
     arguments = docopt.docopt(__doc__, version='bliss-gui 0.1.0')
     browser   = arguments['--browser']
     host      = arguments['--host']
@@ -43,16 +43,16 @@ try:
     web.start()
     bliss.gui.startBrowser(url, browser)
 
-    bliss.log.info('Connect to %s' % url)
-    bliss.log.info('Ctrl-C to exit')
+    bliss.core.log.info('Connect to %s' % url)
+    bliss.core.log.info('Ctrl-C to exit')
 
     gevent.wait()
 
 except KeyboardInterrupt:
-    bliss.log.info('Received Ctrl-C.  Stopping BLISS GUI.')
+    bliss.core.log.info('Received Ctrl-C.  Stopping BLISS GUI.')
     web.stop()
 
 except Exception as e:
-    bliss.log.error('BLISS GUI error: %s' % str(e))
+    bliss.core.log.error('BLISS GUI error: %s' % str(e))
 
-bliss.log.end()
+bliss.core.log.end()
