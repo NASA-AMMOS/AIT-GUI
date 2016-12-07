@@ -23,7 +23,7 @@ import requests
 
 gevent.monkey.patch_all()
 
-import bliss
+import bliss.core
 
 
 if 'gui' in bliss.config and 'html_root' in bliss.config.gui:
@@ -219,7 +219,7 @@ def startBrowser (url, name=None):
     browser = None
 
     if name is not None and name.lower() == 'none':
-        bliss.log.info('Will not start any browser since --browser=none')
+        bliss.core.log.info('Will not start any browser since --browser=none')
         return
 
     try:
@@ -228,13 +228,13 @@ def startBrowser (url, name=None):
         old     = name or 'default'
         msg     = 'Could not find browser: %s.  Will use: %s.'
         browser = webbrowser.get()
-        bliss.log.warn(msg, name, getBrowserName(browser))
+        bliss.core.log.warn(msg, name, getBrowserName(browser))
 
     if type(browser) is webbrowser.GenericBrowser:
         msg = 'Will not start text-based browser: %s.'
-        bliss.log.info(msg % getBrowserName(browser))
+        bliss.core.log.info(msg % getBrowserName(browser))
     elif browser is not None:
-        bliss.log.info('Starting browser: %s' % getBrowserName(browser))
+        bliss.core.log.info('Starting browser: %s' % getBrowserName(browser))
         browser.open_new(url)
 
 @App.route('/')
