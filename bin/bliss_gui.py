@@ -40,7 +40,15 @@ try:
     web = gevent.pywsgi.WSGIServer(('0.0.0.0', port), app,
               handler_class=geventwebsocket.handler.WebSocketHandler)
 
+    udp_port = 3076
+    tlm_udp  = bliss.gui.TlmUdpServer(':%d' % udp_port)
+
+    udp_port = 2514
+    log_udp  = bliss.gui.LogUdpServer(':%d' % udp_port)
+
     web.start()
+    tlm_udp.start()
+    log_udp.start()
     bliss.gui.startBrowser(url, browser)
 
     bliss.core.log.info('Connect to %s' % url)
@@ -51,6 +59,8 @@ try:
 except KeyboardInterrupt:
     bliss.core.log.info('Received Ctrl-C.  Stopping BLISS GUI.')
     web.stop()
+    tlm_udp.stop()
+    log_udp.stop()
 
 except Exception as e:
     bliss.core.log.error('BLISS GUI error: %s' % str(e))
