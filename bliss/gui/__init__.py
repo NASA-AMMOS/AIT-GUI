@@ -338,7 +338,11 @@ def handle():
 
 @App.route('/config/evr', method='GET')
 def handle():
-    return json.dumps([e.toDict() for e in evr.getDefaultEVRs()])
+    return json.dumps({
+        e.code:e.name
+        for e in evr.getDefaultEVRs()
+    })
+    # return json.dumps([e.toDict() for e in evr.getDefaultEVRs()])
 
 
 # OCO3 Specific sim code
