@@ -12,6 +12,7 @@ import collections
 import copy
 import json
 import os
+import time
 import webbrowser
 
 import bottle
@@ -24,6 +25,7 @@ import requests
 gevent.monkey.patch_all()
 
 import bliss.core
+from bliss.core import log, gds, tlm, cmd, util, evr, pcap
 
 
 if 'gui' in bliss.config and 'html_root' in bliss.config.gui:
@@ -39,6 +41,9 @@ if 'gui' in bliss.config and 'html_root' in bliss.config.gui:
 else:
     import pkg_resources
     HTMLRoot = pkg_resources.resource_filename('bliss.gui', 'static/')
+
+SEQRoot     = os.path.join(bliss.config._ROOT_DIR, 'seq' )
+CmdHistFile = os.path.join(bliss.config._ROOT_DIR, 'bliss-cmdhist.pcap')
 
 App = bottle.Bottle()
 
@@ -267,6 +272,205 @@ def handle ():
 def handle (pathname):
     return bottle.static_file(pathname, root=HTMLRoot)
 
+@App.route('/cmd', method='POST')
+def handle():
+    with Sessions.current() as session:
+        command = bottle.request.forms.get('command').strip()
+
+        if len(command) > 0:
+            cmddict = cmd.getDefaultCmdDict()
+            host    = '127.0.0.1'
+            port    = 3075
+            sock    = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            verbose = False
+
+            if cmddict is not None:
+                args     = command.split()
+                name     = args[0]
+                args     = [util.toNumber(t, t) for t in args[1:]]
+                cmdobj  = cmddict.create(name, *args)
+                messages = []
+
+            if cmdobj is None:
+                log.error('unrecognized command: %s' % name)
+            elif not cmdobj.validate(messages):
+                for msg in messages:
+                    log.error(msg)
+            else:
+                encoded = cmdobj.encode()
+
+                if verbose:
+                    size = len(cmdobj.name)
+                    pad  = (size - len(cmdobj.name) + 1) * ' '
+                    gds.hexdump(encoded, preamble=cmdobj.name + ':' + pad)
+
+                try:
+                    log.info('Sending to %s:%d: %s', host, port, cmdobj.name)
+                    sock.sendto(encoded, (host, port))
+
+                    with pcap.open(CmdHistFile, 'a') as output:
+                        output.write(command)
+
+                    Sessions.addEvent('cmd:hist', command)
+                except socket.error, err:
+                    log.error(str(err))
+                except IOError, err:
+                    log.error(str(err))
+
+
+@App.route('/cmd/hist.json', method='GET')
+def handle():
+    cmds = [ ]
+
+    try:
+        with pcap.open(CmdHistFile, 'r') as stream:
+            cmds = [ cmdname for (header, cmdname) in stream ]
+    except IOError:
+        pass
+
+    return json.dumps( list( set(cmds) ) )
+
+
+@App.route('/config/cmd', method='GET')
+def handle():
+    return json.dumps( cmd.getDefaultCmdDict().toDict() )
+
+
+@App.route('/config/evr', method='GET')
+def handle():
+    return json.dumps({
+        e.code:e.name
+        for e in evr.getDefaultEVRs()
+    })
+    # return json.dumps([e.toDict() for e in evr.getDefaultEVRs()])
+
+
+# OCO3 Specific sim code
+# @App.route('/config/sim', method='GET')
+# def handle():
+    # pass
+    # return json.dumps( oco3.sim.Config.dict() )
+
+
+@App.route('/config/tlm', method='GET')
+def handle():
+    return json.dumps( tlm.getDefaultDict().toDict() )
+
+
+@App.route('/seq', method='GET')
+def handle():
+    """Endpoint that provides a JSON array of filenames in the SEQRoot
+    directory."""
+    try:
+        files = [ fn for fn in os.listdir(SEQRoot) if fn.endswith('.txt') ]
+    except OSError:
+        files = []
+    return json.dumps(sorted(files))
+
+
+# OCO3 Specific sim code
+# @App.route('/seq', method='POST')
+# def handle():
+    # bn_seqfile = bottle.request.forms.get('seqfile')
+    # gevent.spawn(bgExecSeq, bn_seqfile)
+
+
+# def bgExecSeq(bn_seqfile):
+    # seqfile = os.path.join(SEQRoot, bn_seqfile)
+    # if not os.path.isfile(seqfile):
+        # msg  = "Sequence file not found.  "
+        # msg += "Reload page to see updated list of files."
+        # log.error(msg)
+        # return
+
+    # log.info("Executing sequence: " + seqfile)
+    # Sessions.addEvent('seq:exec', bn_seqfile)
+    # seq_p = gevent.subprocess.Popen(["oco3-seq-send.py", seqfile],
+                                    # stdout=gevent.subprocess.PIPE)
+    # seq_out, seq_err = seq_p.communicate()
+    # if seq_p.returncode is not 0:
+        # Sessions.addEvent('seq:err', bn_seqfile + ': ' + seq_err)
+        # return
+
+    # Sessions.addEvent('seq:done', bn_seqfile)
+
+
+@App.route('/log', method='GET')
+def handle():
+    """Endpoint that pushes syslog output to client"""
+    with Sessions.current() as session:
+        bottle.response.content_type  = 'text/event-stream'
+        bottle.response.cache_control = 'no-cache'
+        yield 'event: connected\ndata:\n\n'
+
+        while True:
+            msg = session.messages.get()
+            bottle.response.content_type  = 'text/event-stream'
+            bottle.response.cache_control = 'no-cache'
+            yield 'data: %s\n\n' % json.dumps(msg)
+
+
+# OCO3 Specific Sim code
+# @App.route('/sim/<name>/<action>', method=['GET', 'POST'])
+# def handle(name, action):
+    # with Sessions.current() as session:
+        # sim = oco3.sim.getSim(name)
+        # bottle.response.status = 404
+
+        # if sim:
+            # bottle.response.status = 200
+            # gevent.spawn( bgSimAction, sim, action, bottle.request.method,
+                          # dict(bottle.request.forms) )
+
+
+# def bgSimAction(sim, action, method, kwargs):
+    # Sessions.addEvent('sim:pending', sim.name)
+    # response = sim.execute(action, method, **kwargs)
+
+    # for n in range(10):
+        # if response == 200:
+            # break
+        # elif response == 404:
+            # gevent.sleep(1)
+            # response = sim.status()
+
+    # if response == 200:
+        # if action == 'start':
+            # Sessions.addEvent('sim:on', sim.name)
+        # elif action == 'stop':
+            # Sessions.addEvent('sim:off', sim.name)
+
+
+@App.route('/tlm/stream')
+def handle():
+    with Sessions.current() as session:
+        # A byte of padding makes sure that the stream is treated as binary.
+        pad     = bytearray(1)
+        wsock   = bottle.request.environ.get('wsgi.websocket')
+
+        if not wsock:
+            bottle.abort(400, 'Expected WebSocket request.')
+
+        while True:
+            tlm = session.telemetry.get()
+            # The byte of 0x00 padding makes sure that the stream is treated as
+            # binary data
+            wsock.send(pad + tlm)
+
+
+# @App.route('/tlm/psu')
+# def psu_tlm():
+    # with Sessions.current() as session:
+        # wsock = bottle.request.environ.get('wsgi.websocket')
+
+        # if not wsock:
+            # bottle.abort(400, 'Expected WebSocket request.')
+
+        # while True:
+            # ptlm = session.psu_telemetry.get()
+            # wsock.send(ptlm)
+
+
 @App.route('/bsc/handlers', method='GET')
 def handle():
     try:
@@ -321,3 +525,30 @@ def handle():
         bottle.response.status = r.status_code
     except requests.ConnectionError:
         bottle.response.status = 500
+
+class TlmUdpServer(gevent.server.DatagramServer):
+    def handle(self, packet, address):
+        Sessions.addTelemetry(packet)
+
+# class PSUTlmUdpServer(gevent.server.DatagramServer):
+    # def handle(self, packet, address):
+        # Sessions.addPSUTelemetry(packet)
+
+class LogUdpServer (gevent.server.DatagramServer):
+    def __init__ (self, *args, **kwargs):
+        gevent.server.DatagramServer.__init__(self, *args, **kwargs)
+        self.parser = bliss.core.log.SysLogParser()
+
+    def handle(self, data, address):
+        msg = self.parser.parse(data)
+        msg['asctime'] = formatTime(msg['asctime'],
+                                    bliss.core.log.SysLogFormatter.SYS_DATEFMT,
+                                    bliss.core.log.LogFormatter.DATEFMT)
+        msg['levelname'] = '{:<30}'.format(msg['levelname'])
+        Sessions.addMessage(msg)
+
+def formatTime(t, currfmt, newfmt):
+    """Reformat time from one format to another"""
+    timetup = time.strptime(t, currfmt)
+    t_out   = time.strftime(newfmt, timetup)
+    return t_out
