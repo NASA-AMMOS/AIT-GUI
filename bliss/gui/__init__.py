@@ -22,10 +22,13 @@ import gevent.monkey
 import geventwebsocket
 import requests
 
-gevent.monkey.patch_all()
+import bliss
+from bliss.core import log
 
 import bliss.core
 from bliss.core import log, gds, tlm, cmd, util, evr, pcap
+
+gevent.monkey.patch_all()
 
 
 if 'gui' in bliss.config and 'html_root' in bliss.config.gui:
@@ -49,6 +52,7 @@ App = bottle.Bottle()
 
 bottle.debug(True)
 bottle.TEMPLATE_PATH.append(HTMLRoot)
+
 
 class Deque (object):
     """Deque
@@ -106,6 +110,24 @@ class Deque (object):
         """
         self.deque.append(item)
         self.event.set()
+
+
+
+class LogUdpServer (gevent.server.DatagramServer):
+    def __init__ (self, *args, **kwargs):
+        gevent.server.DatagramServer.__init__(self, *args, **kwargs)
+        self._parser = log.SysLogParser()
+
+    def formatTime (self, s):
+        """Reformat time from one format to another"""
+        return time.strftime(log.LogFormatter.DATEFMT,
+                             time.strptime(s, log.SysLogFormatter.SYS_DATEFMT))
+
+    def handle(self, data, address):
+        msg            = self._parser.parse(data)
+        #msg['asctime'] = self.formatTime(msg['asctime'])
+        Sessions.addMessage(msg)
+
 
 
 class Session (object):
@@ -215,16 +237,47 @@ class SessionStore (dict):
         del self[session.id]
 
 
-Sessions = SessionStore()
-
-def getBrowserName (browser):
+def getBrowserName(browser):
     return getattr(browser, 'name', getattr(browser, '_name', '(none)'))
 
-def startBrowser (url, name=None):
+
+def init(host=None, port=8000):
+    global tlmsrv
+    global logsrv
+    global websrv
+
+    if host is None:
+        host = 'localhost'
+
+    tlmsrv  = bliss.gui.TlmUdpServer(':%d' % 3076)
+    logsrv = LogUdpServer(':%d' % 2514)
+    websrv = gevent.pywsgi.WSGIServer(('0.0.0.0', port), App,
+                 handler_class=geventwebsocket.handler.WebSocketHandler)
+
+    tlmsrv.start()
+    logsrv.start()
+    websrv.start()
+
+    log.crit('Critical')
+    log.debug('Debug')
+    log.error('Error')
+    log.info('Info')
+    log.warn('Warn')
+
+def cleanup():
+    global tlmsrv
+    global logsrv
+    global websrv
+
+    tlmsrv.stop()
+    logsrv.stop()
+    websrv.stop()
+
+def startBrowser(url, name=None):
     browser = None
 
     if name is not None and name.lower() == 'none':
-        bliss.core.log.info('Will not start any browser since --browser=none')
+        log.info('Will not start any browser since --browser=none')
         return
 
     try:
@@ -233,19 +286,27 @@ def startBrowser (url, name=None):
         old     = name or 'default'
         msg     = 'Could not find browser: %s.  Will use: %s.'
         browser = webbrowser.get()
-        bliss.core.log.warn(msg, name, getBrowserName(browser))
+        log.warn(msg, name, getBrowserName(browser))
 
     if type(browser) is webbrowser.GenericBrowser:
         msg = 'Will not start text-based browser: %s.'
-        bliss.core.log.info(msg % getBrowserName(browser))
+        log.info(msg % getBrowserName(browser))
     elif browser is not None:
-        bliss.core.log.info('Starting browser: %s' % getBrowserName(browser))
+        log.info('Starting browser: %s' % getBrowserName(browser))
         browser.open_new(url)
+
+
+def wait():
+    gevent.wait()
+
+
+Sessions = SessionStore()
 
 @App.route('/')
 def handle ():
     Sessions.create()
     return bottle.template('index.html')
+
 
 @App.route('/events', method='GET')
 def handle ():
@@ -261,6 +322,7 @@ def handle ():
             bottle.response.cache_control = 'no-cache'
             yield 'data: %s\n\n' % json.dumps(event)
 
+
 @App.route('/events', method='POST')
 def handle ():
     with Sessions.current() as session:
@@ -268,9 +330,26 @@ def handle ():
         data = bottle.request.POST.data
         Sessions.addEvent(name, data)
 
+
+@App.route('/messages', method='GET')
+def handle():
+    """Endpoint that pushes syslog output to client"""
+    with Sessions.current() as session:
+        bottle.response.content_type  = 'text/event-stream'
+        bottle.response.cache_control = 'no-cache'
+        yield 'event: connected\ndata:\n\n'
+
+        while True:
+            msg = session.messages.get()
+            bottle.response.content_type  = 'text/event-stream'
+            bottle.response.cache_control = 'no-cache'
+            yield 'data: %s\n\n' % json.dumps(msg)
+
+
 @App.route('/<pathname:path>')
 def handle (pathname):
     return bottle.static_file(pathname, root=HTMLRoot)
+
 
 @App.route('/cmd', method='POST')
 def handle():
