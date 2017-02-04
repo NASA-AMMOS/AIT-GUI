@@ -29,38 +29,29 @@ try:
     host      = arguments['--host']
     port      = arguments['<port>'] or 8000
 
+
     if host is None:
         if sys.platform == 'darwin':
             host = 'localhost'
         else:
             host = socket.gethostname().split('.')[0]
 
-    app = bliss.gui.App
     url = 'http://%s:%d' % (host, port)
-    web = gevent.pywsgi.WSGIServer(('0.0.0.0', port), app,
-              handler_class=geventwebsocket.handler.WebSocketHandler)
 
-    udp_port = 3076
-    tlm_udp  = bliss.gui.TlmUdpServer(':%d' % udp_port)
-
-    udp_port = 2514
-    log_udp  = bliss.gui.LogUdpServer(':%d' % udp_port)
-
-    web.start()
-    tlm_udp.start()
-    log_udp.start()
+    bliss.gui.init(host, port)
     bliss.gui.startBrowser(url, browser)
 
     bliss.core.log.info('Connect to %s' % url)
     bliss.core.log.info('Ctrl-C to exit')
 
-    gevent.wait()
+    bliss.gui.startBrowser(url, browser)
+
+    bliss.gui.wait()
+
 
 except KeyboardInterrupt:
     bliss.core.log.info('Received Ctrl-C.  Stopping BLISS GUI.')
-    web.stop()
-    tlm_udp.stop()
-    log_udp.stop()
+    bliss.gui.cleanup()
 
 except Exception as e:
     bliss.core.log.error('BLISS GUI error: %s' % str(e))

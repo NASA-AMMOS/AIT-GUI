@@ -1,0 +1,50 @@
+@import url("./node_modules/bootstrap/dist/css/bootstrap.css");
+@import url("./node_modules/bootstrap/dist/css/bootstrap-theme.css");
+
+body {
+    padding-top: 70px;
+}
+
+bliss-clock {
+    cursor: pointer;
+    display: block;
+}
+
+bliss-messages .log-command  { background-color: #d9edf7; }
+bliss-messages .log-critical { background-color: #f2dede; }
+bliss-messages .log-error    { background-color: #f2dede; }
+bliss-messages .log-info     { background-color: #ffffff; }
+bliss-messages .log-notice   { background-color: #d9edf7; }
+bliss-messages .log-program  { background-color: #d9edf7; }
+bliss-messages .log-warning  { background-color: #fcf8e3; }
+
+
+/* Animate bliss-tab moves */
+bliss-tabset li {
+    transition: .15s ease-in-out;
+}
+
+
+/**
+ * Make room to indicate where a tab would be positioned when dropped.
+ * Note this changes (left/top or right/bottom) depending upon whether
+ * the tab being dragged comes `before` or `after` the tab that its
+ * currently being dragged over.
+ */
+bliss-tabset li.drag-over-before {
+    padding-left: 4em;
+}
+
+bliss-tabset li.drag-over-after {
+    padding-right: 4em;
+}
+
+bliss-tabset ul.nav-stacked li.drag-over-before {
+    padding-left: 0;
+    padding-top:  4em;
+}
+
+bliss-tabset ul.nav-stacked li.drag-over-after {
+    padding-right:  0;
+    padding-bottom: 4em;
+}

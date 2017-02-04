@@ -44,2337 +44,2623 @@
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	m = __webpack_require__(1)
+	'use strict';
 
-	//import styles from './index_test.css'
-	__webpack_require__(3)
+	var _mithril = __webpack_require__(1);
 
-	//this application only has one component: todo
-	var todo = {};
+	var _mithril2 = _interopRequireDefault(_mithril);
 
-	//for simplicity, we use this component to namespace the model classes
+	var _bliss = __webpack_require__(24);
 
-	//the Todo class has two properties
-	todo.Todo = function(data) {
-	    this.description = m.prop(data.description);
-	    this.done = m.prop(false);
-	};
+	var bliss = _interopRequireWildcard(_bliss);
 
-	//the TodoList class is a list of Todo's
-	todo.TodoList = Array;
+	var _index = __webpack_require__(32);
 
-	//the view-model tracks a running list of todos,
-	//stores a description for new todos before they are created
-	//and takes care of the logic surrounding when adding is permitted
-	//and clearing the input after adding a todo to the list
-	todo.vm = (function() {
-	    var vm = {}
-	    vm.init = function() {
-	        //a running list of todos
-	        vm.list = new todo.TodoList();
+	var _index2 = _interopRequireDefault(_index);
 
-	        //a slot to store the name of a new todo before it is created
-	        vm.description = m.prop("");
+	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
-	        //adds a todo to the list, and clears the description field for user convenience
-	        vm.add = function() {
-	            if (vm.description()) {
-	                vm.list.push(new todo.Todo({description: vm.description()}));
-	                vm.description("");
-	            }
-	        };
-	    }
-	    return vm
-	}())
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	//the controller defines what part of the model is relevant for the current page
-	//in our case, there's only one view-model that handles everything
-	todo.controller = function() {
-	    todo.vm.init()
-	}
+	bliss.gui.init();
 
-	//here's the view
-	todo.view = function() {
-	    return [
-	        m("span", {class: "glyphicon glyphicon-star"}),
-	        m("div", {class: "header"}, "TODOS:"),
-	        m("input", {class: "form-control", onchange: m.withAttr("value", todo.vm.description), value: todo.vm.description()}),
-	        m("button", {onclick: todo.vm.add}, "Add"),
-	        m("table", [
-	            todo.vm.list.map(function(task, index) {
-	                return m("tr", [
-	                    m("td", [
-	                        m("input[type=checkbox]", {onclick: m.withAttr("checked", task.done), checked: task.done()})
-	                    ]),
-	                    m("td", {style: {textDecoration: task.done() ? "line-through" : "none"}}, task.description()),
-	                ])
-	            })
-	        ])
-	    ]
-	};
-
-	//initialize the application
-	m.mount(document.body, {controller: todo.controller, view: todo.view});
-
+	window.bliss = bliss;
+	window.m = _mithril2.default;
 
 /***/ },
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module) {;(function (global, factory) { // eslint-disable-line
-		"use strict"
-		/* eslint-disable no-undef */
-		var m = factory(global)
-		if (typeof module === "object" && module != null && module.exports) {
-			module.exports = m
-		} else if (true) {
-			!(__WEBPACK_AMD_DEFINE_RESULT__ = function () { return m }.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__))
-		} else {
-			global.m = m
-		}
-		/* eslint-enable no-undef */
-	})(typeof window !== "undefined" ? window : this, function (global, undefined) { // eslint-disable-line
-		"use strict"
+	"use strict"
+
+	var m = __webpack_require__(2)
+	var requestService = __webpack_require__(7)
+	var redrawService = __webpack_require__(13)
+
+	requestService.setCompletionCallback(redrawService.redraw)
+
+	m.mount = __webpack_require__(16)
+	m.route = __webpack_require__(18)
+	m.withAttr = __webpack_require__(22)
+	m.render = __webpack_require__(23).render
+	m.redraw = redrawService.redraw
+	m.request = requestService.request
+	m.jsonp = requestService.jsonp
+	m.parseQueryString = __webpack_require__(21)
+	m.buildQueryString = __webpack_require__(12)
+	m.version = "bleeding-edge"
+	m.vnode = __webpack_require__(4)
+
+	module.exports = m
 
-		m.version = function () {
-			return "v0.2.5"
-		}
-
-		var hasOwn = {}.hasOwnProperty
-		var type = {}.toString
-
-		function isFunction(object) {
-			return typeof object === "function"
-		}
-
-		function isObject(object) {
-			return type.call(object) === "[object Object]"
-		}
-
-		function isString(object) {
-			return type.call(object) === "[object String]"
-		}
-
-		var isArray = Array.isArray || function (object) {
-			return type.call(object) === "[object Array]"
-		}
-
-		function noop() {}
-
-		var voidElements = {
-			AREA: 1,
-			BASE: 1,
-			BR: 1,
-			COL: 1,
-			COMMAND: 1,
-			EMBED: 1,
-			HR: 1,
-			IMG: 1,
-			INPUT: 1,
-			KEYGEN: 1,
-			LINK: 1,
-			META: 1,
-			PARAM: 1,
-			SOURCE: 1,
-			TRACK: 1,
-			WBR: 1
-		}
-
-		// caching commonly used variables
-		var $document, $location, $requestAnimationFrame, $cancelAnimationFrame
-
-		// self invoking function needed because of the way mocks work
-		function initialize(mock) {
-			$document = mock.document
-			$location = mock.location
-			$cancelAnimationFrame = mock.cancelAnimationFrame || mock.clearTimeout
-			$requestAnimationFrame = mock.requestAnimationFrame || mock.setTimeout
-		}
-
-		// testing API
-		m.deps = function (mock) {
-			initialize(global = mock || window)
-			return global
-		}
-
-		m.deps(global)
-
-		/**
-		 * @typedef {String} Tag
-		 * A string that looks like -> div.classname#id[param=one][param2=two]
-		 * Which describes a DOM node
-		 */
-
-		function parseTagAttrs(cell, tag) {
-			var classes = []
-			var parser = /(?:(^|#|\.)([^#\.\[\]]+))|(\[.+?\])/g
-			var match
-
-			while ((match = parser.exec(tag))) {
-				if (match[1] === "" && match[2]) {
-					cell.tag = match[2]
-				} else if (match[1] === "#") {
-					cell.attrs.id = match[2]
-				} else if (match[1] === ".") {
-					classes.push(match[2])
-				} else if (match[3][0] === "[") {
-					var pair = /\[(.+?)(?:=("|'|)(.*?)\2)?\]/.exec(match[3])
-					cell.attrs[pair[1]] = pair[3] || ""
-				}
-			}
-
-			return classes
-		}
-
-		function getVirtualChildren(args, hasAttrs) {
-			var children = hasAttrs ? args.slice(1) : args
-
-			if (children.length === 1 && isArray(children[0])) {
-				return children[0]
-			} else {
-				return children
-			}
-		}
-
-		function assignAttrs(target, attrs, classes) {
-			var classAttr = "class" in attrs ? "class" : "className"
-
-			for (var attrName in attrs) {
-				if (hasOwn.call(attrs, attrName)) {
-					if (attrName === classAttr &&
-							attrs[attrName] != null &&
-							attrs[attrName] !== "") {
-						classes.push(attrs[attrName])
-						// create key in correct iteration order
-						target[attrName] = ""
-					} else {
-						target[attrName] = attrs[attrName]
-					}
-				}
-			}
-
-			if (classes.length) target[classAttr] = classes.join(" ")
-		}
-
-		/**
-		 *
-		 * @param {Tag} The DOM node tag
-		 * @param {Object=[]} optional key-value pairs to be mapped to DOM attrs
-		 * @param {...mNode=[]} Zero or more Mithril child nodes. Can be an array,
-		 *                      or splat (optional)
-		 */
-		function m(tag, pairs) {
-			var args = []
-
-			for (var i = 1, length = arguments.length; i < length; i++) {
-				args[i - 1] = arguments[i]
-			}
-
-			if (isObject(tag)) return parameterize(tag, args)
-
-			if (!isString(tag)) {
-				throw new Error("selector in m(selector, attrs, children) should " +
-					"be a string")
-			}
-
-			var hasAttrs = pairs != null && isObject(pairs) &&
-				!("tag" in pairs || "view" in pairs || "subtree" in pairs)
-
-			var attrs = hasAttrs ? pairs : {}
-			var cell = {
-				tag: "div",
-				attrs: {},
-				children: getVirtualChildren(args, hasAttrs)
-			}
-
-			assignAttrs(cell.attrs, attrs, parseTagAttrs(cell, tag))
-			return cell
-		}
-
-		function forEach(list, f) {
-			for (var i = 0; i < list.length && !f(list[i], i++);) {
-				// function called in condition
-			}
-		}
-
-		function forKeys(list, f) {
-			forEach(list, function (attrs, i) {
-				return (attrs = attrs && attrs.attrs) &&
-					attrs.key != null &&
-					f(attrs, i)
-			})
-		}
-		// This function was causing deopts in Chrome.
-		function dataToString(data) {
-			// data.toString() might throw or return null if data is the return
-			// value of Console.log in some versions of Firefox (behavior depends on
-			// version)
-			try {
-				if (data != null && data.toString() != null) return data
-			} catch (e) {
-				// silently ignore errors
-			}
-			return ""
-		}
-
-		// This function was causing deopts in Chrome.
-		function injectTextNode(parentElement, first, index, data) {
-			try {
-				insertNode(parentElement, first, index)
-				first.nodeValue = data
-			} catch (e) {
-				// IE erroneously throws error when appending an empty text node
-				// after a null
-			}
-		}
-
-		function flatten(list) {
-			// recursively flatten array
-			for (var i = 0; i < list.length; i++) {
-				if (isArray(list[i])) {
-					list = list.concat.apply([], list)
-					// check current index again and flatten until there are no more
-					// nested arrays at that index
-					i--
-				}
-			}
-			return list
-		}
-
-		function insertNode(parentElement, node, index) {
-			parentElement.insertBefore(node,
-				parentElement.childNodes[index] || null)
-		}
-
-		var DELETION = 1
-		var INSERTION = 2
-		var MOVE = 3
-
-		function handleKeysDiffer(data, existing, cached, parentElement) {
-			forKeys(data, function (key, i) {
-				existing[key = key.key] = existing[key] ? {
-					action: MOVE,
-					index: i,
-					from: existing[key].index,
-					element: cached.nodes[existing[key].index] ||
-						$document.createElement("div")
-				} : {action: INSERTION, index: i}
-			})
-
-			var actions = []
-			for (var prop in existing) {
-				if (hasOwn.call(existing, prop)) {
-					actions.push(existing[prop])
-				}
-			}
-
-			var changes = actions.sort(sortChanges)
-			var newCached = new Array(cached.length)
-
-			newCached.nodes = cached.nodes.slice()
-
-			forEach(changes, function (change) {
-				var index = change.index
-				if (change.action === DELETION) {
-					clear(cached[index].nodes, cached[index])
-					newCached.splice(index, 1)
-				}
-				if (change.action === INSERTION) {
-					var dummy = $document.createElement("div")
-					dummy.key = data[index].attrs.key
-					insertNode(parentElement, dummy, index)
-					newCached.splice(index, 0, {
-						attrs: {key: data[index].attrs.key},
-						nodes: [dummy]
-					})
-					newCached.nodes[index] = dummy
-				}
-
-				if (change.action === MOVE) {
-					var changeElement = change.element
-					var maybeChanged = parentElement.childNodes[index]
-					if (maybeChanged !== changeElement && changeElement !== null) {
-						parentElement.insertBefore(changeElement,
-							maybeChanged || null)
-					}
-					newCached[index] = cached[change.from]
-					newCached.nodes[index] = changeElement
-				}
-			})
-
-			return newCached
-		}
-
-		function diffKeys(data, cached, existing, parentElement) {
-			var keysDiffer = data.length !== cached.length
-
-			if (!keysDiffer) {
-				forKeys(data, function (attrs, i) {
-					var cachedCell = cached[i]
-					return keysDiffer = cachedCell &&
-						cachedCell.attrs &&
-						cachedCell.attrs.key !== attrs.key
-				})
-			}
-
-			if (keysDiffer) {
-				return handleKeysDiffer(data, existing, cached, parentElement)
-			} else {
-				return cached
-			}
-		}
-
-		function diffArray(data, cached, nodes) {
-			// diff the array itself
-
-			// update the list of DOM nodes by collecting the nodes from each item
-			forEach(data, function (_, i) {
-				if (cached[i] != null) nodes.push.apply(nodes, cached[i].nodes)
-			})
-			// remove items from the end of the array if the new array is shorter
-			// than the old one. if errors ever happen here, the issue is most
-			// likely a bug in the construction of the `cached` data structure
-			// somewhere earlier in the program
-			forEach(cached.nodes, function (node, i) {
-				if (node.parentNode != null && nodes.indexOf(node) < 0) {
-					clear([node], [cached[i]])
-				}
-			})
-
-			if (data.length < cached.length) cached.length = data.length
-			cached.nodes = nodes
-		}
-
-		function buildArrayKeys(data) {
-			var guid = 0
-			forKeys(data, function () {
-				forEach(data, function (attrs) {
-					if ((attrs = attrs && attrs.attrs) && attrs.key == null) {
-						attrs.key = "__mithril__" + guid++
-					}
-				})
-				return 1
-			})
-		}
-
-		function isDifferentEnough(data, cached, dataAttrKeys) {
-			if (data.tag !== cached.tag) return true
-
-			if (dataAttrKeys.sort().join() !==
-					Object.keys(cached.attrs).sort().join()) {
-				return true
-			}
-
-			if (data.attrs.id !== cached.attrs.id) {
-				return true
-			}
-
-			if (data.attrs.key !== cached.attrs.key) {
-				return true
-			}
-
-			if (m.redraw.strategy() === "all") {
-				return !cached.configContext || cached.configContext.retain !== true
-			}
-
-			if (m.redraw.strategy() === "diff") {
-				return cached.configContext && cached.configContext.retain === false
-			}
-
-			return false
-		}
-
-		function maybeRecreateObject(data, cached, dataAttrKeys) {
-			// if an element is different enough from the one in cache, recreate it
-			if (isDifferentEnough(data, cached, dataAttrKeys)) {
-				if (cached.nodes.length) clear(cached.nodes)
-
-				if (cached.configContext &&
-						isFunction(cached.configContext.onunload)) {
-					cached.configContext.onunload()
-				}
-
-				if (cached.controllers) {
-					forEach(cached.controllers, function (controller) {
-						if (controller.onunload) {
-							controller.onunload({preventDefault: noop})
-						}
-					})
-				}
-			}
-		}
-
-		function getObjectNamespace(data, namespace) {
-			if (data.attrs.xmlns) return data.attrs.xmlns
-			if (data.tag === "svg") return "http://www.w3.org/2000/svg"
-			if (data.tag === "math") return "http://www.w3.org/1998/Math/MathML"
-			return namespace
-		}
-
-		var pendingRequests = 0
-		m.startComputation = function () { pendingRequests++ }
-		m.endComputation = function () {
-			if (pendingRequests > 1) {
-				pendingRequests--
-			} else {
-				pendingRequests = 0
-				m.redraw()
-			}
-		}
-
-		function unloadCachedControllers(cached, views, controllers) {
-			if (controllers.length) {
-				cached.views = views
-				cached.controllers = controllers
-				forEach(controllers, function (controller) {
-					if (controller.onunload && controller.onunload.$old) {
-						controller.onunload = controller.onunload.$old
-					}
-
-					if (pendingRequests && controller.onunload) {
-						var onunload = controller.onunload
-						controller.onunload = noop
-						controller.onunload.$old = onunload
-					}
-				})
-			}
-		}
-
-		function scheduleConfigsToBeCalled(configs, data, node, isNew, cached) {
-			// schedule configs to be called. They are called after `build` finishes
-			// running
-			if (isFunction(data.attrs.config)) {
-				var context = cached.configContext = cached.configContext || {}
-
-				// bind
-				configs.push(function () {
-					return data.attrs.config.call(data, node, !isNew, context,
-						cached)
-				})
-			}
-		}
-
-		function buildUpdatedNode(
-			cached,
-			data,
-			editable,
-			hasKeys,
-			namespace,
-			views,
-			configs,
-			controllers
-		) {
-			var node = cached.nodes[0]
-
-			if (hasKeys) {
-				setAttributes(node, data.tag, data.attrs, cached.attrs, namespace)
-			}
-
-			cached.children = build(
-				node,
-				data.tag,
-				undefined,
-				undefined,
-				data.children,
-				cached.children,
-				false,
-				0,
-				data.attrs.contenteditable ? node : editable,
-				namespace,
-				configs
-			)
-
-			cached.nodes.intact = true
-
-			if (controllers.length) {
-				cached.views = views
-				cached.controllers = controllers
-			}
-
-			return node
-		}
-
-		function handleNonexistentNodes(data, parentElement, index) {
-			var nodes
-			if (data.$trusted) {
-				nodes = injectHTML(parentElement, index, data)
-			} else {
-				nodes = [$document.createTextNode(data)]
-				if (!(parentElement.nodeName in voidElements)) {
-					insertNode(parentElement, nodes[0], index)
-				}
-			}
-
-			var cached
-
-			if (typeof data === "string" ||
-					typeof data === "number" ||
-					typeof data === "boolean") {
-				cached = new data.constructor(data)
-			} else {
-				cached = data
-			}
-
-			cached.nodes = nodes
-			return cached
-		}
-
-		function reattachNodes(
-			data,
-			cached,
-			parentElement,
-			editable,
-			index,
-			parentTag
-		) {
-			var nodes = cached.nodes
-			if (!editable || editable !== $document.activeElement) {
-				if (data.$trusted) {
-					clear(nodes, cached)
-					nodes = injectHTML(parentElement, index, data)
-				} else if (parentTag === "textarea") {
-					// <textarea> uses `value` instead of `nodeValue`.
-					parentElement.value = data
-				} else if (editable) {
-					// contenteditable nodes use `innerHTML` instead of `nodeValue`.
-					editable.innerHTML = data
-				} else {
-					// was a trusted string
-					if (nodes[0].nodeType === 1 || nodes.length > 1 ||
-							(nodes[0].nodeValue.trim &&
-								!nodes[0].nodeValue.trim())) {
-						clear(cached.nodes, cached)
-						nodes = [$document.createTextNode(data)]
-					}
-
-					injectTextNode(parentElement, nodes[0], index, data)
-				}
-			}
-			cached = new data.constructor(data)
-			cached.nodes = nodes
-			return cached
-		}
-
-		function handleTextNode(
-			cached,
-			data,
-			index,
-			parentElement,
-			shouldReattach,
-			editable,
-			parentTag
-		) {
-			if (!cached.nodes.length) {
-				return handleNonexistentNodes(data, parentElement, index)
-			} else if (cached.valueOf() !== data.valueOf() || shouldReattach) {
-				return reattachNodes(data, cached, parentElement, editable, index,
-					parentTag)
-			} else {
-				return (cached.nodes.intact = true, cached)
-			}
-		}
-
-		function getSubArrayCount(item) {
-			if (item.$trusted) {
-				// fix offset of next element if item was a trusted string w/ more
-				// than one html element
-				// the first clause in the regexp matches elements
-				// the second clause (after the pipe) matches text nodes
-				var match = item.match(/<[^\/]|\>\s*[^<]/g)
-				if (match != null) return match.length
-			} else if (isArray(item)) {
-				return item.length
-			}
-			return 1
-		}
-
-		function buildArray(
-			data,
-			cached,
-			parentElement,
-			index,
-			parentTag,
-			shouldReattach,
-			editable,
-			namespace,
-			configs
-		) {
-			data = flatten(data)
-			var nodes = []
-			var intact = cached.length === data.length
-			var subArrayCount = 0
-
-			// keys algorithm: sort elements without recreating them if keys are
-			// present
-			//
-			// 1) create a map of all existing keys, and mark all for deletion
-			// 2) add new keys to map and mark them for addition
-			// 3) if key exists in new list, change action from deletion to a move
-			// 4) for each key, handle its corresponding action as marked in
-			//    previous steps
-
-			var existing = {}
-			var shouldMaintainIdentities = false
-
-			forKeys(cached, function (attrs, i) {
-				shouldMaintainIdentities = true
-				existing[cached[i].attrs.key] = {action: DELETION, index: i}
-			})
-
-			buildArrayKeys(data)
-			if (shouldMaintainIdentities) {
-				cached = diffKeys(data, cached, existing, parentElement)
-			}
-			// end key algorithm
-
-			var cacheCount = 0
-			// faster explicitly written
-			for (var i = 0, len = data.length; i < len; i++) {
-				// diff each item in the array
-				var item = build(
-					parentElement,
-					parentTag,
-					cached,
-					index,
-					data[i],
-					cached[cacheCount],
-					shouldReattach,
-					index + subArrayCount || subArrayCount,
-					editable,
-					namespace,
-					configs)
-
-				if (item !== undefined) {
-					intact = intact && item.nodes.intact
-					subArrayCount += getSubArrayCount(item)
-					cached[cacheCount++] = item
-				}
-			}
-
-			if (!intact) diffArray(data, cached, nodes)
-			return cached
-		}
-
-		function makeCache(data, cached, index, parentIndex, parentCache) {
-			if (cached != null) {
-				if (type.call(cached) === type.call(data)) return cached
-
-				if (parentCache && parentCache.nodes) {
-					var offset = index - parentIndex
-					var end = offset + (isArray(data) ? data : cached.nodes).length
-					clear(
-						parentCache.nodes.slice(offset, end),
-						parentCache.slice(offset, end))
-				} else if (cached.nodes) {
-					clear(cached.nodes, cached)
-				}
-			}
-
-			cached = new data.constructor()
-			// if constructor creates a virtual dom element, use a blank object as
-			// the base cached node instead of copying the virtual el (#277)
-			if (cached.tag) cached = {}
-			cached.nodes = []
-			return cached
-		}
-
-		function constructNode(data, namespace) {
-			if (data.attrs.is) {
-				if (namespace == null) {
-					return $document.createElement(data.tag, data.attrs.is)
-				} else {
-					return $document.createElementNS(namespace, data.tag,
-						data.attrs.is)
-				}
-			} else if (namespace == null) {
-				return $document.createElement(data.tag)
-			} else {
-				return $document.createElementNS(namespace, data.tag)
-			}
-		}
-
-		function constructAttrs(data, node, namespace, hasKeys) {
-			if (hasKeys) {
-				return setAttributes(node, data.tag, data.attrs, {}, namespace)
-			} else {
-				return data.attrs
-			}
-		}
-
-		function constructChildren(
-			data,
-			node,
-			cached,
-			editable,
-			namespace,
-			configs
-		) {
-			if (data.children != null && data.children.length > 0) {
-				return build(
-					node,
-					data.tag,
-					undefined,
-					undefined,
-					data.children,
-					cached.children,
-					true,
-					0,
-					data.attrs.contenteditable ? node : editable,
-					namespace,
-					configs)
-			} else {
-				return data.children
-			}
-		}
-
-		function reconstructCached(
-			data,
-			attrs,
-			children,
-			node,
-			namespace,
-			views,
-			controllers
-		) {
-			var cached = {
-				tag: data.tag,
-				attrs: attrs,
-				children: children,
-				nodes: [node]
-			}
-
-			unloadCachedControllers(cached, views, controllers)
-
-			if (cached.children && !cached.children.nodes) {
-				cached.children.nodes = []
-			}
-
-			// edge case: setting value on <select> doesn't work before children
-			// exist, so set it again after children have been created
-			if (data.tag === "select" && "value" in data.attrs) {
-				setAttributes(node, data.tag, {value: data.attrs.value}, {},
-					namespace)
-			}
-
-			return cached
-		}
-
-		function getController(views, view, cachedControllers, controller) {
-			var controllerIndex
-
-			if (m.redraw.strategy() === "diff" && views) {
-				controllerIndex = views.indexOf(view)
-			} else {
-				controllerIndex = -1
-			}
-
-			if (controllerIndex > -1) {
-				return cachedControllers[controllerIndex]
-			} else if (isFunction(controller)) {
-				return new controller()
-			} else {
-				return {}
-			}
-		}
-
-		var unloaders = []
-
-		function updateLists(views, controllers, view, controller) {
-			if (controller.onunload != null &&
-					unloaders.map(function (u) { return u.handler })
-						.indexOf(controller.onunload) < 0) {
-				unloaders.push({
-					controller: controller,
-					handler: controller.onunload
-				})
-			}
-
-			views.push(view)
-			controllers.push(controller)
-		}
-
-		var forcing = false
-		function checkView(
-			data,
-			view,
-			cached,
-			cachedControllers,
-			controllers,
-			views
-		) {
-			var controller = getController(
-				cached.views,
-				view,
-				cachedControllers,
-				data.controller)
-
-			var key = data && data.attrs && data.attrs.key
-
-			if (pendingRequests === 0 ||
-					forcing ||
-					cachedControllers &&
-						cachedControllers.indexOf(controller) > -1) {
-				data = data.view(controller)
-			} else {
-				data = {tag: "placeholder"}
-			}
-
-			if (data.subtree === "retain") return data
-			data.attrs = data.attrs || {}
-			data.attrs.key = key
-			updateLists(views, controllers, view, controller)
-			return data
-		}
-
-		function markViews(data, cached, views, controllers) {
-			var cachedControllers = cached && cached.controllers
-
-			while (data.view != null) {
-				data = checkView(
-					data,
-					data.view.$original || data.view,
-					cached,
-					cachedControllers,
-					controllers,
-					views)
-			}
-
-			return data
-		}
-
-		function buildObject( // eslint-disable-line max-statements
-			data,
-			cached,
-			editable,
-			parentElement,
-			index,
-			shouldReattach,
-			namespace,
-			configs
-		) {
-			var views = []
-			var controllers = []
-
-			data = markViews(data, cached, views, controllers)
-
-			if (data.subtree === "retain") return cached
-
-			if (!data.tag && controllers.length) {
-				throw new Error("Component template must return a virtual " +
-					"element, not an array, string, etc.")
-			}
-
-			data.attrs = data.attrs || {}
-			cached.attrs = cached.attrs || {}
-
-			var dataAttrKeys = Object.keys(data.attrs)
-			var hasKeys = dataAttrKeys.length > ("key" in data.attrs ? 1 : 0)
-
-			maybeRecreateObject(data, cached, dataAttrKeys)
-
-			if (!isString(data.tag)) return
-
-			var isNew = cached.nodes.length === 0
-
-			namespace = getObjectNamespace(data, namespace)
-
-			var node
-			if (isNew) {
-				node = constructNode(data, namespace)
-				// set attributes first, then create children
-				var attrs = constructAttrs(data, node, namespace, hasKeys)
-
-				// add the node to its parent before attaching children to it
-				insertNode(parentElement, node, index)
-
-				var children = constructChildren(data, node, cached, editable,
-					namespace, configs)
-
-				cached = reconstructCached(
-					data,
-					attrs,
-					children,
-					node,
-					namespace,
-					views,
-					controllers)
-			} else {
-				node = buildUpdatedNode(
-					cached,
-					data,
-					editable,
-					hasKeys,
-					namespace,
-					views,
-					configs,
-					controllers)
-			}
-
-			if (!isNew && shouldReattach === true && node != null) {
-				insertNode(parentElement, node, index)
-			}
-
-			// The configs are called after `build` finishes running
-			scheduleConfigsToBeCalled(configs, data, node, isNew, cached)
-
-			return cached
-		}
-
-		function build(
-			parentElement,
-			parentTag,
-			parentCache,
-			parentIndex,
-			data,
-			cached,
-			shouldReattach,
-			index,
-			editable,
-			namespace,
-			configs
-		) {
-			/*
-			 * `build` is a recursive function that manages creation/diffing/removal
-			 * of DOM elements based on comparison between `data` and `cached` the
-			 * diff algorithm can be summarized as this:
-			 *
-			 * 1 - compare `data` and `cached`
-			 * 2 - if they are different, copy `data` to `cached` and update the DOM
-			 *     based on what the difference is
-			 * 3 - recursively apply this algorithm for every array and for the
-			 *     children of every virtual element
-			 *
-			 * The `cached` data structure is essentially the same as the previous
-			 * redraw's `data` data structure, with a few additions:
-			 * - `cached` always has a property called `nodes`, which is a list of
-			 *    DOM elements that correspond to the data represented by the
-			 *    respective virtual element
-			 * - in order to support attaching `nodes` as a property of `cached`,
-			 *    `cached` is *always* a non-primitive object, i.e. if the data was
-			 *    a string, then cached is a String instance. If data was `null` or
-			 *    `undefined`, cached is `new String("")`
-			 * - `cached also has a `configContext` property, which is the state
-			 *    storage object exposed by config(element, isInitialized, context)
-			 * - when `cached` is an Object, it represents a virtual element; when
-			 *    it's an Array, it represents a list of elements; when it's a
-			 *    String, Number or Boolean, it represents a text node
-			 *
-			 * `parentElement` is a DOM element used for W3C DOM API calls
-			 * `parentTag` is only used for handling a corner case for textarea
-			 * values
-			 * `parentCache` is used to remove nodes in some multi-node cases
-			 * `parentIndex` and `index` are used to figure out the offset of nodes.
-			 * They're artifacts from before arrays started being flattened and are
-			 * likely refactorable
-			 * `data` and `cached` are, respectively, the new and old nodes being
-			 * diffed
-			 * `shouldReattach` is a flag indicating whether a parent node was
-			 * recreated (if so, and if this node is reused, then this node must
-			 * reattach itself to the new parent)
-			 * `editable` is a flag that indicates whether an ancestor is
-			 * contenteditable
-			 * `namespace` indicates the closest HTML namespace as it cascades down
-			 * from an ancestor
-			 * `configs` is a list of config functions to run after the topmost
-			 * `build` call finishes running
-			 *
-			 * there's logic that relies on the assumption that null and undefined
-			 * data are equivalent to empty strings
-			 * - this prevents lifecycle surprises from procedural helpers that mix
-			 *   implicit and explicit return statements (e.g.
-			 *   function foo() {if (cond) return m("div")}
-			 * - it simplifies diffing code
-			 */
-			data = dataToString(data)
-			if (data.subtree === "retain") return cached
-			cached = makeCache(data, cached, index, parentIndex, parentCache)
-
-			if (isArray(data)) {
-				return buildArray(
-					data,
-					cached,
-					parentElement,
-					index,
-					parentTag,
-					shouldReattach,
-					editable,
-					namespace,
-					configs)
-			} else if (data != null && isObject(data)) {
-				return buildObject(
-					data,
-					cached,
-					editable,
-					parentElement,
-					index,
-					shouldReattach,
-					namespace,
-					configs)
-			} else if (!isFunction(data)) {
-				return handleTextNode(
-					cached,
-					data,
-					index,
-					parentElement,
-					shouldReattach,
-					editable,
-					parentTag)
-			} else {
-				return cached
-			}
-		}
-
-		function sortChanges(a, b) {
-			return a.action - b.action || a.index - b.index
-		}
-
-		function copyStyleAttrs(node, dataAttr, cachedAttr) {
-			for (var rule in dataAttr) {
-				if (hasOwn.call(dataAttr, rule)) {
-					if (cachedAttr == null || cachedAttr[rule] !== dataAttr[rule]) {
-						node.style[rule] = dataAttr[rule]
-					}
-				}
-			}
-
-			for (rule in cachedAttr) {
-				if (hasOwn.call(cachedAttr, rule)) {
-					if (!hasOwn.call(dataAttr, rule)) node.style[rule] = ""
-				}
-			}
-		}
-
-		var shouldUseSetAttribute = {
-			list: 1,
-			style: 1,
-			form: 1,
-			type: 1,
-			width: 1,
-			height: 1
-		}
-
-		function setSingleAttr(
-			node,
-			attrName,
-			dataAttr,
-			cachedAttr,
-			tag,
-			namespace
-		) {
-			if (attrName === "config" || attrName === "key") {
-				// `config` isn't a real attribute, so ignore it
-				return true
-			} else if (isFunction(dataAttr) && attrName.slice(0, 2) === "on") {
-				// hook event handlers to the auto-redrawing system
-				node[attrName] = autoredraw(dataAttr, node)
-			} else if (attrName === "style" && dataAttr != null &&
-					isObject(dataAttr)) {
-				// handle `style: {...}`
-				copyStyleAttrs(node, dataAttr, cachedAttr)
-			} else if (namespace != null) {
-				// handle SVG
-				if (attrName === "href") {
-					node.setAttributeNS("http://www.w3.org/1999/xlink",
-						"href", dataAttr)
-				} else {
-					node.setAttribute(
-						attrName === "className" ? "class" : attrName,
-						dataAttr)
-				}
-			} else if (attrName in node && !shouldUseSetAttribute[attrName]) {
-				// handle cases that are properties (but ignore cases where we
-				// should use setAttribute instead)
-				//
-				// - list and form are typically used as strings, but are DOM
-				//   element references in js
-				//
-				// - when using CSS selectors (e.g. `m("[style='']")`), style is
-				//   used as a string, but it's an object in js
-				//
-				// #348 don't set the value if not needed - otherwise, cursor
-				// placement breaks in Chrome
-				try {
-					if (tag !== "input" || node[attrName] !== dataAttr) {
-						node[attrName] = dataAttr
-					}
-				} catch (e) {
-					node.setAttribute(attrName, dataAttr)
-				}
-			}
-			else node.setAttribute(attrName, dataAttr)
-		}
-
-		function trySetAttr(
-			node,
-			attrName,
-			dataAttr,
-			cachedAttr,
-			cachedAttrs,
-			tag,
-			namespace
-		) {
-			if (!(attrName in cachedAttrs) || (cachedAttr !== dataAttr) || ($document.activeElement === node)) {
-				cachedAttrs[attrName] = dataAttr
-				try {
-					return setSingleAttr(
-						node,
-						attrName,
-						dataAttr,
-						cachedAttr,
-						tag,
-						namespace)
-				} catch (e) {
-					// swallow IE's invalid argument errors to mimic HTML's
-					// fallback-to-doing-nothing-on-invalid-attributes behavior
-					if (e.message.indexOf("Invalid argument") < 0) throw e
-				}
-			} else if (attrName === "value" && tag === "input" &&
-					node.value !== dataAttr) {
-				// #348 dataAttr may not be a string, so use loose comparison
-				node.value = dataAttr
-			}
-		}
-
-		function setAttributes(node, tag, dataAttrs, cachedAttrs, namespace) {
-			for (var attrName in dataAttrs) {
-				if (hasOwn.call(dataAttrs, attrName)) {
-					if (trySetAttr(
-							node,
-							attrName,
-							dataAttrs[attrName],
-							cachedAttrs[attrName],
-							cachedAttrs,
-							tag,
-							namespace)) {
-						continue
-					}
-				}
-			}
-			return cachedAttrs
-		}
-
-		function clear(nodes, cached) {
-			for (var i = nodes.length - 1; i > -1; i--) {
-				if (nodes[i] && nodes[i].parentNode) {
-					try {
-						nodes[i].parentNode.removeChild(nodes[i])
-					} catch (e) {
-						/* eslint-disable max-len */
-						// ignore if this fails due to order of events (see
-						// http://stackoverflow.com/questions/21926083/failed-to-execute-removechild-on-node)
-						/* eslint-enable max-len */
-					}
-					cached = [].concat(cached)
-					if (cached[i]) unload(cached[i])
-				}
-			}
-			// release memory if nodes is an array. This check should fail if nodes
-			// is a NodeList (see loop above)
-			if (nodes.length) {
-				nodes.length = 0
-			}
-		}
-
-		function unload(cached) {
-			if (cached.configContext && isFunction(cached.configContext.onunload)) {
-				cached.configContext.onunload()
-				cached.configContext.onunload = null
-			}
-			if (cached.controllers) {
-				forEach(cached.controllers, function (controller) {
-					if (isFunction(controller.onunload)) {
-						controller.onunload({preventDefault: noop})
-					}
-				})
-			}
-			if (cached.children) {
-				if (isArray(cached.children)) forEach(cached.children, unload)
-				else if (cached.children.tag) unload(cached.children)
-			}
-		}
-
-		function appendTextFragment(parentElement, data) {
-			try {
-				parentElement.appendChild(
-					$document.createRange().createContextualFragment(data))
-			} catch (e) {
-				parentElement.insertAdjacentHTML("beforeend", data)
-				replaceScriptNodes(parentElement)
-			}
-		}
-
-		// Replace script tags inside given DOM element with executable ones.
-		// Will also check children recursively and replace any found script
-		// tags in same manner.
-		function replaceScriptNodes(node) {
-			if (node.tagName === "SCRIPT") {
-				node.parentNode.replaceChild(buildExecutableNode(node), node)
-			} else {
-				var children = node.childNodes
-				if (children && children.length) {
-					for (var i = 0; i < children.length; i++) {
-						replaceScriptNodes(children[i])
-					}
-				}
-			}
-
-			return node
-		}
-
-		// Replace script element with one whose contents are executable.
-		function buildExecutableNode(node){
-			var scriptEl = document.createElement("script")
-			var attrs = node.attributes
-
-			for (var i = 0; i < attrs.length; i++) {
-				scriptEl.setAttribute(attrs[i].name, attrs[i].value)
-			}
-
-			scriptEl.text = node.innerHTML
-			return scriptEl
-		}
-
-		function injectHTML(parentElement, index, data) {
-			var nextSibling = parentElement.childNodes[index]
-			if (nextSibling) {
-				var isElement = nextSibling.nodeType !== 1
-				var placeholder = $document.createElement("span")
-				if (isElement) {
-					parentElement.insertBefore(placeholder, nextSibling || null)
-					placeholder.insertAdjacentHTML("beforebegin", data)
-					parentElement.removeChild(placeholder)
-				} else {
-					nextSibling.insertAdjacentHTML("beforebegin", data)
-				}
-			} else {
-				appendTextFragment(parentElement, data)
-			}
-
-			var nodes = []
-
-			while (parentElement.childNodes[index] !== nextSibling) {
-				nodes.push(parentElement.childNodes[index])
-				index++
-			}
-
-			return nodes
-		}
-
-		function autoredraw(callback, object) {
-			return function (e) {
-				e = e || event
-				m.redraw.strategy("diff")
-				m.startComputation()
-				try {
-					return callback.call(object, e)
-				} finally {
-					endFirstComputation()
-				}
-			}
-		}
-
-		var html
-		var documentNode = {
-			appendChild: function (node) {
-				if (html === undefined) html = $document.createElement("html")
-				if ($document.documentElement &&
-						$document.documentElement !== node) {
-					$document.replaceChild(node, $document.documentElement)
-				} else {
-					$document.appendChild(node)
-				}
-
-				this.childNodes = $document.childNodes
-			},
-
-			insertBefore: function (node) {
-				this.appendChild(node)
-			},
-
-			childNodes: []
-		}
-
-		var nodeCache = []
-		var cellCache = {}
-
-		m.render = function (root, cell, forceRecreation) {
-			if (!root) {
-				throw new Error("Ensure the DOM element being passed to " +
-					"m.route/m.mount/m.render is not undefined.")
-			}
-			var configs = []
-			var id = getCellCacheKey(root)
-			var isDocumentRoot = root === $document
-			var node
-
-			if (isDocumentRoot || root === $document.documentElement) {
-				node = documentNode
-			} else {
-				node = root
-			}
-
-			if (isDocumentRoot && cell.tag !== "html") {
-				cell = {tag: "html", attrs: {}, children: cell}
-			}
-
-			if (cellCache[id] === undefined) clear(node.childNodes)
-			if (forceRecreation === true) reset(root)
-
-			cellCache[id] = build(
-				node,
-				null,
-				undefined,
-				undefined,
-				cell,
-				cellCache[id],
-				false,
-				0,
-				null,
-				undefined,
-				configs)
-
-			forEach(configs, function (config) { config() })
-		}
-
-		function getCellCacheKey(element) {
-			var index = nodeCache.indexOf(element)
-			return index < 0 ? nodeCache.push(element) - 1 : index
-		}
-
-		m.trust = function (value) {
-			value = new String(value) // eslint-disable-line no-new-wrappers
-			value.$trusted = true
-			return value
-		}
-
-		function gettersetter(store) {
-			function prop() {
-				if (arguments.length) store = arguments[0]
-				return store
-			}
-
-			prop.toJSON = function () {
-				return store
-			}
-
-			return prop
-		}
-
-		m.prop = function (store) {
-			if ((store != null && (isObject(store) || isFunction(store)) || ((typeof Promise !== "undefined") && (store instanceof Promise))) &&
-					isFunction(store.then)) {
-				return propify(store)
-			}
-
-			return gettersetter(store)
-		}
-
-		var roots = []
-		var components = []
-		var controllers = []
-		var lastRedrawId = null
-		var lastRedrawCallTime = 0
-		var computePreRedrawHook = null
-		var computePostRedrawHook = null
-		var topComponent
-		var FRAME_BUDGET = 16 // 60 frames per second = 1 call per 16 ms
-
-		function parameterize(component, args) {
-			function controller() {
-				/* eslint-disable no-invalid-this */
-				return (component.controller || noop).apply(this, args) || this
-				/* eslint-enable no-invalid-this */
-			}
-
-			if (component.controller) {
-				controller.prototype = component.controller.prototype
-			}
-
-			function view(ctrl) {
-				var currentArgs = [ctrl].concat(args)
-				for (var i = 1; i < arguments.length; i++) {
-					currentArgs.push(arguments[i])
-				}
-
-				return component.view.apply(component, currentArgs)
-			}
-
-			view.$original = component.view
-			var output = {controller: controller, view: view}
-			if (args[0] && args[0].key != null) output.attrs = {key: args[0].key}
-			return output
-		}
-
-		m.component = function (component) {
-			var args = new Array(arguments.length - 1)
-
-			for (var i = 1; i < arguments.length; i++) {
-				args[i - 1] = arguments[i]
-			}
-
-			return parameterize(component, args)
-		}
-
-		function checkPrevented(component, root, index, isPrevented) {
-			if (!isPrevented) {
-				m.redraw.strategy("all")
-				m.startComputation()
-				roots[index] = root
-				var currentComponent
-
-				if (component) {
-					currentComponent = topComponent = component
-				} else {
-					currentComponent = topComponent = component = {controller: noop}
-				}
-
-				var controller = new (component.controller || noop)()
-
-				// controllers may call m.mount recursively (via m.route redirects,
-				// for example)
-				// this conditional ensures only the last recursive m.mount call is
-				// applied
-				if (currentComponent === topComponent) {
-					controllers[index] = controller
-					components[index] = component
-				}
-				endFirstComputation()
-				if (component === null) {
-					removeRootElement(root, index)
-				}
-				return controllers[index]
-			} else if (component == null) {
-				removeRootElement(root, index)
-			}
-		}
-
-		m.mount = m.module = function (root, component) {
-			if (!root) {
-				throw new Error("Please ensure the DOM element exists before " +
-					"rendering a template into it.")
-			}
-
-			var index = roots.indexOf(root)
-			if (index < 0) index = roots.length
-
-			var isPrevented = false
-			var event = {
-				preventDefault: function () {
-					isPrevented = true
-					computePreRedrawHook = computePostRedrawHook = null
-				}
-			}
-
-			forEach(unloaders, function (unloader) {
-				unloader.handler.call(unloader.controller, event)
-				unloader.controller.onunload = null
-			})
-
-			if (isPrevented) {
-				forEach(unloaders, function (unloader) {
-					unloader.controller.onunload = unloader.handler
-				})
-			} else {
-				unloaders = []
-			}
-
-			if (controllers[index] && isFunction(controllers[index].onunload)) {
-				controllers[index].onunload(event)
-			}
-
-			return checkPrevented(component, root, index, isPrevented)
-		}
-
-		function removeRootElement(root, index) {
-			roots.splice(index, 1)
-			controllers.splice(index, 1)
-			components.splice(index, 1)
-			reset(root)
-			nodeCache.splice(getCellCacheKey(root), 1)
-		}
-
-		var redrawing = false
-		m.redraw = function (force) {
-			if (redrawing) return
-			redrawing = true
-			if (force) forcing = true
-
-			try {
-				// lastRedrawId is a positive number if a second redraw is requested
-				// before the next animation frame
-				// lastRedrawId is null if it's the first redraw and not an event
-				// handler
-				if (lastRedrawId && !force) {
-					// when setTimeout: only reschedule redraw if time between now
-					// and previous redraw is bigger than a frame, otherwise keep
-					// currently scheduled timeout
-					// when rAF: always reschedule redraw
-					if ($requestAnimationFrame === global.requestAnimationFrame ||
-							new Date() - lastRedrawCallTime > FRAME_BUDGET) {
-						if (lastRedrawId > 0) $cancelAnimationFrame(lastRedrawId)
-						lastRedrawId = $requestAnimationFrame(redraw, FRAME_BUDGET)
-					}
-				} else {
-					redraw()
-					lastRedrawId = $requestAnimationFrame(function () {
-						lastRedrawId = null
-					}, FRAME_BUDGET)
-				}
-			} finally {
-				redrawing = forcing = false
-			}
-		}
-
-		m.redraw.strategy = m.prop()
-		function redraw() {
-			if (computePreRedrawHook) {
-				computePreRedrawHook()
-				computePreRedrawHook = null
-			}
-			forEach(roots, function (root, i) {
-				var component = components[i]
-				if (controllers[i]) {
-					var args = [controllers[i]]
-					m.render(root,
-						component.view ? component.view(controllers[i], args) : "")
-				}
-			})
-			// after rendering within a routed context, we need to scroll back to
-			// the top, and fetch the document title for history.pushState
-			if (computePostRedrawHook) {
-				computePostRedrawHook()
-				computePostRedrawHook = null
-			}
-			lastRedrawId = null
-			lastRedrawCallTime = new Date()
-			m.redraw.strategy("diff")
-		}
-
-		function endFirstComputation() {
-			if (m.redraw.strategy() === "none") {
-				pendingRequests--
-				m.redraw.strategy("diff")
-			} else {
-				m.endComputation()
-			}
-		}
-
-		m.withAttr = function (prop, withAttrCallback, callbackThis) {
-			return function (e) {
-				e = e || window.event
-				/* eslint-disable no-invalid-this */
-				var currentTarget = e.currentTarget || this
-				var _this = callbackThis || this
-				/* eslint-enable no-invalid-this */
-				var target = prop in currentTarget ?
-					currentTarget[prop] :
-					currentTarget.getAttribute(prop)
-				withAttrCallback.call(_this, target)
-			}
-		}
-
-		// routing
-		var modes = {pathname: "", hash: "#", search: "?"}
-		var redirect = noop
-		var isDefaultRoute = false
-		var routeParams, currentRoute
-
-		m.route = function (root, arg1, arg2, vdom) { // eslint-disable-line
-			// m.route()
-			if (arguments.length === 0) return currentRoute
-			// m.route(el, defaultRoute, routes)
-			if (arguments.length === 3 && isString(arg1)) {
-				redirect = function (source) {
-					var path = currentRoute = normalizeRoute(source)
-					if (!routeByValue(root, arg2, path)) {
-						if (isDefaultRoute) {
-							throw new Error("Ensure the default route matches " +
-								"one of the routes defined in m.route")
-						}
-
-						isDefaultRoute = true
-						m.route(arg1, true)
-						isDefaultRoute = false
-					}
-				}
-
-				var listener = m.route.mode === "hash" ?
-					"onhashchange" :
-					"onpopstate"
-
-				global[listener] = function () {
-					var path = $location[m.route.mode]
-					if (m.route.mode === "pathname") path += $location.search
-					if (currentRoute !== normalizeRoute(path)) redirect(path)
-				}
-
-				computePreRedrawHook = setScroll
-				global[listener]()
-
-				return
-			}
-
-			// config: m.route
-			if (root.addEventListener || root.attachEvent) {
-				var base = m.route.mode !== "pathname" ? $location.pathname : ""
-				root.href = base + modes[m.route.mode] + vdom.attrs.href
-				if (root.addEventListener) {
-					root.removeEventListener("click", routeUnobtrusive)
-					root.addEventListener("click", routeUnobtrusive)
-				} else {
-					root.detachEvent("onclick", routeUnobtrusive)
-					root.attachEvent("onclick", routeUnobtrusive)
-				}
-
-				return
-			}
-			// m.route(route, params, shouldReplaceHistoryEntry)
-			if (isString(root)) {
-				var oldRoute = currentRoute
-				currentRoute = root
-
-				var args = arg1 || {}
-				var queryIndex = currentRoute.indexOf("?")
-				var params
-
-				if (queryIndex > -1) {
-					params = parseQueryString(currentRoute.slice(queryIndex + 1))
-				} else {
-					params = {}
-				}
-
-				for (var i in args) {
-					if (hasOwn.call(args, i)) {
-						params[i] = args[i]
-					}
-				}
-
-				var querystring = buildQueryString(params)
-				var currentPath
-
-				if (queryIndex > -1) {
-					currentPath = currentRoute.slice(0, queryIndex)
-				} else {
-					currentPath = currentRoute
-				}
-
-				if (querystring) {
-					currentRoute = currentPath +
-						(currentPath.indexOf("?") === -1 ? "?" : "&") +
-						querystring
-				}
-
-				var replaceHistory =
-					(arguments.length === 3 ? arg2 : arg1) === true ||
-					oldRoute === root
-
-				if (global.history.pushState) {
-					var method = replaceHistory ? "replaceState" : "pushState"
-					computePreRedrawHook = setScroll
-					computePostRedrawHook = function () {
-						try {
-							global.history[method](null, $document.title,
-								modes[m.route.mode] + currentRoute)
-						} catch (err) {
-							// In the event of a pushState or replaceState failure,
-							// fallback to a standard redirect. This is specifically
-							// to address a Safari security error when attempting to
-							// call pushState more than 100 times.
-							$location[m.route.mode] = currentRoute
-						}
-					}
-					redirect(modes[m.route.mode] + currentRoute)
-				} else {
-					$location[m.route.mode] = currentRoute
-					redirect(modes[m.route.mode] + currentRoute)
-				}
-			}
-		}
-
-		m.route.param = function (key) {
-			if (!routeParams) {
-				throw new Error("You must call m.route(element, defaultRoute, " +
-					"routes) before calling m.route.param()")
-			}
-
-			if (!key) {
-				return routeParams
-			}
-
-			return routeParams[key]
-		}
-
-		m.route.mode = "search"
-
-		function normalizeRoute(route) {
-			return route.slice(modes[m.route.mode].length)
-		}
-
-		function routeByValue(root, router, path) {
-			routeParams = {}
-
-			var queryStart = path.indexOf("?")
-			if (queryStart !== -1) {
-				routeParams = parseQueryString(
-					path.substr(queryStart + 1, path.length))
-				path = path.substr(0, queryStart)
-			}
-
-			// Get all routes and check if there's
-			// an exact match for the current path
-			var keys = Object.keys(router)
-			var index = keys.indexOf(path)
-
-			if (index !== -1){
-				m.mount(root, router[keys [index]])
-				return true
-			}
-
-			for (var route in router) {
-				if (hasOwn.call(router, route)) {
-					if (route === path) {
-						m.mount(root, router[route])
-						return true
-					}
-
-					var matcher = new RegExp("^" + route
-						.replace(/:[^\/]+?\.{3}/g, "(.*?)")
-						.replace(/:[^\/]+/g, "([^\\/]+)") + "\/?$")
-
-					if (matcher.test(path)) {
-						/* eslint-disable no-loop-func */
-						path.replace(matcher, function () {
-							var keys = route.match(/:[^\/]+/g) || []
-							var values = [].slice.call(arguments, 1, -2)
-							forEach(keys, function (key, i) {
-								routeParams[key.replace(/:|\./g, "")] =
-									decodeURIComponent(values[i])
-							})
-							m.mount(root, router[route])
-						})
-						/* eslint-enable no-loop-func */
-						return true
-					}
-				}
-			}
-		}
-
-		function routeUnobtrusive(e) {
-			e = e || event
-			if (e.ctrlKey || e.metaKey || e.shiftKey || e.which === 2) return
-
-			if (e.preventDefault) {
-				e.preventDefault()
-			} else {
-				e.returnValue = false
-			}
-
-			var currentTarget = e.currentTarget || e.srcElement
-			var args
-
-			if (m.route.mode === "pathname" && currentTarget.search) {
-				args = parseQueryString(currentTarget.search.slice(1))
-			} else {
-				args = {}
-			}
-
-			while (currentTarget && !/a/i.test(currentTarget.nodeName)) {
-				currentTarget = currentTarget.parentNode
-			}
-
-			// clear pendingRequests because we want an immediate route change
-			pendingRequests = 0
-			m.route(currentTarget[m.route.mode]
-				.slice(modes[m.route.mode].length), args)
-		}
-
-		function setScroll() {
-			if (m.route.mode !== "hash" && $location.hash) {
-				$location.hash = $location.hash
-			} else {
-				global.scrollTo(0, 0)
-			}
-		}
-
-		function buildQueryString(object, prefix) {
-			var duplicates = {}
-			var str = []
-
-			for (var prop in object) {
-				if (hasOwn.call(object, prop)) {
-					var key = prefix ? prefix + "[" + prop + "]" : prop
-					var value = object[prop]
-
-					if (value === null) {
-						str.push(encodeURIComponent(key))
-					} else if (isObject(value)) {
-						str.push(buildQueryString(value, key))
-					} else if (isArray(value)) {
-						var keys = []
-						duplicates[key] = duplicates[key] || {}
-						/* eslint-disable no-loop-func */
-						forEach(value, function (item) {
-							/* eslint-enable no-loop-func */
-							if (!duplicates[key][item]) {
-								duplicates[key][item] = true
-								keys.push(encodeURIComponent(key) + "=" +
-									encodeURIComponent(item))
-							}
-						})
-						str.push(keys.join("&"))
-					} else if (value !== undefined) {
-						str.push(encodeURIComponent(key) + "=" +
-							encodeURIComponent(value))
-					}
-				}
-			}
-
-			return str.join("&")
-		}
-
-		function parseQueryString(str) {
-			if (str === "" || str == null) return {}
-			if (str.charAt(0) === "?") str = str.slice(1)
-
-			var pairs = str.split("&")
-			var params = {}
-
-			forEach(pairs, function (string) {
-				var pair = string.split("=")
-				var key = decodeURIComponent(pair[0])
-				var value = pair.length === 2 ? decodeURIComponent(pair[1]) : null
-				if (params[key] != null) {
-					if (!isArray(params[key])) params[key] = [params[key]]
-					params[key].push(value)
-				}
-				else params[key] = value
-			})
-
-			return params
-		}
-
-		m.route.buildQueryString = buildQueryString
-		m.route.parseQueryString = parseQueryString
-
-		function reset(root) {
-			var cacheKey = getCellCacheKey(root)
-			clear(root.childNodes, cellCache[cacheKey])
-			cellCache[cacheKey] = undefined
-		}
-
-		m.deferred = function () {
-			var deferred = new Deferred()
-			deferred.promise = propify(deferred.promise)
-			return deferred
-		}
-
-		function propify(promise, initialValue) {
-			var prop = m.prop(initialValue)
-			promise.then(prop)
-			prop.then = function (resolve, reject) {
-				return propify(promise.then(resolve, reject), initialValue)
-			}
-
-			prop.catch = prop.then.bind(null, null)
-			return prop
-		}
-		// Promiz.mithril.js | Zolmeister | MIT
-		// a modified version of Promiz.js, which does not conform to Promises/A+
-		// for two reasons:
-		//
-		// 1) `then` callbacks are called synchronously (because setTimeout is too
-		//    slow, and the setImmediate polyfill is too big
-		//
-		// 2) throwing subclasses of Error cause the error to be bubbled up instead
-		//    of triggering rejection (because the spec does not account for the
-		//    important use case of default browser error handling, i.e. message w/
-		//    line number)
-
-		var RESOLVING = 1
-		var REJECTING = 2
-		var RESOLVED = 3
-		var REJECTED = 4
-
-		function Deferred(onSuccess, onFailure) {
-			var self = this
-			var state = 0
-			var promiseValue = 0
-			var next = []
-
-			self.promise = {}
-
-			self.resolve = function (value) {
-				if (!state) {
-					promiseValue = value
-					state = RESOLVING
-
-					fire()
-				}
-
-				return self
-			}
-
-			self.reject = function (value) {
-				if (!state) {
-					promiseValue = value
-					state = REJECTING
-
-					fire()
-				}
-
-				return self
-			}
-
-			self.promise.then = function (onSuccess, onFailure) {
-				var deferred = new Deferred(onSuccess, onFailure)
-
-				if (state === RESOLVED) {
-					deferred.resolve(promiseValue)
-				} else if (state === REJECTED) {
-					deferred.reject(promiseValue)
-				} else {
-					next.push(deferred)
-				}
-
-				return deferred.promise
-			}
-
-			function finish(type) {
-				state = type || REJECTED
-				next.map(function (deferred) {
-					if (state === RESOLVED) {
-						deferred.resolve(promiseValue)
-					} else {
-						deferred.reject(promiseValue)
-					}
-				})
-			}
-
-			function thennable(then, success, failure, notThennable) {
-				if (((promiseValue != null && isObject(promiseValue)) ||
-						isFunction(promiseValue)) && isFunction(then)) {
-					try {
-						// count protects against abuse calls from spec checker
-						var count = 0
-						then.call(promiseValue, function (value) {
-							if (count++) return
-							promiseValue = value
-							success()
-						}, function (value) {
-							if (count++) return
-							promiseValue = value
-							failure()
-						})
-					} catch (e) {
-						m.deferred.onerror(e)
-						promiseValue = e
-						failure()
-					}
-				} else {
-					notThennable()
-				}
-			}
-
-			function fire() {
-				// check if it's a thenable
-				var then
-				try {
-					then = promiseValue && promiseValue.then
-				} catch (e) {
-					m.deferred.onerror(e)
-					promiseValue = e
-					state = REJECTING
-					return fire()
-				}
-
-				if (state === REJECTING) {
-					m.deferred.onerror(promiseValue)
-				}
-
-				thennable(then, function () {
-					state = RESOLVING
-					fire()
-				}, function () {
-					state = REJECTING
-					fire()
-				}, function () {
-					try {
-						if (state === RESOLVING && isFunction(onSuccess)) {
-							promiseValue = onSuccess(promiseValue)
-						} else if (state === REJECTING && isFunction(onFailure)) {
-							promiseValue = onFailure(promiseValue)
-							state = RESOLVING
-						}
-					} catch (e) {
-						m.deferred.onerror(e)
-						promiseValue = e
-						return finish()
-					}
-
-					if (promiseValue === self) {
-						promiseValue = TypeError()
-						finish()
-					} else {
-						thennable(then, function () {
-							finish(RESOLVED)
-						}, finish, function () {
-							finish(state === RESOLVING && RESOLVED)
-						})
-					}
-				})
-			}
-		}
-
-		m.deferred.onerror = function (e) {
-			if (type.call(e) === "[object Error]" &&
-					!/ Error/.test(e.constructor.toString())) {
-				pendingRequests = 0
-				throw e
-			}
-		}
-
-		m.sync = function (args) {
-			var deferred = m.deferred()
-			var outstanding = args.length
-			var results = []
-			var method = "resolve"
-
-			function synchronizer(pos, resolved) {
-				return function (value) {
-					results[pos] = value
-					if (!resolved) method = "reject"
-					if (--outstanding === 0) {
-						deferred.promise(results)
-						deferred[method](results)
-					}
-					return value
-				}
-			}
-
-			if (args.length > 0) {
-				forEach(args, function (arg, i) {
-					arg.then(synchronizer(i, true), synchronizer(i, false))
-				})
-			} else {
-				deferred.resolve([])
-			}
-
-			return deferred.promise
-		}
-
-		function identity(value) { return value }
-
-		function handleJsonp(options) {
-			var callbackKey = options.callbackName || "mithril_callback_" +
-				new Date().getTime() + "_" +
-				(Math.round(Math.random() * 1e16)).toString(36)
-
-			var script = $document.createElement("script")
-
-			global[callbackKey] = function (resp) {
-				script.parentNode.removeChild(script)
-				options.onload({
-					type: "load",
-					target: {
-						responseText: resp
-					}
-				})
-				global[callbackKey] = undefined
-			}
-
-			script.onerror = function () {
-				script.parentNode.removeChild(script)
-
-				options.onerror({
-					type: "error",
-					target: {
-						status: 500,
-						responseText: JSON.stringify({
-							error: "Error making jsonp request"
-						})
-					}
-				})
-				global[callbackKey] = undefined
-
-				return false
-			}
-
-			script.onload = function () {
-				return false
-			}
-
-			script.src = options.url +
-				(options.url.indexOf("?") > 0 ? "&" : "?") +
-				(options.callbackKey ? options.callbackKey : "callback") +
-				"=" + callbackKey +
-				"&" + buildQueryString(options.data || {})
-
-			$document.body.appendChild(script)
-		}
-
-		function createXhr(options) {
-			var xhr = new global.XMLHttpRequest()
-			xhr.open(options.method, options.url, true, options.user,
-				options.password)
-
-			xhr.onreadystatechange = function () {
-				if (xhr.readyState === 4) {
-					if (xhr.status >= 200 && xhr.status < 300) {
-						options.onload({type: "load", target: xhr})
-					} else {
-						options.onerror({type: "error", target: xhr})
-					}
-				}
-			}
-
-			if (options.serialize === JSON.stringify &&
-					options.data &&
-					options.method !== "GET") {
-				xhr.setRequestHeader("Content-Type",
-					"application/json; charset=utf-8")
-			}
-
-			if (options.deserialize === JSON.parse) {
-				xhr.setRequestHeader("Accept", "application/json, text/*")
-			}
-
-			if (isFunction(options.config)) {
-				var maybeXhr = options.config(xhr, options)
-				if (maybeXhr != null) xhr = maybeXhr
-			}
-
-			var data = options.method === "GET" || !options.data ? "" : options.data
-
-			if (data && !isString(data) && data.constructor !== global.FormData) {
-				throw new Error("Request data should be either be a string or " +
-					"FormData. Check the `serialize` option in `m.request`")
-			}
-
-			xhr.send(data)
-			return xhr
-		}
-
-		function ajax(options) {
-			if (options.dataType && options.dataType.toLowerCase() === "jsonp") {
-				return handleJsonp(options)
-			} else {
-				return createXhr(options)
-			}
-		}
-
-		function bindData(options, data, serialize) {
-			if (options.method === "GET" && options.dataType !== "jsonp") {
-				var prefix = options.url.indexOf("?") < 0 ? "?" : "&"
-				var querystring = buildQueryString(data)
-				options.url += (querystring ? prefix + querystring : "")
-			} else {
-				options.data = serialize(data)
-			}
-		}
-
-		function parameterizeUrl(url, data) {
-			if (data) {
-				url = url.replace(/:[a-z]\w+/gi, function (token){
-					var key = token.slice(1)
-					var value = data[key] || token
-					delete data[key]
-					return value
-				})
-			}
-			return url
-		}
-
-		m.request = function (options) {
-			if (options.background !== true) m.startComputation()
-			var deferred = new Deferred()
-			var isJSONP = options.dataType &&
-				options.dataType.toLowerCase() === "jsonp"
-
-			var serialize, deserialize, extract
-
-			if (isJSONP) {
-				serialize = options.serialize =
-				deserialize = options.deserialize = identity
-
-				extract = function (jsonp) { return jsonp.responseText }
-			} else {
-				serialize = options.serialize = options.serialize || JSON.stringify
-
-				deserialize = options.deserialize =
-					options.deserialize || JSON.parse
-				extract = options.extract || function (xhr) {
-					if (xhr.responseText.length || deserialize !== JSON.parse) {
-						return xhr.responseText
-					} else {
-						return null
-					}
-				}
-			}
-
-			options.method = (options.method || "GET").toUpperCase()
-			options.url = parameterizeUrl(options.url, options.data)
-			bindData(options, options.data, serialize)
-			options.onload = options.onerror = function (ev) {
-				try {
-					ev = ev || event
-					var response = deserialize(extract(ev.target, options))
-					if (ev.type === "load") {
-						if (options.unwrapSuccess) {
-							response = options.unwrapSuccess(response, ev.target)
-						}
-
-						if (isArray(response) && options.type) {
-							forEach(response, function (res, i) {
-								response[i] = new options.type(res)
-							})
-						} else if (options.type) {
-							response = new options.type(response)
-						}
-
-						deferred.resolve(response)
-					} else {
-						if (options.unwrapError) {
-							response = options.unwrapError(response, ev.target)
-						}
-
-						deferred.reject(response)
-					}
-				} catch (e) {
-					deferred.reject(e)
-					m.deferred.onerror(e)
-				} finally {
-					if (options.background !== true) m.endComputation()
-				}
-			}
-
-			ajax(options)
-			deferred.promise = propify(deferred.promise, options.initialValue)
-			return deferred.promise
-		}
-
-		return m
-	}); // eslint-disable-line
-
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2)(module)))
 
 /***/ },
 /* 2 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
-	module.exports = function(module) {
-		if(!module.webpackPolyfill) {
-			module.deprecate = function() {};
-			module.paths = [];
-			// module.parent = undefined by default
-			module.children = [];
-			module.webpackPolyfill = 1;
-		}
-		return module;
-	}
+	var hyperscript = __webpack_require__(3)
+
+	hyperscript.trust = __webpack_require__(5)
+	hyperscript.fragment = __webpack_require__(6)
+
+	module.exports = hyperscript
 
 
 /***/ },
 /* 3 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict"
+
+	var Vnode = __webpack_require__(4)
+
+	var selectorParser = /(?:(^|#|\.)([^#\.\[\]]+))|(\[(.+?)(?:\s*=\s*("|'|)((?:\\["'\]]|.)*?)\5)?\])/g
+	var selectorCache = {}
+	function hyperscript(selector) {
+		if (selector == null || typeof selector !== "string" && selector.view == null) {
+			throw Error("The selector must be either a string or a component.");
+		}
+
+		if (typeof selector === "string" && selectorCache[selector] === undefined) {
+			var match, tag, classes = [], attributes = {}
+			while (match = selectorParser.exec(selector)) {
+				var type = match[1], value = match[2]
+				if (type === "" && value !== "") tag = value
+				else if (type === "#") attributes.id = value
+				else if (type === ".") classes.push(value)
+				else if (match[3][0] === "[") {
+					var attrValue = match[6]
+					if (attrValue) attrValue = attrValue.replace(/\\(["'])/g, "$1").replace(/\\\\/g, "\\")
+					if (match[4] === "class") classes.push(attrValue)
+					else attributes[match[4]] = attrValue || true
+				}
+			}
+			if (classes.length > 0) attributes.className = classes.join(" ")
+			selectorCache[selector] = function(attrs, children) {
+				var hasAttrs = false, childList, text
+				var className = attrs.className || attrs.class
+				for (var key in attributes) attrs[key] = attributes[key]
+				if (className !== undefined) {
+					if (attrs.class !== undefined) {
+						attrs.class = undefined
+						attrs.className = className
+					}
+					if (attributes.className !== undefined) attrs.className = attributes.className + " " + className
+				}
+				for (var key in attrs) {
+					if (key !== "key") {
+						hasAttrs = true
+						break
+					}
+				}
+				if (children instanceof Array && children.length == 1 && children[0] != null && children[0].tag === "#") text = children[0].children
+				else childList = children
+
+				return Vnode(tag || "div", attrs.key, hasAttrs ? attrs : undefined, childList, text, undefined)
+			}
+		}
+		var attrs, children, childrenIndex
+		if (arguments[1] == null || typeof arguments[1] === "object" && arguments[1].tag === undefined && !(arguments[1] instanceof Array)) {
+			attrs = arguments[1]
+			childrenIndex = 2
+		}
+		else childrenIndex = 1
+		if (arguments.length === childrenIndex + 1) {
+			children = arguments[childrenIndex] instanceof Array ? arguments[childrenIndex] : [arguments[childrenIndex]]
+		}
+		else {
+			children = []
+			for (var i = childrenIndex; i < arguments.length; i++) children.push(arguments[i])
+		}
+
+		if (typeof selector === "string") return selectorCache[selector](attrs || {}, Vnode.normalizeChildren(children))
+
+		return Vnode(selector, attrs && attrs.key, attrs || {}, Vnode.normalizeChildren(children), undefined, undefined)
+	}
+
+	module.exports = hyperscript
+
+
+/***/ },
+/* 4 */
+/***/ function(module, exports) {
+
+	function Vnode(tag, key, attrs, children, text, dom) {
+		return {tag: tag, key: key, attrs: attrs, children: children, text: text, dom: dom, domSize: undefined, state: {}, events: undefined, instance: undefined, skip: false}
+	}
+	Vnode.normalize = function(node) {
+		if (node instanceof Array) return Vnode("[", undefined, undefined, Vnode.normalizeChildren(node), undefined, undefined)
+		if (node != null && typeof node !== "object") return Vnode("#", undefined, undefined, node, undefined, undefined)
+		return node
+	}
+	Vnode.normalizeChildren = function normalizeChildren(children) {
+		for (var i = 0; i < children.length; i++) {
+			children[i] = Vnode.normalize(children[i])
+		}
+		return children
+	}
+
+	module.exports = Vnode
+
+
+/***/ },
+/* 5 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict"
+
+	var Vnode = __webpack_require__(4)
+
+	module.exports = function(html) {
+		if (html == null) html = ""
+		return Vnode("<", undefined, undefined, html, undefined, undefined)
+	}
+
+
+/***/ },
+/* 6 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict"
+
+	var Vnode = __webpack_require__(4)
+
+	module.exports = function(attrs, children) {
+		return Vnode("[", attrs.key, attrs, Vnode.normalizeChildren(children), undefined, undefined)
+	}
+
+
+/***/ },
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var PromisePolyfill = __webpack_require__(8)
+	module.exports = __webpack_require__(11)(window, PromisePolyfill)
+
+
+/***/ },
+/* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(setImmediate, global) {"use strict"
+	/** @constructor */
+	var PromisePolyfill = function(executor) {
+		if (!(this instanceof PromisePolyfill)) throw new Error("Promise must be called with `new`")
+		if (typeof executor !== "function") throw new TypeError("executor must be a function")
+
+		var self = this, resolvers = [], rejectors = [], resolveCurrent = handler(resolvers, true), rejectCurrent = handler(rejectors, false)
+		var instance = self._instance = {resolvers: resolvers, rejectors: rejectors}
+		var callAsync = typeof setImmediate === "function" ? setImmediate : setTimeout
+		function handler(list, shouldAbsorb) {
+			return function execute(value) {
+				var then
+				try {
+					if (shouldAbsorb && value != null && (typeof value === "object" || typeof value === "function") && typeof (then = value.then) === "function") {
+						if (value === self) throw new TypeError("Promise can't be resolved w/ itself")
+						executeOnce(then.bind(value))
+					}
+					else {
+						callAsync(function() {
+							if (!shouldAbsorb && list.length === 0) console.error("Possible unhandled promise rejection:", value)
+							for (var i = 0; i < list.length; i++) list[i](value)
+							resolvers.length = 0, rejectors.length = 0
+							instance.state = shouldAbsorb
+							instance.retry = function() {execute(value)}
+						})
+					}
+				}
+				catch (e) {
+					rejectCurrent(e)
+				}
+			}
+		}
+		function executeOnce(then) {
+			var runs = 0
+			function run(fn) {
+				return function(value) {
+					if (runs++ > 0) return
+					fn(value)
+				}
+			}
+			var onerror = run(rejectCurrent)
+			try {then(run(resolveCurrent), onerror)} catch (e) {onerror(e)}
+		}
+
+		executeOnce(executor)
+	}
+	PromisePolyfill.prototype.then = function(onFulfilled, onRejection) {
+		var self = this, instance = self._instance
+		function handle(callback, list, next, state) {
+			list.push(function(value) {
+				if (typeof callback !== "function") next(value)
+				else try {resolveNext(callback(value))} catch (e) {if (rejectNext) rejectNext(e)}
+			})
+			if (typeof instance.retry === "function" && state === instance.state) instance.retry()
+		}
+		var resolveNext, rejectNext
+		var promise = new PromisePolyfill(function(resolve, reject) {resolveNext = resolve, rejectNext = reject})
+		handle(onFulfilled, instance.resolvers, resolveNext, true), handle(onRejection, instance.rejectors, rejectNext, false)
+		return promise
+	}
+	PromisePolyfill.prototype.catch = function(onRejection) {
+		return this.then(null, onRejection)
+	}
+	PromisePolyfill.resolve = function(value) {
+		if (value instanceof PromisePolyfill) return value
+		return new PromisePolyfill(function(resolve) {resolve(value)})
+	}
+	PromisePolyfill.reject = function(value) {
+		return new PromisePolyfill(function(resolve, reject) {reject(value)})
+	}
+	PromisePolyfill.all = function(list) {
+		return new PromisePolyfill(function(resolve, reject) {
+			var total = list.length, count = 0, values = []
+			if (list.length === 0) resolve([])
+			else for (var i = 0; i < list.length; i++) {
+				(function(i) {
+					function consume(value) {
+						count++
+						values[i] = value
+						if (count === total) resolve(values)
+					}
+					if (list[i] != null && (typeof list[i] === "object" || typeof list[i] === "function") && typeof list[i].then === "function") {
+						list[i].then(consume, reject)
+					}
+					else consume(list[i])
+				})(i)
+			}
+		})
+	}
+	PromisePolyfill.race = function(list) {
+		return new PromisePolyfill(function(resolve, reject) {
+			for (var i = 0; i < list.length; i++) {
+				list[i].then(resolve, reject)
+			}
+		})
+	}
+
+	if (typeof window !== "undefined") {
+		if (typeof window.Promise === "undefined") window.Promise = PromisePolyfill
+		module.exports = window.Promise
+	} else if (typeof global !== "undefined") {
+		if (typeof global.Promise === "undefined") global.Promise = PromisePolyfill
+		module.exports = global.Promise
+	} else {
+		module.exports = PromisePolyfill
+	}
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(9).setImmediate, (function() { return this; }())))
+
+/***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(setImmediate, clearImmediate) {var nextTick = __webpack_require__(10).nextTick;
+	var apply = Function.prototype.apply;
+	var slice = Array.prototype.slice;
+	var immediateIds = {};
+	var nextImmediateId = 0;
+
+	// DOM APIs, for completeness
+
+	exports.setTimeout = function() {
+	  return new Timeout(apply.call(setTimeout, window, arguments), clearTimeout);
+	};
+	exports.setInterval = function() {
+	  return new Timeout(apply.call(setInterval, window, arguments), clearInterval);
+	};
+	exports.clearTimeout =
+	exports.clearInterval = function(timeout) { timeout.close(); };
+
+	function Timeout(id, clearFn) {
+	  this._id = id;
+	  this._clearFn = clearFn;
+	}
+	Timeout.prototype.unref = Timeout.prototype.ref = function() {};
+	Timeout.prototype.close = function() {
+	  this._clearFn.call(window, this._id);
+	};
+
+	// Does not start the time, just sets up the members needed.
+	exports.enroll = function(item, msecs) {
+	  clearTimeout(item._idleTimeoutId);
+	  item._idleTimeout = msecs;
+	};
+
+	exports.unenroll = function(item) {
+	  clearTimeout(item._idleTimeoutId);
+	  item._idleTimeout = -1;
+	};
+
+	exports._unrefActive = exports.active = function(item) {
+	  clearTimeout(item._idleTimeoutId);
+
+	  var msecs = item._idleTimeout;
+	  if (msecs >= 0) {
+	    item._idleTimeoutId = setTimeout(function onTimeout() {
+	      if (item._onTimeout)
+	        item._onTimeout();
+	    }, msecs);
+	  }
+	};
+
+	// That's not how node.js implements it but the exposed api is the same.
+	exports.setImmediate = typeof setImmediate === "function" ? setImmediate : function(fn) {
+	  var id = nextImmediateId++;
+	  var args = arguments.length < 2 ? false : slice.call(arguments, 1);
+
+	  immediateIds[id] = true;
+
+	  nextTick(function onNextTick() {
+	    if (immediateIds[id]) {
+	      // fn.call() is faster so we optimize for the common use-case
+	      // @see http://jsperf.com/call-apply-segu
+	      if (args) {
+	        fn.apply(null, args);
+	      } else {
+	        fn.call(null);
+	      }
+	      // Prevent ids from leaking
+	      exports.clearImmediate(id);
+	    }
+	  });
+
+	  return id;
+	};
+
+	exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate : function(id) {
+	  delete immediateIds[id];
+	};
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(9).setImmediate, __webpack_require__(9).clearImmediate))
+
+/***/ },
+/* 10 */
+/***/ function(module, exports) {
+
+	// shim for using process in browser
+	var process = module.exports = {};
+
+	// cached from whatever global is present so that test runners that stub it
+	// don't break things.  But we need to wrap it in a try catch in case it is
+	// wrapped in strict mode code which doesn't define any globals.  It's inside a
+	// function because try/catches deoptimize in certain engines.
+
+	var cachedSetTimeout;
+	var cachedClearTimeout;
+
+	function defaultSetTimout() {
+	    throw new Error('setTimeout has not been defined');
+	}
+	function defaultClearTimeout () {
+	    throw new Error('clearTimeout has not been defined');
+	}
+	(function () {
+	    try {
+	        if (typeof setTimeout === 'function') {
+	            cachedSetTimeout = setTimeout;
+	        } else {
+	            cachedSetTimeout = defaultSetTimout;
+	        }
+	    } catch (e) {
+	        cachedSetTimeout = defaultSetTimout;
+	    }
+	    try {
+	        if (typeof clearTimeout === 'function') {
+	            cachedClearTimeout = clearTimeout;
+	        } else {
+	            cachedClearTimeout = defaultClearTimeout;
+	        }
+	    } catch (e) {
+	        cachedClearTimeout = defaultClearTimeout;
+	    }
+	} ())
+	function runTimeout(fun) {
+	    if (cachedSetTimeout === setTimeout) {
+	        //normal enviroments in sane situations
+	        return setTimeout(fun, 0);
+	    }
+	    // if setTimeout wasn't available but was latter defined
+	    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+	        cachedSetTimeout = setTimeout;
+	        return setTimeout(fun, 0);
+	    }
+	    try {
+	        // when when somebody has screwed with setTimeout but no I.E. maddness
+	        return cachedSetTimeout(fun, 0);
+	    } catch(e){
+	        try {
+	            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+	            return cachedSetTimeout.call(null, fun, 0);
+	        } catch(e){
+	            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+	            return cachedSetTimeout.call(this, fun, 0);
+	        }
+	    }
+
+
+	}
+	function runClearTimeout(marker) {
+	    if (cachedClearTimeout === clearTimeout) {
+	        //normal enviroments in sane situations
+	        return clearTimeout(marker);
+	    }
+	    // if clearTimeout wasn't available but was latter defined
+	    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+	        cachedClearTimeout = clearTimeout;
+	        return clearTimeout(marker);
+	    }
+	    try {
+	        // when when somebody has screwed with setTimeout but no I.E. maddness
+	        return cachedClearTimeout(marker);
+	    } catch (e){
+	        try {
+	            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+	            return cachedClearTimeout.call(null, marker);
+	        } catch (e){
+	            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+	            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+	            return cachedClearTimeout.call(this, marker);
+	        }
+	    }
+
+
+
+	}
+	var queue = [];
+	var draining = false;
+	var currentQueue;
+	var queueIndex = -1;
+
+	function cleanUpNextTick() {
+	    if (!draining || !currentQueue) {
+	        return;
+	    }
+	    draining = false;
+	    if (currentQueue.length) {
+	        queue = currentQueue.concat(queue);
+	    } else {
+	        queueIndex = -1;
+	    }
+	    if (queue.length) {
+	        drainQueue();
+	    }
+	}
+
+	function drainQueue() {
+	    if (draining) {
+	        return;
+	    }
+	    var timeout = runTimeout(cleanUpNextTick);
+	    draining = true;
+
+	    var len = queue.length;
+	    while(len) {
+	        currentQueue = queue;
+	        queue = [];
+	        while (++queueIndex < len) {
+	            if (currentQueue) {
+	                currentQueue[queueIndex].run();
+	            }
+	        }
+	        queueIndex = -1;
+	        len = queue.length;
+	    }
+	    currentQueue = null;
+	    draining = false;
+	    runClearTimeout(timeout);
+	}
+
+	process.nextTick = function (fun) {
+	    var args = new Array(arguments.length - 1);
+	    if (arguments.length > 1) {
+	        for (var i = 1; i < arguments.length; i++) {
+	            args[i - 1] = arguments[i];
+	        }
+	    }
+	    queue.push(new Item(fun, args));
+	    if (queue.length === 1 && !draining) {
+	        runTimeout(drainQueue);
+	    }
+	};
+
+	// v8 likes predictible objects
+	function Item(fun, array) {
+	    this.fun = fun;
+	    this.array = array;
+	}
+	Item.prototype.run = function () {
+	    this.fun.apply(null, this.array);
+	};
+	process.title = 'browser';
+	process.browser = true;
+	process.env = {};
+	process.argv = [];
+	process.version = ''; // empty string to avoid regexp issues
+	process.versions = {};
+
+	function noop() {}
+
+	process.on = noop;
+	process.addListener = noop;
+	process.once = noop;
+	process.off = noop;
+	process.removeListener = noop;
+	process.removeAllListeners = noop;
+	process.emit = noop;
+
+	process.binding = function (name) {
+	    throw new Error('process.binding is not supported');
+	};
+
+	process.cwd = function () { return '/' };
+	process.chdir = function (dir) {
+	    throw new Error('process.chdir is not supported');
+	};
+	process.umask = function() { return 0; };
+
+
+/***/ },
+/* 11 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict"
+
+	var buildQueryString = __webpack_require__(12)
+
+	module.exports = function($window, Promise) {
+		var callbackCount = 0
+
+		var oncompletion
+		function setCompletionCallback(callback) {oncompletion = callback}
+		function finalizer() {
+			var count = 0
+			function complete() {if (--count === 0 && typeof oncompletion === "function") oncompletion()}
+
+			return function finalize(promise) {
+				var then = promise.then
+				promise.then = function() {
+					count++
+					var next = then.apply(promise, arguments)
+					next.then(complete, function(e) {
+						complete()
+						if (count === 0) throw e
+					})
+					return finalize(next)
+				}
+				return promise
+			}
+		}
+		function normalize(args, extra) {
+			if (typeof args === "string") {
+				var url = args
+				args = extra || {}
+				if (args.url == null) args.url = url
+			}
+			return args
+		}
+		
+		function request(args, extra) {
+			var finalize = finalizer()
+			args = normalize(args, extra)
+
+			var promise = new Promise(function(resolve, reject) {
+				if (args.method == null) args.method = "GET"
+				args.method = args.method.toUpperCase()
+
+				var useBody = typeof args.useBody === "boolean" ? args.useBody : args.method !== "GET" && args.method !== "TRACE"
+
+				if (typeof args.serialize !== "function") args.serialize = typeof FormData !== "undefined" && args.data instanceof FormData ? function(value) {return value} : JSON.stringify
+				if (typeof args.deserialize !== "function") args.deserialize = deserialize
+				if (typeof args.extract !== "function") args.extract = extract
+
+				args.url = interpolate(args.url, args.data)
+				if (useBody) args.data = args.serialize(args.data)
+				else args.url = assemble(args.url, args.data)
+
+				var xhr = new $window.XMLHttpRequest()
+				xhr.open(args.method, args.url, typeof args.async === "boolean" ? args.async : true, typeof args.user === "string" ? args.user : undefined, typeof args.password === "string" ? args.password : undefined)
+
+				if (args.serialize === JSON.stringify && useBody) {
+					xhr.setRequestHeader("Content-Type", "application/json; charset=utf-8")
+				}
+				if (args.deserialize === deserialize) {
+					xhr.setRequestHeader("Accept", "application/json, text/*")
+				}
+				if (args.withCredentials) xhr.withCredentials = args.withCredentials
+
+				if (typeof args.config === "function") xhr = args.config(xhr, args) || xhr
+
+				xhr.onreadystatechange = function() {
+					if (xhr.readyState === 4) {
+						try {
+							var response = (args.extract !== extract) ? args.extract(xhr, args) : args.deserialize(args.extract(xhr, args))
+							if ((xhr.status >= 200 && xhr.status < 300) || xhr.status === 304) {
+								resolve(cast(args.type, response))
+							}
+							else {
+								var error = new Error(xhr.responseText)
+								for (var key in response) error[key] = response[key]
+								reject(error)
+							}
+						}
+						catch (e) {
+							reject(e)
+						}
+					}
+				}
+
+				if (useBody && (args.data != null)) xhr.send(args.data)
+				else xhr.send()
+			})
+			return args.background === true ? promise : finalize(promise)
+		}
+
+		function jsonp(args, extra) {
+			var finalize = finalizer()
+			args = normalize(args, extra)
+			
+			var promise = new Promise(function(resolve, reject) {
+				var callbackName = args.callbackName || "_mithril_" + Math.round(Math.random() * 1e16) + "_" + callbackCount++
+				var script = $window.document.createElement("script")
+				$window[callbackName] = function(data) {
+					script.parentNode.removeChild(script)
+					resolve(cast(args.type, data))
+					delete $window[callbackName]
+				}
+				script.onerror = function() {
+					script.parentNode.removeChild(script)
+					reject(new Error("JSONP request failed"))
+					delete $window[callbackName]
+				}
+				if (args.data == null) args.data = {}
+				args.url = interpolate(args.url, args.data)
+				args.data[args.callbackKey || "callback"] = callbackName
+				script.src = assemble(args.url, args.data)
+				$window.document.documentElement.appendChild(script)
+			})
+			return args.background === true? promise : finalize(promise)
+		}
+
+		function interpolate(url, data) {
+			if (data == null) return url
+
+			var tokens = url.match(/:[^\/]+/gi) || []
+			for (var i = 0; i < tokens.length; i++) {
+				var key = tokens[i].slice(1)
+				if (data[key] != null) {
+					url = url.replace(tokens[i], data[key])
+					delete data[key]
+				}
+			}
+			return url
+		}
+
+		function assemble(url, data) {
+			var querystring = buildQueryString(data)
+			if (querystring !== "") {
+				var prefix = url.indexOf("?") < 0 ? "?" : "&"
+				url += prefix + querystring
+			}
+			return url
+		}
+
+		function deserialize(data) {
+			try {return data !== "" ? JSON.parse(data) : null}
+			catch (e) {throw new Error(data)}
+		}
+
+		function extract(xhr) {return xhr.responseText}
+
+		function cast(type, data) {
+			if (typeof type === "function") {
+				if (data instanceof Array) {
+					for (var i = 0; i < data.length; i++) {
+						data[i] = new type(data[i])
+					}
+				}
+				else return new type(data)
+			}
+			return data
+		}
+
+		return {request: request, jsonp: jsonp, setCompletionCallback: setCompletionCallback}
+	}
+
+
+/***/ },
+/* 12 */
+/***/ function(module, exports) {
+
+	"use strict"
+
+	module.exports = function(object) {
+		if (Object.prototype.toString.call(object) !== "[object Object]") return ""
+
+		var args = []
+		for (var key in object) {
+			destructure(key, object[key])
+		}
+		return args.join("&")
+
+		function destructure(key, value) {
+			if (value instanceof Array) {
+				for (var i = 0; i < value.length; i++) {
+					destructure(key + "[" + i + "]", value[i])
+				}
+			}
+			else if (Object.prototype.toString.call(value) === "[object Object]") {
+				for (var i in value) {
+					destructure(key + "[" + i + "]", value[i])
+				}
+			}
+			else args.push(encodeURIComponent(key) + (value != null && value !== "" ? "=" + encodeURIComponent(value) : ""))
+		}
+	}
+
+
+/***/ },
+/* 13 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = __webpack_require__(14)(window)
+
+/***/ },
+/* 14 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict"
+
+	var coreRenderer = __webpack_require__(15)
+
+	function throttle(callback) {
+		//60fps translates to 16.6ms, round it down since setTimeout requires int
+		var time = 16
+		var last = 0, pending = null
+		var timeout = typeof requestAnimationFrame === "function" ? requestAnimationFrame : setTimeout
+		return function() {
+			var now = Date.now()
+			if (last === 0 || now - last >= time) {
+				last = now
+				callback()
+			}
+			else if (pending === null) {
+				pending = timeout(function() {
+					pending = null
+					callback()
+					last = Date.now()
+				}, time - (now - last))
+			}
+		}
+	}
+
+	module.exports = function($window) {
+		var renderService = coreRenderer($window)
+		renderService.setEventCallback(function(e) {
+			if (e.redraw !== false) redraw()
+		})
+		
+		var callbacks = []
+		function subscribe(key, callback) {
+			unsubscribe(key)
+			callbacks.push(key, throttle(callback))
+		}
+		function unsubscribe(key) {
+			var index = callbacks.indexOf(key)
+			if (index > -1) callbacks.splice(index, 2)
+		}
+	    function redraw() {
+	        for (var i = 1; i < callbacks.length; i += 2) {
+	            callbacks[i]()
+	        }
+	    }
+		return {subscribe: subscribe, unsubscribe: unsubscribe, redraw: redraw, render: renderService.render}
+	}
+
+
+/***/ },
+/* 15 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict"
+
+	var Vnode = __webpack_require__(4)
+
+	module.exports = function($window) {
+		var $doc = $window.document
+		var $emptyFragment = $doc.createDocumentFragment()
+
+		var onevent
+		function setEventCallback(callback) {return onevent = callback}
+
+		//create
+		function createNodes(parent, vnodes, start, end, hooks, nextSibling, ns) {
+			for (var i = start; i < end; i++) {
+				var vnode = vnodes[i]
+				if (vnode != null) {
+					insertNode(parent, createNode(vnode, hooks, ns), nextSibling)
+				}
+			}
+		}
+		function createNode(vnode, hooks, ns) {
+			var tag = vnode.tag
+			if (vnode.attrs != null) initLifecycle(vnode.attrs, vnode, hooks)
+			if (typeof tag === "string") {
+				switch (tag) {
+					case "#": return createText(vnode)
+					case "<": return createHTML(vnode)
+					case "[": return createFragment(vnode, hooks, ns)
+					default: return createElement(vnode, hooks, ns)
+				}
+			}
+			else return createComponent(vnode, hooks, ns)
+		}
+		function createText(vnode) {
+			return vnode.dom = $doc.createTextNode(vnode.children)
+		}
+		function createHTML(vnode) {
+			var match = vnode.children.match(/^\s*?<(\w+)/im) || []
+			var parent = {caption: "table", thead: "table", tbody: "table", tfoot: "table", tr: "tbody", th: "tr", td: "tr", colgroup: "table", col: "colgroup"}[match[1]] || "div"
+			var temp = $doc.createElement(parent)
+
+			temp.innerHTML = vnode.children
+			vnode.dom = temp.firstChild
+			vnode.domSize = temp.childNodes.length
+			var fragment = $doc.createDocumentFragment()
+			var child
+			while (child = temp.firstChild) {
+				fragment.appendChild(child)
+			}
+			return fragment
+		}
+		function createFragment(vnode, hooks, ns) {
+			var fragment = $doc.createDocumentFragment()
+			if (vnode.children != null) {
+				var children = vnode.children
+				createNodes(fragment, children, 0, children.length, hooks, null, ns)
+			}
+			vnode.dom = fragment.firstChild
+			vnode.domSize = fragment.childNodes.length
+			return fragment
+		}
+		function createElement(vnode, hooks, ns) {
+			var tag = vnode.tag
+			switch (vnode.tag) {
+				case "svg": ns = "http://www.w3.org/2000/svg"; break
+				case "math": ns = "http://www.w3.org/1998/Math/MathML"; break
+			}
+
+			var attrs = vnode.attrs
+			var is = attrs && attrs.is
+
+			var element = ns ?
+				is ? $doc.createElementNS(ns, tag, {is: is}) : $doc.createElementNS(ns, tag) :
+				is ? $doc.createElement(tag, {is: is}) : $doc.createElement(tag)
+			vnode.dom = element
+
+			if (attrs != null) {
+				setAttrs(vnode, attrs, ns)
+			}
+
+			if (vnode.attrs != null && vnode.attrs.contenteditable != null) {
+				setContentEditable(vnode)
+			}
+			else {
+				if (vnode.text != null) {
+					if (vnode.text !== "") element.textContent = vnode.text
+					else vnode.children = [Vnode("#", undefined, undefined, vnode.text, undefined, undefined)]
+				}
+				if (vnode.children != null) {
+					var children = vnode.children
+					createNodes(element, children, 0, children.length, hooks, null, ns)
+					setLateAttrs(vnode)
+				}
+			}
+			return element
+		}
+		function createComponent(vnode, hooks, ns) {
+			// For object literals since `Vnode()` always sets the `state` field.
+			if (!vnode.state) vnode.state = {}
+			var constructor = function() {}
+			constructor.prototype = vnode.tag
+			vnode.state = new constructor
+
+			var view = vnode.tag.view
+			if (view.reentrantLock != null) return $emptyFragment
+			view.reentrantLock = true
+			initLifecycle(vnode.tag, vnode, hooks)
+			vnode.instance = Vnode.normalize(view.call(vnode.state, vnode))
+			view.reentrantLock = null
+			if (vnode.instance != null) {
+				if (vnode.instance === vnode) throw Error("A view cannot return the vnode it received as arguments")
+				var element = createNode(vnode.instance, hooks, ns)
+				vnode.dom = vnode.instance.dom
+				vnode.domSize = vnode.dom != null ? vnode.instance.domSize : 0
+				return element
+			}
+			else {
+				vnode.domSize = 0
+				return $emptyFragment
+			}
+		}
+
+		//update
+		function updateNodes(parent, old, vnodes, hooks, nextSibling, ns) {
+			if (old === vnodes || old == null && vnodes == null) return
+			else if (old == null) createNodes(parent, vnodes, 0, vnodes.length, hooks, nextSibling, undefined)
+			else if (vnodes == null) removeNodes(old, 0, old.length, vnodes)
+			else {
+				if (old.length === vnodes.length) {
+					var isUnkeyed = false
+					for (var i = 0; i < vnodes.length; i++) {
+						if (vnodes[i] != null && old[i] != null) {
+							isUnkeyed = vnodes[i].key == null && old[i].key == null
+							break
+						}
+					}
+					if (isUnkeyed) {
+						for (var i = 0; i < old.length; i++) {
+							if (old[i] === vnodes[i]) continue
+							else if (old[i] == null && vnodes[i] != null) insertNode(parent, createNode(vnodes[i], hooks, ns), getNextSibling(old, i + 1, nextSibling))
+							else if (vnodes[i] == null) removeNodes(old, i, i + 1, vnodes)
+							else updateNode(parent, old[i], vnodes[i], hooks, getNextSibling(old, i + 1, nextSibling), false, ns)
+						}
+						return
+					}
+				}
+				var recycling = isRecyclable(old, vnodes)
+				if (recycling) old = old.concat(old.pool)
+
+				var oldStart = 0, start = 0, oldEnd = old.length - 1, end = vnodes.length - 1, map
+				while (oldEnd >= oldStart && end >= start) {
+					var o = old[oldStart], v = vnodes[start]
+					if (o === v && !recycling) oldStart++, start++
+					else if (o == null) oldStart++
+					else if (v == null) start++
+					else if (o.key === v.key) {
+						oldStart++, start++
+						updateNode(parent, o, v, hooks, getNextSibling(old, oldStart, nextSibling), recycling, ns)
+						if (recycling && o.tag === v.tag) insertNode(parent, toFragment(o), nextSibling)
+					}
+					else {
+						var o = old[oldEnd]
+						if (o === v && !recycling) oldEnd--, start++
+						else if (o == null) oldEnd--
+						else if (v == null) start++
+						else if (o.key === v.key) {
+							updateNode(parent, o, v, hooks, getNextSibling(old, oldEnd + 1, nextSibling), recycling, ns)
+							if (recycling || start < end) insertNode(parent, toFragment(o), getNextSibling(old, oldStart, nextSibling))
+							oldEnd--, start++
+						}
+						else break
+					}
+				}
+				while (oldEnd >= oldStart && end >= start) {
+					var o = old[oldEnd], v = vnodes[end]
+					if (o === v && !recycling) oldEnd--, end--
+					else if (o == null) oldEnd--
+					else if (v == null) end--
+					else if (o.key === v.key) {
+						updateNode(parent, o, v, hooks, getNextSibling(old, oldEnd + 1, nextSibling), recycling, ns)
+						if (recycling && o.tag === v.tag) insertNode(parent, toFragment(o), nextSibling)
+						if (o.dom != null) nextSibling = o.dom
+						oldEnd--, end--
+					}
+					else {
+						if (!map) map = getKeyMap(old, oldEnd)
+						if (v != null) {
+							var oldIndex = map[v.key]
+							if (oldIndex != null) {
+								var movable = old[oldIndex]
+								updateNode(parent, movable, v, hooks, getNextSibling(old, oldEnd + 1, nextSibling), recycling, ns)
+								insertNode(parent, toFragment(movable), nextSibling)
+								old[oldIndex].skip = true
+								if (movable.dom != null) nextSibling = movable.dom
+							}
+							else {
+								var dom = createNode(v, hooks, undefined)
+								insertNode(parent, dom, nextSibling)
+								nextSibling = dom
+							}
+						}
+						end--
+					}
+					if (end < start) break
+				}
+				createNodes(parent, vnodes, start, end + 1, hooks, nextSibling, ns)
+				removeNodes(old, oldStart, oldEnd + 1, vnodes)
+			}
+		}
+		function updateNode(parent, old, vnode, hooks, nextSibling, recycling, ns) {
+			var oldTag = old.tag, tag = vnode.tag
+			if (oldTag === tag) {
+				vnode.state = old.state
+				vnode.events = old.events
+				if (shouldUpdate(vnode, old)) return
+				if (vnode.attrs != null) {
+					updateLifecycle(vnode.attrs, vnode, hooks, recycling)
+				}
+				if (typeof oldTag === "string") {
+					switch (oldTag) {
+						case "#": updateText(old, vnode); break
+						case "<": updateHTML(parent, old, vnode, nextSibling); break
+						case "[": updateFragment(parent, old, vnode, hooks, nextSibling, ns); break
+						default: updateElement(old, vnode, hooks, ns)
+					}
+				}
+				else updateComponent(parent, old, vnode, hooks, nextSibling, recycling, ns)
+			}
+			else {
+				removeNode(old, null)
+				insertNode(parent, createNode(vnode, hooks, ns), nextSibling)
+			}
+		}
+		function updateText(old, vnode) {
+			if (old.children.toString() !== vnode.children.toString()) {
+				old.dom.nodeValue = vnode.children
+			}
+			vnode.dom = old.dom
+		}
+		function updateHTML(parent, old, vnode, nextSibling) {
+			if (old.children !== vnode.children) {
+				toFragment(old)
+				insertNode(parent, createHTML(vnode), nextSibling)
+			}
+			else vnode.dom = old.dom, vnode.domSize = old.domSize
+		}
+		function updateFragment(parent, old, vnode, hooks, nextSibling, ns) {
+			updateNodes(parent, old.children, vnode.children, hooks, nextSibling, ns)
+			var domSize = 0, children = vnode.children
+			vnode.dom = null
+			if (children != null) {
+				for (var i = 0; i < children.length; i++) {
+					var child = children[i]
+					if (child != null && child.dom != null) {
+						if (vnode.dom == null) vnode.dom = child.dom
+						domSize += child.domSize || 1
+					}
+				}
+				if (domSize !== 1) vnode.domSize = domSize
+			}
+		}
+		function updateElement(old, vnode, hooks, ns) {
+			var element = vnode.dom = old.dom
+			switch (vnode.tag) {
+				case "svg": ns = "http://www.w3.org/2000/svg"; break
+				case "math": ns = "http://www.w3.org/1998/Math/MathML"; break
+			}
+			if (vnode.tag === "textarea") {
+				if (vnode.attrs == null) vnode.attrs = {}
+				if (vnode.text != null) {
+					vnode.attrs.value = vnode.text //FIXME handle multiple children
+					vnode.text = undefined
+				}
+			}
+			updateAttrs(vnode, old.attrs, vnode.attrs, ns)
+			if (vnode.attrs != null && vnode.attrs.contenteditable != null) {
+				setContentEditable(vnode)
+			}
+			else if (old.text != null && vnode.text != null && vnode.text !== "") {
+				if (old.text.toString() !== vnode.text.toString()) old.dom.firstChild.nodeValue = vnode.text
+			}
+			else {
+				if (old.text != null) old.children = [Vnode("#", undefined, undefined, old.text, undefined, old.dom.firstChild)]
+				if (vnode.text != null) vnode.children = [Vnode("#", undefined, undefined, vnode.text, undefined, undefined)]
+				updateNodes(element, old.children, vnode.children, hooks, null, ns)
+			}
+		}
+		function updateComponent(parent, old, vnode, hooks, nextSibling, recycling, ns) {
+			vnode.instance = Vnode.normalize(vnode.tag.view.call(vnode.state, vnode))
+			updateLifecycle(vnode.tag, vnode, hooks, recycling)
+			if (vnode.instance != null) {
+				if (old.instance == null) insertNode(parent, createNode(vnode.instance, hooks, ns), nextSibling)
+				else updateNode(parent, old.instance, vnode.instance, hooks, nextSibling, recycling, ns)
+				vnode.dom = vnode.instance.dom
+				vnode.domSize = vnode.instance.domSize
+			}
+			else if (old.instance != null) {
+				removeNode(old.instance, null)
+				vnode.dom = undefined
+				vnode.domSize = 0
+			}
+			else {
+				vnode.dom = old.dom
+				vnode.domSize = old.domSize
+			}
+		}
+		function isRecyclable(old, vnodes) {
+			if (old.pool != null && Math.abs(old.pool.length - vnodes.length) <= Math.abs(old.length - vnodes.length)) {
+				var oldChildrenLength = old[0] && old[0].children && old[0].children.length || 0
+				var poolChildrenLength = old.pool[0] && old.pool[0].children && old.pool[0].children.length || 0
+				var vnodesChildrenLength = vnodes[0] && vnodes[0].children && vnodes[0].children.length || 0
+				if (Math.abs(poolChildrenLength - vnodesChildrenLength) <= Math.abs(oldChildrenLength - vnodesChildrenLength)) {
+					return true
+				}
+			}
+			return false
+		}
+		function getKeyMap(vnodes, end) {
+			var map = {}, i = 0
+			for (var i = 0; i < end; i++) {
+				var vnode = vnodes[i]
+				if (vnode != null) {
+					var key = vnode.key
+					if (key != null) map[key] = i
+				}
+			}
+			return map
+		}
+		function toFragment(vnode) {
+			var count = vnode.domSize
+			if (count != null || vnode.dom == null) {
+				var fragment = $doc.createDocumentFragment()
+				if (count > 0) {
+					var dom = vnode.dom
+					while (--count) fragment.appendChild(dom.nextSibling)
+					fragment.insertBefore(dom, fragment.firstChild)
+				}
+				return fragment
+			}
+			else return vnode.dom
+		}
+		function getNextSibling(vnodes, i, nextSibling) {
+			for (; i < vnodes.length; i++) {
+				if (vnodes[i] != null && vnodes[i].dom != null) return vnodes[i].dom
+			}
+			return nextSibling
+		}
+
+		function insertNode(parent, dom, nextSibling) {
+			if (nextSibling && nextSibling.parentNode) parent.insertBefore(dom, nextSibling)
+			else parent.appendChild(dom)
+		}
+
+		function setContentEditable(vnode) {
+			var children = vnode.children
+			if (children != null && children.length === 1 && children[0].tag === "<") {
+				var content = children[0].children
+				if (vnode.dom.innerHTML !== content) vnode.dom.innerHTML = content
+			}
+			else if (vnode.text != null || children != null && children.length !== 0) throw new Error("Child node of a contenteditable must be trusted")
+		}
+
+		//remove
+		function removeNodes(vnodes, start, end, context) {
+			for (var i = start; i < end; i++) {
+				var vnode = vnodes[i]
+				if (vnode != null) {
+					if (vnode.skip) vnode.skip = false
+					else removeNode(vnode, context)
+				}
+			}
+		}
+		function removeNode(vnode, context) {
+			var expected = 1, called = 0
+			if (vnode.attrs && vnode.attrs.onbeforeremove) {
+				var result = vnode.attrs.onbeforeremove.call(vnode.state, vnode)
+				if (result != null && typeof result.then === "function") {
+					expected++
+					result.then(continuation, continuation)
+				}
+			}
+			if (typeof vnode.tag !== "string" && vnode.tag.onbeforeremove) {
+				var result = vnode.tag.onbeforeremove.call(vnode.state, vnode)
+				if (result != null && typeof result.then === "function") {
+					expected++
+					result.then(continuation, continuation)
+				}
+			}
+			continuation()
+			function continuation() {
+				if (++called === expected) {
+					onremove(vnode)
+					if (vnode.dom) {
+						var count = vnode.domSize || 1
+						if (count > 1) {
+							var dom = vnode.dom
+							while (--count) {
+								removeNodeFromDOM(dom.nextSibling)
+							}
+						}
+						removeNodeFromDOM(vnode.dom)
+						if (context != null && vnode.domSize == null && !hasIntegrationMethods(vnode.attrs) && typeof vnode.tag === "string") { //TODO test custom elements
+							if (!context.pool) context.pool = [vnode]
+							else context.pool.push(vnode)
+						}
+					}
+				}
+			}
+		}
+		function removeNodeFromDOM(node) {
+			var parent = node.parentNode
+			if (parent != null) parent.removeChild(node)
+		}
+		function onremove(vnode) {
+			if (vnode.attrs && vnode.attrs.onremove) vnode.attrs.onremove.call(vnode.state, vnode)
+			if (typeof vnode.tag !== "string" && vnode.tag.onremove) vnode.tag.onremove.call(vnode.state, vnode)
+			if (vnode.instance != null) onremove(vnode.instance)
+			else {
+				var children = vnode.children
+				if (children instanceof Array) {
+					for (var i = 0; i < children.length; i++) {
+						var child = children[i]
+						if (child != null) onremove(child)
+					}
+				}
+			}
+		}
+
+		//attrs
+		function setAttrs(vnode, attrs, ns) {
+			for (var key in attrs) {
+				setAttr(vnode, key, null, attrs[key], ns)
+			}
+		}
+		function setAttr(vnode, key, old, value, ns) {
+			var element = vnode.dom
+			if (key === "key" || key === "is" || (old === value && !isFormAttribute(vnode, key)) && typeof value !== "object" || typeof value === "undefined" || isLifecycleMethod(key)) return
+			var nsLastIndex = key.indexOf(":")
+			if (nsLastIndex > -1 && key.substr(0, nsLastIndex) === "xlink") {
+				element.setAttributeNS("http://www.w3.org/1999/xlink", key.slice(nsLastIndex + 1), value)
+			}
+			else if (key[0] === "o" && key[1] === "n" && typeof value === "function") updateEvent(vnode, key, value)
+			else if (key === "style") updateStyle(element, old, value)
+			else if (key in element && !isAttribute(key) && ns === undefined && !isCustomElement(vnode)) {
+				//setting input[value] to same value by typing on focused element moves cursor to end in Chrome
+				if (vnode.tag === "input" && key === "value" && vnode.dom.value === value && vnode.dom === $doc.activeElement) return
+				//setting select[value] to same value while having select open blinks select dropdown in Chrome
+				if (vnode.tag === "select" && key === "value" && vnode.dom.value === value && vnode.dom === $doc.activeElement) return
+				//setting option[value] to same value while having select open blinks select dropdown in Chrome
+				if (vnode.tag === "option" && key === "value" && vnode.dom.value === value) return
+				element[key] = value
+			}
+			else {
+				if (typeof value === "boolean") {
+					if (value) element.setAttribute(key, "")
+					else element.removeAttribute(key)
+				}
+				else element.setAttribute(key === "className" ? "class" : key, value)
+			}
+		}
+		function setLateAttrs(vnode) {
+			var attrs = vnode.attrs
+			if (vnode.tag === "select" && attrs != null) {
+				if ("value" in attrs) setAttr(vnode, "value", null, attrs.value, undefined)
+				if ("selectedIndex" in attrs) setAttr(vnode, "selectedIndex", null, attrs.selectedIndex, undefined)
+			}
+		}
+		function updateAttrs(vnode, old, attrs, ns) {
+			if (attrs != null) {
+				for (var key in attrs) {
+					setAttr(vnode, key, old && old[key], attrs[key], ns)
+				}
+			}
+			if (old != null) {
+				for (var key in old) {
+					if (attrs == null || !(key in attrs)) {
+						if (key === "className") key = "class"
+						if (key[0] === "o" && key[1] === "n" && !isLifecycleMethod(key)) updateEvent(vnode, key, undefined)
+						else if (key !== "key") vnode.dom.removeAttribute(key)
+					}
+				}
+			}
+		}
+		function isFormAttribute(vnode, attr) {
+			return attr === "value" || attr === "checked" || attr === "selectedIndex" || attr === "selected" && vnode.dom === $doc.activeElement
+		}
+		function isLifecycleMethod(attr) {
+			return attr === "oninit" || attr === "oncreate" || attr === "onupdate" || attr === "onremove" || attr === "onbeforeremove" || attr === "onbeforeupdate"
+		}
+		function isAttribute(attr) {
+			return attr === "href" || attr === "list" || attr === "form" || attr === "width" || attr === "height"// || attr === "type"
+		}
+		function isCustomElement(vnode){
+			return vnode.attrs.is || vnode.tag.indexOf("-") > -1
+		}
+		function hasIntegrationMethods(source) {
+			return source != null && (source.oncreate || source.onupdate || source.onbeforeremove || source.onremove)
+		}
+
+		//style
+		function updateStyle(element, old, style) {
+			if (old === style) element.style.cssText = "", old = null
+			if (style == null) element.style.cssText = ""
+			else if (typeof style === "string") element.style.cssText = style
+			else {
+				if (typeof old === "string") element.style.cssText = ""
+				for (var key in style) {
+					element.style[key] = style[key]
+				}
+				if (old != null && typeof old !== "string") {
+					for (var key in old) {
+						if (!(key in style)) element.style[key] = ""
+					}
+				}
+			}
+		}
+
+		//event
+		function updateEvent(vnode, key, value) {
+			var element = vnode.dom
+			var callback = typeof onevent !== "function" ? value : function(e) {
+				var result = value.call(element, e)
+				onevent.call(element, e)
+				return result
+			}
+			if (key in element) element[key] = typeof value === "function" ? callback : null
+			else {
+				var eventName = key.slice(2)
+				if (vnode.events === undefined) vnode.events = {}
+				if (vnode.events[key] === callback) return
+				if (vnode.events[key] != null) element.removeEventListener(eventName, vnode.events[key], false)
+				if (typeof value === "function") {
+					vnode.events[key] = callback
+					element.addEventListener(eventName, vnode.events[key], false)
+				}
+			}
+		}
+
+		//lifecycle
+		function initLifecycle(source, vnode, hooks) {
+			if (typeof source.oninit === "function") source.oninit.call(vnode.state, vnode)
+			if (typeof source.oncreate === "function") hooks.push(source.oncreate.bind(vnode.state, vnode))
+		}
+		function updateLifecycle(source, vnode, hooks, recycling) {
+			if (recycling) initLifecycle(source, vnode, hooks)
+			else if (typeof source.onupdate === "function") hooks.push(source.onupdate.bind(vnode.state, vnode))
+		}
+		function shouldUpdate(vnode, old) {
+			var forceVnodeUpdate, forceComponentUpdate
+			if (vnode.attrs != null && typeof vnode.attrs.onbeforeupdate === "function") forceVnodeUpdate = vnode.attrs.onbeforeupdate.call(vnode.state, vnode, old)
+			if (typeof vnode.tag !== "string" && typeof vnode.tag.onbeforeupdate === "function") forceComponentUpdate = vnode.tag.onbeforeupdate.call(vnode.state, vnode, old)
+			if (!(forceVnodeUpdate === undefined && forceComponentUpdate === undefined) && !forceVnodeUpdate && !forceComponentUpdate) {
+				vnode.dom = old.dom
+				vnode.domSize = old.domSize
+				vnode.instance = old.instance
+				return true
+			}
+			return false
+		}
+
+		function render(dom, vnodes) {
+			if (!dom) throw new Error("Ensure the DOM element being passed to m.route/m.mount/m.render is not undefined.")
+			var hooks = []
+			var active = $doc.activeElement
+
+			// First time rendering into a node clears it out
+			if (dom.vnodes == null) dom.textContent = ""
+
+			if (!(vnodes instanceof Array)) vnodes = [vnodes]
+			updateNodes(dom, dom.vnodes, Vnode.normalizeChildren(vnodes), hooks, null, undefined)
+			dom.vnodes = vnodes
+			for (var i = 0; i < hooks.length; i++) hooks[i]()
+			if ($doc.activeElement !== active) active.focus()
+		}
+
+		return {render: render, setEventCallback: setEventCallback}
+	}
+
+
+/***/ },
+/* 16 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var redrawService = __webpack_require__(13)
+
+	module.exports = __webpack_require__(17)(redrawService)
+
+/***/ },
+/* 17 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict"
+
+	var Vnode = __webpack_require__(4)
+
+	module.exports = function(redrawService) {
+		return function(root, component) {
+			if (component === null) {
+				redrawService.render(root, [])
+				redrawService.unsubscribe(root)
+				return
+			}
+			
+			if (component.view == null) throw new Error("m.mount(element, component) expects a component, not a vnode")
+			
+			var run = function() {
+				redrawService.render(root, Vnode(component))
+			}
+			redrawService.subscribe(root, run)
+			redrawService.redraw()
+		}
+	}
+
+
+/***/ },
+/* 18 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var redrawService = __webpack_require__(13)
+
+	module.exports = __webpack_require__(19)(window, redrawService)
+
+/***/ },
+/* 19 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict"
+
+	var Vnode = __webpack_require__(4)
+	var Promise = __webpack_require__(8)
+	var coreRouter = __webpack_require__(20)
+
+	module.exports = function($window, redrawService) {
+		var routeService = coreRouter($window)
+
+		var identity = function(v) {return v}
+		var render, component, attrs, currentPath, lastUpdate
+		var route = function(root, defaultRoute, routes) {
+			if (root == null) throw new Error("Ensure the DOM element that was passed to `m.route` is not undefined")
+			var run = function() {
+				if (render != null) redrawService.render(root, render(Vnode(component, attrs.key, attrs)))
+			}
+			var bail = function() {
+				routeService.setPath(defaultRoute, null, {replace: true})
+			}
+			routeService.defineRoutes(routes, function(payload, params, path) {
+				var update = lastUpdate = function(routeResolver, comp) {
+					if (update !== lastUpdate) return
+					component = comp != null && typeof comp.view === "function" ? comp : "div", attrs = params, currentPath = path, lastUpdate = null
+					render = (routeResolver.render || identity).bind(routeResolver)
+					run()
+				}
+				if (payload.view) update({}, payload)
+				else {
+					if (payload.onmatch) {
+						Promise.resolve(payload.onmatch(params, path)).then(function(resolved) {
+							update(payload, resolved)
+						}, bail)
+					}
+					else update(payload, "div")
+				}
+			}, bail)
+			redrawService.subscribe(root, run)
+		}
+		route.set = function(path, data, options) {
+			if (lastUpdate != null) options = {replace: true}
+			lastUpdate = null
+			routeService.setPath(path, data, options)
+		}
+		route.get = function() {return currentPath}
+		route.prefix = function(prefix) {routeService.prefix = prefix}
+		route.link = function(vnode) {
+			vnode.dom.setAttribute("href", routeService.prefix + vnode.attrs.href)
+			vnode.dom.onclick = function(e) {
+				if (e.ctrlKey || e.metaKey || e.shiftKey || e.which === 2) return
+				e.preventDefault()
+				e.redraw = false
+				var href = this.getAttribute("href")
+				if (href.indexOf(routeService.prefix) === 0) href = href.slice(routeService.prefix.length)
+				route.set(href, undefined, undefined)
+			}
+		}
+
+		return route
+	}
+
+
+/***/ },
+/* 20 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(setImmediate) {"use strict"
+
+	var buildQueryString = __webpack_require__(12)
+	var parseQueryString = __webpack_require__(21)
+
+	module.exports = function($window) {
+		var supportsPushState = typeof $window.history.pushState === "function"
+		var callAsync = typeof setImmediate === "function" ? setImmediate : setTimeout
+
+		function normalize(fragment) {
+			var data = $window.location[fragment].replace(/(?:%[a-f89][a-f0-9])+/gim, decodeURIComponent)
+			if (fragment === "pathname" && data[0] !== "/") data = "/" + data
+			return data
+		}
+
+		var asyncId
+		function debounceAsync(callback) {
+			return function() {
+				if (asyncId != null) return
+				asyncId = callAsync(function() {
+					asyncId = null
+					callback()
+				})
+			}
+		}
+
+		function parsePath(path, queryData, hashData) {
+			var queryIndex = path.indexOf("?")
+			var hashIndex = path.indexOf("#")
+			var pathEnd = queryIndex > -1 ? queryIndex : hashIndex > -1 ? hashIndex : path.length
+			if (queryIndex > -1) {
+				var queryEnd = hashIndex > -1 ? hashIndex : path.length
+				var queryParams = parseQueryString(path.slice(queryIndex + 1, queryEnd))
+				for (var key in queryParams) queryData[key] = queryParams[key]
+			}
+			if (hashIndex > -1) {
+				var hashParams = parseQueryString(path.slice(hashIndex + 1))
+				for (var key in hashParams) hashData[key] = hashParams[key]
+			}
+			return path.slice(0, pathEnd)
+		}
+
+		var router = {prefix: "#!"}
+		router.getPath = function() {
+			var type = router.prefix.charAt(0)
+			switch (type) {
+				case "#": return normalize("hash").slice(router.prefix.length)
+				case "?": return normalize("search").slice(router.prefix.length) + normalize("hash")
+				default: return normalize("pathname").slice(router.prefix.length) + normalize("search") + normalize("hash")
+			}
+		}
+		router.setPath = function(path, data, options) {
+			var queryData = {}, hashData = {}
+			path = parsePath(path, queryData, hashData)
+			if (data != null) {
+				for (var key in data) queryData[key] = data[key]
+				path = path.replace(/:([^\/]+)/g, function(match, token) {
+					delete queryData[token]
+					return data[token]
+				})
+			}
+
+			var query = buildQueryString(queryData)
+			if (query) path += "?" + query
+
+			var hash = buildQueryString(hashData)
+			if (hash) path += "#" + hash
+
+			if (supportsPushState) {
+				var state = options ? options.state : null
+				var title = options ? options.title : null
+				$window.onpopstate()
+				if (options && options.replace) $window.history.replaceState(state, title, router.prefix + path)
+				else $window.history.pushState(state, title, router.prefix + path)
+			}
+			else $window.location.href = router.prefix + path
+		}
+		router.defineRoutes = function(routes, resolve, reject) {
+			function resolveRoute() {
+				var path = router.getPath()
+				var params = {}
+				var pathname = parsePath(path, params, params)
+				
+				var state = $window.history.state
+				if (state != null) {
+					for (var k in state) params[k] = state[k]
+				}
+				for (var route in routes) {
+					var matcher = new RegExp("^" + route.replace(/:[^\/]+?\.{3}/g, "(.*?)").replace(/:[^\/]+/g, "([^\\/]+)") + "\/?$")
+
+					if (matcher.test(pathname)) {
+						pathname.replace(matcher, function() {
+							var keys = route.match(/:[^\/]+/g) || []
+							var values = [].slice.call(arguments, 1, -2)
+							for (var i = 0; i < keys.length; i++) {
+								params[keys[i].replace(/:|\./g, "")] = decodeURIComponent(values[i])
+							}
+							resolve(routes[route], params, path, route)
+						})
+						return
+					}
+				}
+
+				reject(path, params)
+			}
+			
+			if (supportsPushState) $window.onpopstate = debounceAsync(resolveRoute)
+			else if (router.prefix.charAt(0) === "#") $window.onhashchange = resolveRoute
+			resolveRoute()
+		}
+		
+		return router
+	}
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(9).setImmediate))
+
+/***/ },
+/* 21 */
+/***/ function(module, exports) {
+
+	"use strict"
+
+	module.exports = function(string) {
+		if (string === "" || string == null) return {}
+		if (string.charAt(0) === "?") string = string.slice(1)
+
+		var entries = string.split("&"), data = {}, counters = {}
+		for (var i = 0; i < entries.length; i++) {
+			var entry = entries[i].split("=")
+			var key = decodeURIComponent(entry[0])
+			var value = entry.length === 2 ? decodeURIComponent(entry[1]) : ""
+
+			if (value === "true") value = true
+			else if (value === "false") value = false
+
+			var levels = key.split(/\]\[?|\[/)
+			var cursor = data
+			if (key.indexOf("[") > -1) levels.pop()
+			for (var j = 0; j < levels.length; j++) {
+				var level = levels[j], nextLevel = levels[j + 1]
+				var isNumber = nextLevel == "" || !isNaN(parseInt(nextLevel, 10))
+				var isValue = j === levels.length - 1
+				if (level === "") {
+					var key = levels.slice(0, j).join()
+					if (counters[key] == null) counters[key] = 0
+					level = counters[key]++
+				}
+				if (cursor[level] == null) {
+					cursor[level] = isValue ? value : isNumber ? [] : {}
+				}
+				cursor = cursor[level]
+			}
+		}
+		return data
+	}
+
+
+/***/ },
+/* 22 */
+/***/ function(module, exports) {
+
+	"use strict"
+
+	module.exports = function(attrName, callback, context) {
+		return function(e) {
+			return callback.call(context || this, attrName in e.currentTarget ? e.currentTarget[attrName] : e.currentTarget.getAttribute(attrName))
+		}
+	}
+
+
+/***/ },
+/* 23 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = __webpack_require__(15)(window)
+
+/***/ },
+/* 24 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.util = exports.time = exports.gui = exports.format = undefined;
+
+	var _gui = __webpack_require__(25);
+
+	var format = _interopRequireWildcard(_gui);
+
+	var gui = _interopRequireWildcard(_gui);
+
+	var _time = __webpack_require__(28);
+
+	var time = _interopRequireWildcard(_time);
+
+	var _util = __webpack_require__(31);
+
+	var util = _interopRequireWildcard(_util);
+
+	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+	exports.format = format;
+	exports.gui = gui;
+	exports.time = time;
+	exports.util = util;
+
+/***/ },
+/* 25 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+
+	var _Clock = __webpack_require__(26);
+
+	Object.keys(_Clock).forEach(function (key) {
+	    if (key === "default" || key === "__esModule") return;
+	    Object.defineProperty(exports, key, {
+	        enumerable: true,
+	        get: function get() {
+	            return _Clock[key];
+	        }
+	    });
+	});
+
+	var _Messages = __webpack_require__(29);
+
+	Object.keys(_Messages).forEach(function (key) {
+	    if (key === "default" || key === "__esModule") return;
+	    Object.defineProperty(exports, key, {
+	        enumerable: true,
+	        get: function get() {
+	            return _Messages[key];
+	        }
+	    });
+	});
+
+	var _TabSet = __webpack_require__(30);
+
+	Object.keys(_TabSet).forEach(function (key) {
+	    if (key === "default" || key === "__esModule") return;
+	    Object.defineProperty(exports, key, {
+	        enumerable: true,
+	        get: function get() {
+	            return _TabSet[key];
+	        }
+	    });
+	});
+
+
+	var Registry = {};
+
+	// NOTE: The `exports` symbol in the two lines below used to read
+	// `bliss.gui` before I moved this code inside the `bliss.gui` module.
+	// Looking at the Babel ES6 => ES5 transpiled code, `exports` resolves
+	// as the current module.  I'm not sure whether reyling on `exports`
+	// is valid ES6, but from my quick perusal of The ECMAScript 2015
+	// Language Specification, Section 9.4.6 Module Namespace Exotic
+	// Objects (p. 105), it just might be valid.
+
+	Object.keys(exports).map(function (name) {
+	    Registry['bliss-' + name.toLowerCase()] = exports[name];
+	});
+
+	/**
+	 * @returns a plain Javascript object representation of the HTML
+	 * element attributes in a DOM NamedNodeMap.  That is:
+	 *
+	 *     `<... name="value" ...>`
+	 *
+	 * pairs become:
+	 *
+	 * `{ ..., name: value, ... }`
+	 *
+	 * pairs.
+	 */
+	function attrs2obj(attrs) {
+	    var obj = {};
+
+	    for (var n = 0; n < attrs.length; ++n) {
+	        var item = attrs.item(n);
+	        var value = item.value;
+
+	        if (value == 'true') value = true;
+	        if (value == 'false') value = false;
+
+	        obj[item.name] = value;
+	    }
+
+	    return obj;
+	}
+
+	/**
+	 * Creates a Mithril vnode for the given DOM element `elem`.
+	 *
+	 * @returns a Mithril vnode
+	 */
+	function createMithrilNode(elem) {
+	    var node = null;
+
+	    if (elem.nodeType == Node.ELEMENT_NODE) {
+	        var name = elem.nodeName.toLowerCase();
+	        var attrs = attrs2obj(elem.attributes);
+	        var children = createMithrilNodes(elem.childNodes);
+
+	        node = m(Registry[name] || name, attrs, children);
+	    } else if (elem.nodeType == Node.TEXT_NODE) {
+	        node = elem.nodeValue;
+	    }
+
+	    return node;
+	}
+
+	/**
+	 * Creates a Mithril vnode for each DOM element in `elems`.
+	 *
+	 * @returns an array of Mithril vnodes.
+	 */
+	function createMithrilNodes(elems) {
+	    return bliss.util.map(elems, createMithrilNode);
+	}
+
+	/**
+	 * Initializes the BLISS GUI.
+	 */
+	function init() {
+	    ready(function () {
+	        var root = document.body;
+	        var elems = bliss.util.map(root.childNodes, function (c) {
+	            return c;
+	        });
+	        m.mount(root, { view: function view() {
+	                return createMithrilNodes(elems);
+	            } });
+	    });
+	}
+
+	/**
+	 * Calls the given when the HTML document is loaded and ready.
+	 */
+	function ready(fn) {
+	    if (document.readyState !== 'loading') {
+	        fn();
+	    } else {
+	        document.addEventListener('DOMContentLoaded', fn);
+	    }
+	}
+
+	exports.init = init;
+
+/***/ },
+/* 26 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+	exports.Clock = undefined;
+
+	var _mithril = __webpack_require__(1);
+
+	var _mithril2 = _interopRequireDefault(_mithril);
+
+	var _format = __webpack_require__(27);
+
+	var format = _interopRequireWildcard(_format);
+
+	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	/**
+	 * BLISS Clock UI Widget
+	 *
+	 * The BLISS Clock UI Widget displays a clock with date and time that
+	 * updates every second.  The display is configurable with at
+	 * initialization time or by clicking on specific parts of the time.
+	 *
+	 * Configurable / Toggleable options include:
+	 *
+	 *   - 12-hour or 24-hour time
+	 *   - Date (month and day) or Day of Year (DOY)
+	 *   - UTC or localtime
+	 */
+	var Clock = {
+	    _now: null,
+	    _h24: true,
+	    _utc: true,
+	    _doy: false,
+
+	    toggleH24: function toggleH24() {
+	        this._h24 = !this._h24;
+	    },
+	    toggleUTC: function toggleUTC() {
+	        this._utc = !this._utc;
+	    },
+	    toggleDOY: function toggleDOY() {
+	        this._doy = !this._doy;
+	    },
+	    update: function update() {
+	        this._now = new Date();
+	    },
+
+
+	    // Mithril lifecycle method
+	    oninit: function oninit(vnode) {
+	        this._h24 = vnode.attrs.h24 || Clock._h24;
+	        this._utc = vnode.attrs.utc || Clock._utc;
+	        this._doy = vnode.attrs.doy || Clock._doy;
+	        this.update();
+	    },
+
+
+	    // Mithril lifecycle method
+	    oncreate: function oncreate(vnode) {
+	        var _this = this;
+
+	        setInterval(function () {
+	            Clock.update.call(_this);_mithril2.default.redraw();
+	        }, 1000);
+	    },
+
+
+	    // Mithril view() method
+	    view: function view(vnode) {
+	        var opts = { doy: this._doy, h24: this._h24, utc: this._utc };
+	        var date = format.date(this._now, opts);
+	        var time = format.time(this._now, opts);
+	        var tz = format.tz(this._now, opts);
+
+	        return (0, _mithril2.default)('bliss-clock', vnode.attrs, [(0, _mithril2.default)('span.date', { onclick: Clock.toggleDOY.bind(this) }, date), ' ', (0, _mithril2.default)('span.time', { onclick: Clock.toggleH24.bind(this) }, time), ' ', (0, _mithril2.default)('span.tz', { onclick: Clock.toggleUTC.bind(this) }, tz)]);
+	    }
+	};
+
+	exports.default = Clock;
+	exports.Clock = Clock;
+
+/***/ },
+/* 27 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+	exports.tz = exports.time = exports.datetime = exports.date = undefined;
+
+	var _mithril = __webpack_require__(1);
+
+	var _mithril2 = _interopRequireDefault(_mithril);
+
+	var _time = __webpack_require__(28);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function date(obj) {
+	    var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+	        _ref$doy = _ref.doy,
+	        doy = _ref$doy === undefined ? false : _ref$doy,
+	        _ref$utc = _ref.utc,
+	        utc = _ref$utc === undefined ? true : _ref$utc;
+
+	    var yyyy = void 0,
+	        mm = void 0,
+	        dd = void 0,
+	        formatted = void 0;
+	    var date = normalize(obj);
+
+	    if (utc) {
+	        yyyy = date.getUTCFullYear();
+	        mm = date.getUTCMonth();
+	        dd = date.getUTCDate();
+	    } else {
+	        yyyy = date.getFullYear();
+	        mm = date.getMonth();
+	        dd = date.getDate();
+	    }
+
+	    if (doy) {
+	        formatted = yyyy + '-' + pad3((0, _time.DOY)(yyyy, mm, dd));
+	    } else {
+	        formatted = yyyy + '- ' + pad2(mm + 1) + '-' + pad2(dd);
+	    }
+
+	    return formatted;
+	}
+
+	function datetime(obj) {
+	    var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+	    return date(obj, opts) + ' ' + time(obj, opts) + ' ' + tz(obj, opts);
+	}
+
+	/**
+	 * @returns a Javascript Date object given either a date string or a
+	 * Javascript Date object.
+	 */
+	function normalize(obj) {
+	    var result = obj;
+
+	    if (typeof obj === 'string') {
+	        result = Date.parse(obj);
+	    } else if (typeof obj === 'number') {
+	        result = new Date(obj);
+	    }
+
+	    return result;
+	}
+
+	/**
+	 * @returns the number n, as a string, padded with a leading zero if
+	 * less-than 10.
+	 */
+	function pad2(n) {
+	    return n < 10 ? '0' + n : n;
+	}
+
+	/**
+	 * @returns the number n, as a string, padded with one or two leading
+	 * zero if less-than 100 and 10, respectively.
+	 */
+	function pad3(n) {
+	    return n < 100 ? '0' + pad2(n) : n;
+	}
+
+	function time(obj) {
+	    var _ref2 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+	        _ref2$h = _ref2.h24,
+	        h24 = _ref2$h === undefined ? true : _ref2$h,
+	        _ref2$utc = _ref2.utc,
+	        utc = _ref2$utc === undefined ? true : _ref2$utc;
+
+	    var hh = void 0,
+	        mm = void 0,
+	        ss = void 0,
+	        formatted = void 0;
+	    var suffix = ' AM';
+	    var time = normalize(obj);
+
+	    if (utc) {
+	        hh = time.getUTCHours();
+	        mm = time.getUTCMinutes();
+	        ss = time.getUTCSeconds();
+	    } else {
+	        hh = time.getHours();
+	        mm = time.getMinutes();
+	        ss = time.getSeconds();
+	    }
+
+	    if (!h24 && hh > 12) {
+	        hh -= 12;
+	        suffix = ' PM';
+	    }
+
+	    formatted = pad2(hh) + ':' + pad2(mm) + ':' + pad2(ss);
+
+	    if (!h24) {
+	        formatted += suffix;
+	    }
+
+	    return formatted;
+	}
+
+	function tz(obj) {
+	    var _ref3 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+	        _ref3$utc = _ref3.utc,
+	        utc = _ref3$utc === undefined ? true : _ref3$utc;
+
+	    return utc ? 'UTC' : (0, _time.timezone)(obj);
+	}
+
+	exports.date = date;
+	exports.datetime = datetime;
+	exports.time = time;
+	exports.tz = tz;
+
+/***/ },
+/* 28 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	/**
+	 * @returns the Day Of Year (DOY) for the given date.
+	 */
+	function DOY(year, month, day) {
+	  var days = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+	  return days[month] + day + (isLeap(year) ? 1 : 0);
+	}
+
+	/**
+	 * @returns true if year is a leap year, false otherwise.
+	 */
+	function isLeap(year) {
+	  return year % 4 == 0 && year % 100 != 0 || year % 400 == 0;
+	}
+
+	/**
+	 * @returns the timezone string for the given Javascript Date.
+	 */
+	function timezone(date) {
+	  var match = /\((\w+)\)$/.exec(date.toString());
+	  return Array.isArray(match) && match.length > 1 ? match[1] : '';
+	}
+
+	exports.DOY = DOY;
+	exports.isLeap = isLeap;
+	exports.timezone = timezone;
+
+/***/ },
+/* 29 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+	exports.Messages = undefined;
+
+	var _mithril = __webpack_require__(1);
+
+	var _mithril2 = _interopRequireDefault(_mithril);
+
+	var _format = __webpack_require__(27);
+
+	var format = _interopRequireWildcard(_format);
+
+	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var Messages = {
+	    _messages: [],
+	    _source: null,
+
+	    add: function add(msg) {
+	        this._messages.push(this.normalizeMessage(msg));
+	        _mithril2.default.redraw();
+	    },
+	    normalizeMessage: function normalizeMessage(msg) {
+	        return {
+	            timestamp: Date.parse(msg.asctime),
+	            severity: msg.levelname,
+	            message: msg.message
+	        };
+	    },
+	    oninit: function oninit(vode) {
+	        var _this = this;
+
+	        this._source = new EventSource('/messages');
+	        this._source.onmessage = function (event) {
+	            return _this.add(JSON.parse(event.data));
+	        };
+	    },
+	    view: function view(vnode) {
+	        var rows = this._messages.map(function (msg) {
+	            return (0, _mithril2.default)('tr', { class: 'log-' + msg.severity.toLowerCase() }, [(0, _mithril2.default)('td', { width: '20%' }, format.datetime(msg.timestamp)), (0, _mithril2.default)('td', { width: '10%' }, msg.levelname), (0, _mithril2.default)('td', { width: '70%' }, msg.message)]);
+	        });
+
+	        return (0, _mithril2.default)('bliss-messages', vnode.attrs, (0, _mithril2.default)('table', { class: 'table table-condensed' }, (0, _mithril2.default)('tbody', rows)));
+	    }
+	};
+
+	exports.default = Messages;
+	exports.Messages = Messages;
+
+/***/ },
+/* 30 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+	exports.TabSet = undefined;
+
+	var _mithril = __webpack_require__(1);
+
+	var _mithril2 = _interopRequireDefault(_mithril);
+
+	var _util = __webpack_require__(31);
+
+	var util = _interopRequireWildcard(_util);
+
+	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	/**
+	 * DragDrop
+	 *
+	 * DragDrop manages the drag-and-drop state and behavior for a TabSet,
+	 * keeping track of the indicies of the `from` tab (i.e. the tab being
+	 * dragged) and the current tab which is being dragged `over`.
+	 */
+	var DragDrop = {
+	    _from: -1,
+	    _over: -1,
+
+	    /**
+	     * Handle an HTML5 drop event for the tab at the given `index`.
+	     *
+	     * Calls `callback(from, to)`, where `from` is the index of the
+	     * tab that was dragged and `to` is the index of the drop target
+	     * tab.  In practical terms, callback is `TabSet.move(from, to)`.
+	     */
+	    drop: function drop(event, index, callback) {
+	        if (this._from !== -1) {
+	            event.preventDefault();
+	            callback(this._from, index);
+	        }
+	    },
+
+
+	    /**
+	     * Handle the HTML5 `dragend` event for the tab at the given index.
+	     */
+	    end: function end(event, index) {
+	        this._from = -1;
+	        this._over = -1;
+	    },
+
+
+	    /**
+	     * @returns true if the tab at the given index is being dragged
+	     * over, false otherwise.
+	     */
+	    isOver: function isOver(index) {
+	        return index === this._over;
+	    },
+
+
+	    /**
+	     * Handle the HTML5 `dragover` event for the tab at the given index.
+	     */
+	    over: function over(event, index) {
+	        event.preventDefault();
+	        this._over = index;
+	    },
+
+
+	    /**
+	     * Return CSS classes for the tab at the given index that is being
+	     * dragged over.
+	     *
+	     * @pre  this.isOver(index) === true
+	     */
+	    overClass: function overClass(index) {
+	        return 'drag-over-' + (this._from > index ? 'before' : 'after');
+	    },
+
+
+	    /**
+	     * Handle the HTML5 `dragstart` event for the tab at the given index.
+	     */
+	    start: function start(event, index) {
+	        event.dataTransfer.effectAllowed = 'move';
+	        this._from = index;
+	    }
+	};
+
+	/**
+	 * BLISS TabSet
+	 *
+	 * BLISS TabSet is a Mithril UI component for a `<bliss-tabset>`,
+	 * which manages a set of children `<bliss-tab>`s.  Tabs have a title
+	 * attribute and their own child content.  When a TabSet is rendered
+	 * to the DOM via its `view()` method, it:
+	 *
+	 *     1.  Uses `<bliss-tabset>` and `<bliss-tab>` HTML5 custom tags
+	 *         for targeted CSS styling and customization, and
+	 *
+	 *     2.  Uses Bootstrap HTML structure and CSS classes
+	 *
+	 * A BLISS TabSet is signficantly more succinct than Bootstrap tabs.
+	 * For example, compare creating a BLISS TabSet directly in HTML:
+	 *
+	 *     <bliss-tabset class="nav-tabs">
+	 *         <bliss-tab title="Foo"> ... </bliss-tab>
+	 *         <bliss-tab title="Bar"> ... </bliss-tab>
+	 *         <bliss-tab title="Baz"> ... </bliss-tab>
+	 *     </bliss-tab>
+	 *
+	 * To the corresponding Bootstrap HTML and CSS:
+	 *
+	 *     <ul class="nav nav-tabs">
+	 *         <li> <a href="#">Foo</a> </li>
+	 *         <li> <a href="#">Bar</a> </li>
+	 *         <li> <a href="#">Baz</a> </li>
+	 *     </ul>
+	 *
+	 *     <div class="tab-content">
+	 *         <div class="tab-pane active"> ... </div>
+	 *     </div>
+	 *     <!-- Repeat for the contents of all three tabs -->
+	 *
+	 * Plus a BLISS TabSet only renders the contents of the active tab.
+	 *
+	 * Tabs may also be rendered as Bootstrap pills, stacked, justified,
+	 * etc. by adding the [appropriate CSS
+	 * classes](http://getbootstrap.com/components/#nav) to a
+	 * <bliss-tabset>.
+	 *
+	 * Tabs may be reordered programmatically via `TabSet.move(from, to)`
+	 * or by interactively via drag-and-drop.
+	 */
+	var TabSet = {
+	    _active: 0, // The index of the active tab
+	    _drag: null, // A DragDrop object, created in oninit()
+	    _pos: [], // Maps tab position to initial DOM order
+	    _uid: [], // Unique numeric ID for each tab (for Mithril keys)
+
+
+	    /**
+	     * Mithril `view()`-helper method
+	     *
+	     * Renders the `<a>` element of a Bootstrap tab.
+	     *
+	     * NOTE: The anchor element (`<a>`) of a tab is dragged, but it is
+	     * dragged `over` and `drop`ped on parent `<li>` elements.  This
+	     * is due primarily to the way Bootstrap tabs are styled and
+	     * needing to accomodate CSS animations to slide tabs left or
+	     * right to indicate where the dropped tab will be positioned.
+	     */
+	    anchor: function anchor(vnode, index) {
+	        var _this = this;
+
+	        var attrs = {
+	            href: '#',
+	            draggable: this.isActive(index),
+	            ondragstart: function ondragstart(e) {
+	                return _this._drag.start(e, index);
+	            },
+	            ondragend: function ondragend(e) {
+	                return _this._drag.end(e, index);
+	            }
+	        };
+
+	        return (0, _mithril2.default)('a', attrs, vnode.attrs.title);
+	    },
+
+
+	    /**
+	     * Mithril `view()`-helper method
+	     *
+	     * Renders the content of the currently active tab using Bootstrap
+	     * styling.  The passed-in `vnode` is the active `<bliss-tab>`.
+	     */
+	    content: function content(vnode) {
+	        return (0, _mithril2.default)('bliss-tab', vnode.attrs, (0, _mithril2.default)('.tab-content', (0, _mithril2.default)('.tab-pane.active', vnode.children || vnode.text)));
+	    },
+
+
+	    /**
+	     * @returns an array of only those Mithril `vnodes` that are
+	     * `<bliss-tab>`s.
+	     *
+	     * This method is necessary because we cannot cache only child
+	     * `<bliss-tab>` vnodes outside of a `view()` and every time the
+	     * `view(vnodes)` render method is called, the passed-in `vnodes`
+	     * will contain every child of a `<bliss-tabset>` (i.e. whitespace
+	     * text fragments *and* `<bliss-tab>`s) in the original DOM
+	     * (i.e. the HTML5 written by a user).
+	     */
+	    filterTabs: function filterTabs(vnodes) {
+	        return vnodes.filter(function (c) {
+	            return c.tag === 'bliss-tab';
+	        });
+	    },
+
+
+	    /**
+	     * @returns true if the tab at the given `index` is active, false
+	     * otherwise.
+	     */
+	    isActive: function isActive(index) {
+	        return index === this._active;
+	    },
+
+
+	    /**
+	     * Moves the tab at index `from` to index `to`.
+	     */
+	    move: function move(from, to) {
+	        var _this2 = this;
+
+	        if (from === to) return;
+
+	        var ntabs = this._pos.length;
+	        var active = util.mapN(ntabs, function (index) {
+	            return index === _this2._active;
+	        });
+
+	        util.move(this._pos, from, to);
+	        util.move(this._uid, from, to);
+	        util.move(active, from, to);
+
+	        this._active = active.findIndex(function (elem) {
+	            return elem;
+	        });
+	    },
+
+
+	    /**
+	     * Mithril lifecycle method
+	     *
+	     * Initializes this TabSet.
+	     */
+	    oninit: function oninit(vnode) {
+	        var tabs = this.filterTabs(vnode.children);
+	        this._pos = util.range(tabs.length);
+	        this._uid = util.range(tabs.length);
+	        this._drag = Object.create(DragDrop);
+	    },
+
+
+	    /**
+	     * @returns an array of tabs, reordered according to the positions
+	     * in `this._pos`.  For example, the following `pos[]` array would
+	     * reverse the order of four tabs:
+	     *
+	     *   pos = [ 3, 2, 1, 0 ]
+	     *
+	     * By returning:
+	     *
+	     *     [ tabs[3], tabs[2], tabs[1], tabs[0] ]
+	     *
+	     * This method is necessary because we cannot cache child
+	     * `<bliss-tab>` vnodes outside of a `view()` and every time the
+	     * `view(vnodes)` render method is called, the order of
+	     * `<bliss-tab>`s will be the same as the original DOM (i.e. the
+	     * HTML5 written by a user).
+	     */
+	    reorder: function reorder(tabs) {
+	        return this._pos.map(function (index) {
+	            return tabs[index];
+	        });
+	    },
+
+
+	    /**
+	     * Mithril `view()`-helper method
+	     *
+	     * Renders the `<li>` element of a Bootstrap tab.
+	     *
+	     * NOTE: The anchor element (`<a>`) of a tab is dragged, but it is
+	     * dragged `over` and `drop`ped on parent `<li>` elements.  This
+	     * is due primarily to the way Bootstrap tabs are styled and
+	     * needing to accomodate CSS animations to slide tabs left or
+	     * right to indicate where the dropped tab will be positioned.
+	     */
+	    tab: function tab(vnode, index) {
+	        var _this3 = this;
+
+	        var move = TabSet.move.bind(this);
+	        var attrs = {
+	            class: this.tabClass(index),
+	            key: this._uid[index],
+	            onclick: function onclick() {
+	                return _this3._active = index;
+	            },
+	            ondragover: function ondragover(e) {
+	                return _this3._drag.over(e, index);
+	            },
+	            ondrop: function ondrop(e) {
+	                return _this3._drag.drop(e, index, move);
+	            }
+	        };
+
+	        return (0, _mithril2.default)('li', attrs, this.anchor(vnode, index));
+	    },
+
+
+	    /**
+	     * @returns the CSS class(es) for the tab at the given `index`.
+	     */
+	    tabClass: function tabClass(index) {
+	        var name = '';
+
+	        if (this.isActive(index)) {
+	            name = 'active';
+	        } else if (this._drag.isOver(index)) {
+	            name = this._drag.overClass(index);
+	        }
+
+	        return name;
+	    },
+
+
+	    /**
+	     * Mithril `view()` method
+	     *
+	     * Renders this TabSet and its constituent tabs.
+	     */
+	    view: function view(vnode) {
+	        var tabs = this.reorder(this.filterTabs(vnode.children));
+
+	        return (0, _mithril2.default)('bliss-tabset', [(0, _mithril2.default)('ul.nav', vnode.attrs, tabs.map(TabSet.tab.bind(this))), this.content(tabs[this._active])]);
+	    }
+	};
+
+	exports.default = TabSet;
+	exports.TabSet = TabSet;
+
+/***/ },
+/* 31 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	/**
+	 * Maps the given function over the elements of `array`.
+	 *
+	 * This is equivalent to `array.map(fn)`.  Use this function when
+	 * `array` is only *array-like* (i.e. has a length property and is
+	 * integer indexable).  For example:
+	 *
+	 *     'Foo'.map(fn)    // TypeError: 'Foo'.map is not a function.
+	 *     map('Foo', fn)   // Works!
+	 */
+	function map(array, fn) {
+	  return Array.prototype.map.call(array, fn);
+	}
+
+	/**
+	 * Maps the given function over the integers `[0, n - 1]`.  This
+	 * is equivalent to:
+	 *
+	 *   [0, 1, 2, ..., n - 1].map(fn)
+	 */
+	function mapN(n, fn) {
+	  var array = [];
+
+	  for (var index = 0; index < n; ++index) {
+	    array.push(fn(index));
+	  }
+
+	  return array;
+	}
+
+	/**
+	 * Object.assign(target, ...sources) merges sources into target.
+	 *
+	 * @return target
+	 */
+	var merge = Object.assign;
+
+	/**
+	 * Moves array element at index `from` to index `to`, shifting all
+	 * other values up and down, as appropriate.
+	 */
+	function move(array, from, to) {
+	  array.splice(to, 0, array.splice(from, 1)[0]);
+	}
+
+	/**
+	 * @returns an array in the range `[0, stop - 1]`.  This is equivalent
+	 * to Python's `range()` function with a single argument.
+	 */
+	function range(stop) {
+	  return mapN(stop, function (index) {
+	    return index;
+	  });
+	}
+
+	exports.map = map;
+	exports.mapN = mapN;
+	exports.merge = merge;
+	exports.move = move;
+	exports.range = range;
+
+/***/ },
+/* 32 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
