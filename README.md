@@ -14,7 +14,9 @@ pip install .
 
 If you plan to do development work on the GUI you should install the repository in `develop` mode and install all of the dependencies necessary for a frontend build.
 
-`pip install -e . --install-option="--with-ui-deps=True"`
+```
+pip install -e . --install-option="--with-ui-deps=True"
+```
 
 Directory Layout
 ----------------
