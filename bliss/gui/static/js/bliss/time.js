@@ -2,8 +2,15 @@
  * @returns the Day Of Year (DOY) for the given date.
  */
 function DOY (year, month, day) {
-    const  days = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]
-    return days[month] + day + (isLeap(year) ? 1 : 0)
+    const  days = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+    doy = days[month] + day;
+    if (isLeap(year)) {
+        if (month >= 2) {
+            doy += 1;
+        }
+    }
+
+    return doy;
 }
 
 
