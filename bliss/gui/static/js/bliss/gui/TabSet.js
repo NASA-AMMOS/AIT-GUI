@@ -139,7 +139,7 @@ const TabSet =
      * NOTE: The anchor element (`<a>`) of a tab is dragged, but it is
      * dragged `over` and `drop`ped on parent `<li>` elements.  This
      * is due primarily to the way Bootstrap tabs are styled and
-     * needing to accomodate CSS animations to slide tabs left or
+     * needing to accommodate CSS animations to slide tabs left or
      * right to indicate where the dropped tab will be positioned.
      */
     anchor (vnode, index) {
@@ -199,7 +199,7 @@ const TabSet =
         if (from === to) return
 
         const ntabs  = this._pos.length
-        let   active = util.mapN(ntabs, index => index === this._active)
+        let   active = _.times(ntabs, index => index === this._active)
 
         util.move(this._pos, from, to)
         util.move(this._uid, from, to)
@@ -216,8 +216,8 @@ const TabSet =
      */
     oninit (vnode) {
         const tabs = this.filterTabs(vnode.children)
-        this._pos  = util.range(tabs.length)
-        this._uid  = util.range(tabs.length)
+        this._pos  = _.range(tabs.length)
+        this._uid  = _.range(tabs.length)
         this._drag = Object.create(DragDrop)
     },
 

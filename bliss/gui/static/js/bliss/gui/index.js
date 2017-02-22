@@ -76,7 +76,7 @@ function createMithrilNode (elem) {
  * @returns an array of Mithril vnodes.
  */
 function createMithrilNodes (elems) {
-    return bliss.util.map(elems, createMithrilNode)
+    return _.map(elems, createMithrilNode)
 }
 
 
@@ -86,7 +86,7 @@ function createMithrilNodes (elems) {
 function init () {
     ready( () => {
         const root  = document.body
-        const elems = bliss.util.map(root.childNodes, c => c)
+        const elems = _.map(root.childNodes, c => c)
         m.mount(root, { view: () => createMithrilNodes(elems) })
     })
 }
