@@ -14,6 +14,10 @@ pip install .
 
 If you plan to do development work on the GUI you should install the repository in `develop` mode and install all of the dependencies necessary for a frontend build.
 
+```
+pip install -e . --install-option="--with-ui-deps=True"
+```
+
 ### Virtualenv Configuration Example
 
 The example virtualenv configuration example assumes an environment name of `bliss-gui`. Setting the PATH variable ensures that you can run `webpack` and `mocha` as listed below in the `Developer FAQ`.
@@ -25,10 +29,6 @@ then
     export BLISS_ROOT=<Path to repos/bliss-core
     export PATH="<Path to repos>bliss-gui/bliss/gui/static/node_modules/.bin:$PATH"
 fi
-```
-
-```
-pip install -e . --install-option="--with-ui-deps=True"
 ```
 
 Developer FAQ
