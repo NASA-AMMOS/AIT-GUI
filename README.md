@@ -14,12 +14,38 @@ pip install .
 
 If you plan to do development work on the GUI you should install the repository in `develop` mode and install all of the dependencies necessary for a frontend build.
 
+### Virtualenv Configuration Example
+
+The example virtualenv configuration example assumes an environment name of `bliss-gui`. Setting the PATH variable ensures that you can run `webpack` and `mocha` as listed below in the `Developer FAQ`.
+
+```
+if [ $VIRTUAL_ENV == "$HOME/.virtualenvs/bliss-gui" ] 
+then
+    export BLISS_CONFIG=<Path to repos>/bliss-core/config/config.yaml
+    export BLISS_ROOT=<Path to repos/bliss-core
+    export PATH="<Path to repos>bliss-gui/bliss/gui/static/node_modules/.bin:$PATH"
+fi
+```
+
 ```
 pip install -e . --install-option="--with-ui-deps=True"
 ```
 
-Directory Layout
-----------------
-
 Developer FAQ
 -------------
+
+Python GUI code is present in `bliss/gui/__init__.py`. Frontend code for the GUI is present in `bliss/gui/static`.
+
+### Webpack
+The frontend uses Webpack to build/bundle code. Run webpack in `watch` mode during development so that it'll automatically bundle changes you make for you to test in your browser.
+
+```
+webpack --watch
+```
+
+### Unit Tests
+You can run the project's unit tests with:
+
+```
+npm test
+```
