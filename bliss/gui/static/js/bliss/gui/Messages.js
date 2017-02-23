@@ -32,9 +32,9 @@ const Messages =
     view (vnode) {
         const rows = this._messages.map( msg =>
             m('div', { class: 'row log-' + msg.severity.toLowerCase() }, [
-                m('td', {class: 'col-lg-3'}, format.datetime(msg.timestamp)),
-                m('td', {class: 'col-lg-2'}, msg.severity),
-                m('td', {class: 'col-lg-7'}, msg.message)
+                m('div', {class: 'col-lg-3'}, format.datetime(msg.timestamp)),
+                m('div', {class: 'col-lg-2'}, msg.severity),
+                m('div', {class: 'col-lg-7'}, msg.message)
             ])
         )
 
