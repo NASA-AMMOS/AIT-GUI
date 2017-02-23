@@ -2,6 +2,8 @@ export * from './Clock.js'
 export * from './Messages.js'
 export * from './TabSet.js'
 
+import {map} from 'lodash/map'
+
 
 let Registry = { }
 
@@ -76,7 +78,7 @@ function createMithrilNode (elem) {
  * @returns an array of Mithril vnodes.
  */
 function createMithrilNodes (elems) {
-    return _.map(elems, createMithrilNode)
+    return map(elems, createMithrilNode)
 }
 
 
@@ -86,7 +88,7 @@ function createMithrilNodes (elems) {
 function init () {
     ready( () => {
         const root  = document.body
-        const elems = _.map(root.childNodes, c => c)
+        const elems = map(root.childNodes, c => c)
         m.mount(root, { view: () => createMithrilNodes(elems) })
     })
 }
