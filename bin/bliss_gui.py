@@ -44,8 +44,6 @@ try:
     bliss.core.log.info('Connect to %s' % url)
     bliss.core.log.info('Ctrl-C to exit')
 
-    bliss.gui.startBrowser(url, browser)
-
     bliss.gui.wait()
 
 
