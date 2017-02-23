@@ -1,6 +1,10 @@
 import m from 'mithril'
 import * as util from 'bliss/util'
 
+import {range} from 'lodash/range'
+import {times} from 'lodash/times'
+
+
 
 /**
  * DragDrop
@@ -199,7 +203,7 @@ const TabSet =
         if (from === to) return
 
         const ntabs  = this._pos.length
-        let   active = _.times(ntabs, index => index === this._active)
+        let   active = times(ntabs, index => index === this._active)
 
         util.move(this._pos, from, to)
         util.move(this._uid, from, to)
@@ -216,8 +220,8 @@ const TabSet =
      */
     oninit (vnode) {
         const tabs = this.filterTabs(vnode.children)
-        this._pos  = _.range(tabs.length)
-        this._uid  = _.range(tabs.length)
+        this._pos  = range(tabs.length)
+        this._uid  = range(tabs.length)
         this._drag = Object.create(DragDrop)
     },
 
