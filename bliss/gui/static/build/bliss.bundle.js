@@ -2189,10 +2189,10 @@
 	    },
 	    view: function view(vnode) {
 	        var rows = this._messages.map(function (msg) {
-	            return (0, _mithril2.default)('tr', { class: 'log-' + msg.severity.toLowerCase() }, [(0, _mithril2.default)('td', { width: '20%' }, format.datetime(msg.timestamp)), (0, _mithril2.default)('td', { width: '10%' }, msg.levelname), (0, _mithril2.default)('td', { width: '70%' }, msg.message)]);
+	            return (0, _mithril2.default)('div', { class: 'row log-' + msg.severity.toLowerCase() }, [(0, _mithril2.default)('td', { class: 'col-lg-3' }, format.datetime(msg.timestamp)), (0, _mithril2.default)('td', { class: 'col-lg-2' }, msg.severity), (0, _mithril2.default)('td', { class: 'col-lg-7' }, msg.message)]);
 	        });
 
-	        return (0, _mithril2.default)('bliss-messages', vnode.attrs, (0, _mithril2.default)('table', { class: 'table table-condensed' }, (0, _mithril2.default)('tbody', rows)));
+	        return (0, _mithril2.default)('bliss-messages', vnode.attrs, (0, _mithril2.default)('hr', (0, _mithril2.default)('div', { class: 'container' }, rows)));
 	    }
 	};
 

@@ -31,17 +31,16 @@ const Messages =
 
     view (vnode) {
         const rows = this._messages.map( msg =>
-            m('tr', { class: 'log-' + msg.severity.toLowerCase() }, [
-                m('td', { width: '20%' }, format.datetime(msg.timestamp) ),
-                m('td', { width: '10%' }, msg.levelname ),
-                m('td', { width: '70%' }, msg.message   )
+            m('div', { class: 'row log-' + msg.severity.toLowerCase() }, [
+                m('td', {class: 'col-lg-3'}, format.datetime(msg.timestamp)),
+                m('td', {class: 'col-lg-2'}, msg.severity),
+                m('td', {class: 'col-lg-7'}, msg.message)
             ])
         )
 
-
         return m('bliss-messages', vnode.attrs,
-                 m('table', { class: 'table table-condensed' },
-                   m('tbody', rows)))
+                 m('hr',
+                 m('div', {class: 'container'}, rows)))
     }
 }
 

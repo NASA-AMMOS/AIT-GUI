@@ -10,14 +10,6 @@ bliss-clock {
     display: block;
 }
 
-bliss-messages .log-command  { background-color: #d9edf7; }
-bliss-messages .log-critical { background-color: #f2dede; }
-bliss-messages .log-error    { background-color: #f2dede; }
-bliss-messages .log-info     { background-color: #ffffff; }
-bliss-messages .log-notice   { background-color: #d9edf7; }
-bliss-messages .log-program  { background-color: #d9edf7; }
-bliss-messages .log-warning  { background-color: #fcf8e3; }
-
 
 /* Animate bliss-tab moves */
 bliss-tabset li {
@@ -48,3 +40,24 @@ bliss-tabset ul.nav-stacked li.drag-over-after {
     padding-right:  0;
     padding-bottom: 4em;
 }
+
+bliss-messages hr {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+bliss-messages div.container {
+    display: block;
+    overflow-y: auto;
+    height: 200px;
+    width: 100%;
+    word-break: break-word;
+}
+
+bliss-messages .log-command  { background-color: #d9edf7; }
+bliss-messages .log-critical { background-color: #f2dede; }
+bliss-messages .log-error    { background-color: #f2dede; }
+bliss-messages .log-info     { background-color: #ffffff; }
+bliss-messages .log-notice   { background-color: #d9edf7; }
+bliss-messages .log-program  { background-color: #d9edf7; }
+bliss-messages .log-warning  { background-color: #fcf8e3; }
