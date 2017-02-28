@@ -37,6 +37,7 @@ class CustomDevelopCmd(develop):
 
         develop.run(self)
 
+
 class CustomInstallCmd(install):
     user_options = install.user_options + [
         ('with-ui-deps=', None, "Toggle UI dependency installation")
@@ -69,7 +70,7 @@ setup(
     include_package_data = True,
 
     scripts = ['./bin/bliss_gui.py'],
-    install_requires = ['bliss-core>=0.8.0'],
+    install_requires = ['bliss-core>=0.10.0'],
 
     cmdclass = {
         "install": CustomInstallCmd,
