@@ -2,7 +2,7 @@ export * from './Clock.js'
 export * from './Messages.js'
 export * from './TabSet.js'
 
-import {map} from 'lodash/map'
+import map from 'lodash/map'
 
 
 let Registry = { }

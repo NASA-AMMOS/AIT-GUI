@@ -1,8 +1,8 @@
 import m from 'mithril'
 import * as util from 'bliss/util'
 
-import {range} from 'lodash/range'
-import {times} from 'lodash/times'
+import range from 'lodash/range'
+import times from 'lodash/times'
 
 
 
