@@ -21,9 +21,9 @@ The above will install `bliss-core` for you. If you wish you can install `bliss-
 pip install -e . --install-option="--with-ui-deps=True"
 ```
 
-### Virtualenv Configuration Example
+### Virtualenv Configuration
 
-The example virtualenv configuration example assumes an environment name of `bliss-gui`. Setting the PATH variable ensures that you can run `webpack` and `mocha` as listed below in the `Developer FAQ`.
+Place the following example configuration in your `virtualenvwrapper` **postactivate** script. By defalut, this is located at `~/.virtualenvs/postactivate`. The example virtualenv configuration example assumes an environment name of `bliss-gui`. Setting the PATH variable ensures that you can run `webpack` and `mocha` as listed below in the `Developer FAQ`.
 
 ```
 if [ $VIRTUAL_ENV == "$HOME/.virtualenvs/bliss-gui" ] 
