@@ -70,7 +70,7 @@ setup(
     include_package_data = True,
 
     scripts = ['./bin/bliss_gui.py'],
-    install_requires = ['bliss-core>=0.10.0'],
+    install_requires = ['bliss-core>=0.11.0'],
 
     cmdclass = {
         "install": CustomInstallCmd,
