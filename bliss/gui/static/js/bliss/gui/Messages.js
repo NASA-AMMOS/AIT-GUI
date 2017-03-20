@@ -14,6 +14,12 @@ const Messages =
     },
 
 
+    updateMessageBoxScroll() {
+        let messageBox = document.getElementById("blisslogs");
+        messageBox.scrollTop = messageBox.scrollHeight;
+    },
+
+
     normalizeMessage (msg) {
         return {
             timestamp: Date.parse(msg.asctime),
@@ -25,7 +31,10 @@ const Messages =
 
     oninit (vode) {
         this._source           = new EventSource('/messages')
-        this._source.onmessage = event => this.add( JSON.parse(event.data) )
+        this._source.onmessage = event => {
+            this.add(JSON.parse(event.data))
+            this.updateMessageBoxScroll()
+        }
     },
 
 
@@ -40,7 +49,7 @@ const Messages =
 
         return m('bliss-messages', vnode.attrs,
                  m('hr',
-                 m('div', {class: 'container'}, rows)))
+                 m('div', {class: 'container', id: 'blisslogs'}, rows)))
     }
 }
 
