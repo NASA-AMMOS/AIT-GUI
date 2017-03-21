@@ -3374,6 +3374,10 @@
 	        this._messages.push(this.normalizeMessage(msg));
 	        _mithril2.default.redraw();
 	    },
+	    updateMessageBoxScroll: function updateMessageBoxScroll() {
+	        var messageBox = document.getElementById("blisslogs");
+	        messageBox.scrollTop = messageBox.scrollHeight;
+	    },
 	    normalizeMessage: function normalizeMessage(msg) {
 	        return {
 	            timestamp: Date.parse(msg.asctime),
@@ -3386,7 +3390,8 @@
 
 	        this._source = new EventSource('/messages');
 	        this._source.onmessage = function (event) {
-	            return _this.add(JSON.parse(event.data));
+	            _this.add(JSON.parse(event.data));
+	            _this.updateMessageBoxScroll();
 	        };
 	    },
 	    view: function view(vnode) {
@@ -3394,7 +3399,7 @@
 	            return (0, _mithril2.default)('div', { class: 'row log-' + msg.severity.toLowerCase() }, [(0, _mithril2.default)('div', { class: 'col-lg-3' }, format.datetime(msg.timestamp)), (0, _mithril2.default)('div', { class: 'col-lg-2' }, msg.severity), (0, _mithril2.default)('div', { class: 'col-lg-7' }, msg.message)]);
 	        });
 
-	        return (0, _mithril2.default)('bliss-messages', vnode.attrs, (0, _mithril2.default)('hr', (0, _mithril2.default)('div', { class: 'container' }, rows)));
+	        return (0, _mithril2.default)('bliss-messages', vnode.attrs, (0, _mithril2.default)('hr', (0, _mithril2.default)('div', { class: 'container', id: 'blisslogs' }, rows)));
 	    }
 	};
 
