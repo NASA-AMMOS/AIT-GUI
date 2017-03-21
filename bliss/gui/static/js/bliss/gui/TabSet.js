@@ -1,8 +1,8 @@
 import m from 'mithril'
 import * as util from 'bliss/util'
 
-import {range} from 'lodash/range'
-import {times} from 'lodash/times'
+import range from 'lodash/range'
+import times from 'lodash/times'
 
 
 
@@ -164,10 +164,13 @@ const TabSet =
      * Renders the content of the currently active tab using Bootstrap
      * styling.  The passed-in `vnode` is the active `<bliss-tab>`.
      */
-    content (vnode) {
+    content (vnode, uid) {
+        const attrs = { key: uid }
+
+
         return m('bliss-tab', vnode.attrs,
                  m('.tab-content',
-                   m('.tab-pane.active', vnode.children || vnode.text)))
+                   m('.tab-pane.active', attrs, vnode.children || vnode.text)))
     },
 
 
@@ -297,11 +300,13 @@ const TabSet =
      * Renders this TabSet and its constituent tabs.
      */
     view (vnode) {
-        const tabs = this.reorder( this.filterTabs(vnode.children) )
+        const tabs      = this.reorder( this.filterTabs(vnode.children) )
+        const activeTab = tabs[ this._active ]
+        const activeUID = this._uid[ this._active ]
 
         return m('bliss-tabset', [
             m('ul.nav', vnode.attrs, tabs.map( TabSet.tab.bind(this) )),
-            this.content( tabs[ this._active ] )
+            this.content(activeTab, activeUID)
         ])
     }
 }

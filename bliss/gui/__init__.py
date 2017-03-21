@@ -45,10 +45,8 @@ else:
     import pkg_resources
     HTMLRoot = pkg_resources.resource_filename('bliss.gui', 'static/')
 
-SEQRoot     = os.path.join(bliss.config._ROOT_DIR, 'seq' )
-CmdHistFile = os.path.join(bliss.config._ROOT_DIR, 'bliss-cmdhist.pcap')
-
-App = bottle.Bottle()
+App     = bottle.Bottle()
+Servers = [ ]
 
 bottle.debug(True)
 bottle.TEMPLATE_PATH.append(HTMLRoot)
@@ -90,7 +88,6 @@ class Deque (object):
 
     def get (self):
         """Removes and returns the oldest item inserted into this Deque.
-
         This method blocks if the Deque is empty.
         """
         self.event.wait()
@@ -110,24 +107,7 @@ class Deque (object):
         """
         self.deque.append(item)
         self.event.set()
-
-
-
-class LogUdpServer (gevent.server.DatagramServer):
-    def __init__ (self, *args, **kwargs):
-        gevent.server.DatagramServer.__init__(self, *args, **kwargs)
-        self._parser = log.SysLogParser()
-
-    def formatTime (self, s):
-        """Reformat time from one format to another"""
-        return time.strftime(log.LogFormatter.DATEFMT,
-                             time.strptime(s, log.SysLogFormatter.SYS_DATEFMT))
-
-    def handle(self, data, address):
-        msg            = self._parser.parse(data)
-        #msg['asctime'] = self.formatTime(msg['asctime'])
-        Sessions.addMessage(msg)
-
+        
 
 
 class Session (object):
@@ -138,25 +118,17 @@ class Session (object):
     Python context.
     """
 
-    def __init__ (self, store=None, prototype=None):
-        """Creates a new Session, optionally cloned from the prototype
-        Session."""
-        if prototype is None:
-            self.events    = Deque( maxlen=100     )
-            self.messages  = Deque( maxlen=100     )
-            self.telemetry = Deque( maxlen=30 * 60 )
-        else:
-            self.events    = copy.copy( prototype.events    )
-            self.messages  = copy.copy( prototype.messages  )
-            self.telemetry = copy.copy( prototype.telemetry )
-
+    def __init__ (self, store=None, maxlen=100):
+        """Creates a new Session, capable of storing up to maxlen items of
+        each event, message, and telemetry type.
+        """
+        self.events          = Deque(maxlen)
+        self.messages        = Deque(maxlen)
+        self.telemetry       = collections.defaultdict(lambda: Deque(maxlen))
+        self._maxlen         = maxlen
         self._store          = store
         self._numConnections = 0
-
-    def __copy__ (self):
-        """Creates a new copy of this Session (via Python copy.copy())."""
-        return Session(prototype=self)
-
+        
     def __enter__ (self):
         """Begins a Session context / connection."""
         self._numConnections += 1
@@ -181,34 +153,35 @@ class Session (object):
         return str( id(self) )
 
 
+
 class SessionStore (dict):
     """SessionStore
 
     A SessionStore manages one or more Sessions.  SessionStores
     associate a Session with a GUI clients through an HTTP cookie.
     """
-    Global = Session()
+    History = Session(maxlen=600)
 
     def __init__ (self, *args, **kwargs):
         """Creates a new SessionStore."""
         dict.__init__(self, *args, **kwargs)
 
-    def addTelemetry (self, packet):
+    def addTelemetry (self, name, packet):
         """Adds a telemetry packet to all Sessions in the store."""
-        SessionStore.Global.telemetry.put(packet)
+        SessionStore.History.telemetry[name].put(packet)
         for session in self.values():
-            session.telemetry.put(packet)
-
+            session.telemetry[name].put(packet)
+            
     def addMessage (self, msg):
         """Adds a log message to all Sessions in the store."""
-        SessionStore.Global.messages.put(msg)
+        SessionStore.History.messages.put(msg)
         for session in self.values():
             session.messages.put(msg)
 
     def addEvent (self, name, data):
         """Adds an event to all Sessions in the store."""
         event = { 'name': name, 'data': data }
-        SessionStore.Global.events.put(event)
+        SessionStore.History.events.put(event)
         for session in self.values():
             session.events.put(event)
 
@@ -223,11 +196,8 @@ class SessionStore (dict):
 
     def create (self):
         """Creates and returns a new Session for this HTTP connection.
-
-        New sessions inherit history from the SessionStore Global
-        session.
         """
-        session          = Session(self, SessionStore.Global)
+        session          = Session(self)
         self[session.id] = session
         bottle.response.set_cookie('sid', session.id)
         return session
@@ -237,41 +207,66 @@ class SessionStore (dict):
         del self[session.id]
 
 
+class UdpSysLogServer (gevent.server.DatagramServer):
+    def __init__ (self, *args, **kwargs):
+        gevent.server.DatagramServer.__init__(self, *args, **kwargs)
+        self._parser = log.SysLogParser()
+
+    def start (self):
+        values = self.server_host, self.server_port
+        log.info('Listening for Syslog messages on %s:%d (UDP)' % values)
+        super(UdpSysLogServer, self).start()
+
+    def handle (self, data, address):
+        msg = self._parser.parse(data)
+        Sessions.addMessage(msg)
+
+
+class UdpTelemetryServer (gevent.server.DatagramServer):
+    def __init__ (self, listener, name):
+        super(UdpTelemetryServer, self).__init__(listener)
+        self._name = name
+
+    def start (self):
+        values = self._name, self.server_host, self.server_port
+        log.info('Listening for %s telemetry on %s:%d (UDP)' % values)
+        super(UdpTelemetryServer, self).start()
+
+    def handle (self, packet, address):
+        Sessions.addTelemetry(self._name, packet)
+
+
 def getBrowserName(browser):
     return getattr(browser, 'name', getattr(browser, '_name', '(none)'))
 
 
 def init(host=None, port=8000):
-    global tlmsrv
-    global logsrv
-    global websrv
+    global Servers
 
     if host is None:
         host = 'localhost'
 
-    tlmsrv  = bliss.gui.TlmUdpServer(':%d' % 3076)
-    logsrv = LogUdpServer(':%d' % 2514)
-    websrv = gevent.pywsgi.WSGIServer(('0.0.0.0', port), App,
-                 handler_class=geventwebsocket.handler.WebSocketHandler)
+    for t in bliss.config.gui.telemetry:
+        stream = t['stream']
+        Servers.append( UdpTelemetryServer(stream['port'], stream['name']) )
 
-    tlmsrv.start()
-    logsrv.start()
-    websrv.start()
+    Servers.append( UdpSysLogServer(':%d' % 2514)     )
+    Servers.append( gevent.pywsgi.WSGIServer(
+        ('0.0.0.0', port),
+        App,
+        handler_class = geventwebsocket.handler.WebSocketHandler)
+    )
 
-    log.crit('Critical')
-    log.debug('Debug')
-    log.error('Error')
-    log.info('Info')
-    log.warn('Warn')
+    for s in Servers:
+        s.start()
+
 
 def cleanup():
-    global tlmsrv
-    global logsrv
-    global websrv
+    global Servers
 
-    tlmsrv.stop()
-    logsrv.stop()
-    websrv.stop()
+    for s in Servers:
+        s.stop()
+
 
 def startBrowser(url, name=None):
     browser = None
@@ -301,6 +296,7 @@ def wait():
 
 
 Sessions = SessionStore()
+
 
 @App.route('/')
 def handle ():
@@ -346,132 +342,9 @@ def handle():
             yield 'data: %s\n\n' % json.dumps(msg)
 
 
-@App.route('/<pathname:path>')
-def handle (pathname):
-    return bottle.static_file(pathname, root=HTMLRoot)
-
-
-@App.route('/cmd', method='POST')
-def handle():
-    with Sessions.current() as session:
-        command = bottle.request.forms.get('command').strip()
-
-        if len(command) > 0:
-            cmddict = cmd.getDefaultCmdDict()
-            host    = '127.0.0.1'
-            port    = 3075
-            sock    = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            verbose = False
-
-            if cmddict is not None:
-                args     = command.split()
-                name     = args[0]
-                args     = [util.toNumber(t, t) for t in args[1:]]
-                cmdobj  = cmddict.create(name, *args)
-                messages = []
-
-            if cmdobj is None:
-                log.error('unrecognized command: %s' % name)
-            elif not cmdobj.validate(messages):
-                for msg in messages:
-                    log.error(msg)
-            else:
-                encoded = cmdobj.encode()
-
-                if verbose:
-                    size = len(cmdobj.name)
-                    pad  = (size - len(cmdobj.name) + 1) * ' '
-                    gds.hexdump(encoded, preamble=cmdobj.name + ':' + pad)
-
-                try:
-                    log.info('Sending to %s:%d: %s', host, port, cmdobj.name)
-                    sock.sendto(encoded, (host, port))
-
-                    with pcap.open(CmdHistFile, 'a') as output:
-                        output.write(command)
-
-                    Sessions.addEvent('cmd:hist', command)
-                except socket.error, err:
-                    log.error(str(err))
-                except IOError, err:
-                    log.error(str(err))
-
-
-@App.route('/cmd/hist.json', method='GET')
-def handle():
-    cmds = [ ]
-
-    try:
-        with pcap.open(CmdHistFile, 'r') as stream:
-            cmds = [ cmdname for (header, cmdname) in stream ]
-    except IOError:
-        pass
-
-    return json.dumps( list( set(cmds) ) )
-
-
-@App.route('/config/cmd', method='GET')
-def handle():
-    return json.dumps( cmd.getDefaultCmdDict().toDict() )
-
-
-@App.route('/config/evr', method='GET')
-def handle():
-    return json.dumps({
-        e.code:e.name
-        for e in evr.getDefaultEVRs()
-    })
-    # return json.dumps([e.toDict() for e in evr.getDefaultEVRs()])
-
-
-# OCO3 Specific sim code
-# @App.route('/config/sim', method='GET')
-# def handle():
-    # pass
-    # return json.dumps( oco3.sim.Config.dict() )
-
-
-@App.route('/config/tlm', method='GET')
+@App.route('/tlm/dict', method='GET')
 def handle():
     return json.dumps( tlm.getDefaultDict().toDict() )
-
-
-@App.route('/seq', method='GET')
-def handle():
-    """Endpoint that provides a JSON array of filenames in the SEQRoot
-    directory."""
-    try:
-        files = [ fn for fn in os.listdir(SEQRoot) if fn.endswith('.txt') ]
-    except OSError:
-        files = []
-    return json.dumps(sorted(files))
-
-
-# OCO3 Specific sim code
-# @App.route('/seq', method='POST')
-# def handle():
-    # bn_seqfile = bottle.request.forms.get('seqfile')
-    # gevent.spawn(bgExecSeq, bn_seqfile)
-
-
-# def bgExecSeq(bn_seqfile):
-    # seqfile = os.path.join(SEQRoot, bn_seqfile)
-    # if not os.path.isfile(seqfile):
-        # msg  = "Sequence file not found.  "
-        # msg += "Reload page to see updated list of files."
-        # log.error(msg)
-        # return
-
-    # log.info("Executing sequence: " + seqfile)
-    # Sessions.addEvent('seq:exec', bn_seqfile)
-    # seq_p = gevent.subprocess.Popen(["oco3-seq-send.py", seqfile],
-                                    # stdout=gevent.subprocess.PIPE)
-    # seq_out, seq_err = seq_p.communicate()
-    # if seq_p.returncode is not 0:
-        # Sessions.addEvent('seq:err', bn_seqfile + ': ' + seq_err)
-        # return
-
-    # Sessions.addEvent('seq:done', bn_seqfile)
 
 
 @App.route('/log', method='GET')
@@ -487,37 +360,6 @@ def handle():
             bottle.response.content_type  = 'text/event-stream'
             bottle.response.cache_control = 'no-cache'
             yield 'data: %s\n\n' % json.dumps(msg)
-
-
-# OCO3 Specific Sim code
-# @App.route('/sim/<name>/<action>', method=['GET', 'POST'])
-# def handle(name, action):
-    # with Sessions.current() as session:
-        # sim = oco3.sim.getSim(name)
-        # bottle.response.status = 404
-
-        # if sim:
-            # bottle.response.status = 200
-            # gevent.spawn( bgSimAction, sim, action, bottle.request.method,
-                          # dict(bottle.request.forms) )
-
-
-# def bgSimAction(sim, action, method, kwargs):
-    # Sessions.addEvent('sim:pending', sim.name)
-    # response = sim.execute(action, method, **kwargs)
-
-    # for n in range(10):
-        # if response == 200:
-            # break
-        # elif response == 404:
-            # gevent.sleep(1)
-            # response = sim.status()
-
-    # if response == 200:
-        # if action == 'start':
-            # Sessions.addEvent('sim:on', sim.name)
-        # elif action == 'stop':
-            # Sessions.addEvent('sim:off', sim.name)
 
 
 @App.route('/tlm/stream')
@@ -537,97 +379,30 @@ def handle():
             wsock.send(pad + tlm)
 
 
-# @App.route('/tlm/psu')
-# def psu_tlm():
-    # with Sessions.current() as session:
-        # wsock = bottle.request.environ.get('wsgi.websocket')
+@App.route('/tlm/realtime/<pname>/json', method='GET')
+def handle(pname):
+    """Endpoint that pushes syslog output to client"""
+    with Sessions.current() as session:
+        defn = tlm.getDefaultDict()[pname]
+        hist = tlm.PacketHistory(defn)
 
-        # if not wsock:
-            # bottle.abort(400, 'Expected WebSocket request.')
+        bottle.response.content_type  = 'text/event-stream'
+        bottle.response.cache_control = 'no-cache'
+        yield 'event: connected\ndata:\n\n'
 
-        # while True:
-            # ptlm = session.psu_telemetry.get()
-            # wsock.send(ptlm)
+        while True:
+            data   = session.telemetry[pname].get()
+            packet = tlm.Packet(defn, data, hist)
+            msg    = { }
+
+            for fname in defn.fieldmap.keys():
+                msg[fname] = getattr(packet, fname)
+
+            bottle.response.content_type  = 'text/event-stream'
+            bottle.response.cache_control = 'no-cache'
+            yield 'data: %s\n\n' % json.dumps(msg)
 
 
-@App.route('/bsc/handlers', method='GET')
-def handle():
-    try:
-        r = requests.get('http://{}:{}'.format(
-            bliss.config._config['gui']['bsc_host'],
-            bliss.config._config['gui']['bsc_port']))
-        data = r.json()
-    except requests.ConnectionError:
-        data = {}
-
-    capturers = []
-    for address, handlers in data.iteritems():
-        for handler in handlers:
-            host, port = handler['address']
-            if host == '':
-                host = bliss.config._config['gui']['bsc_host'],
-            capturers.append([
-                handler['handler']['name'],
-                handler['conn_type'],
-                '{}:{}'.format(host, port)
-            ])
-
-    return {'capturers': capturers}
-
-@App.route('/bsc/create', method='POST')
-def handle():
-    try:
-        r = requests.post(
-            'http://{}:{}/{}/start'.format(
-                bliss.config._config['gui']['bsc_host'],
-                bliss.config._config['gui']['bsc_port'],
-                bottle.request.POST.name),
-            data={
-                'loc': bliss.config._config['gui']['bsc_handler_host'],
-                'port': bliss.config._config['gui']['bsc_handler_port'],
-                'conn_type': bliss.config._config['gui']['bsc_handler_conn_type'],
-            }
-        )
-
-        bottle.response.status = r.status_code
-    except requests.ConnectionError:
-        bottle.response.status = 500
-
-@App.route('/bsc/remove', method='POST')
-def handle():
-    try:
-        r = requests.delete('http://{}:{}/{}/stop'.format(
-                bliss.config._config['gui']['bsc_host'],
-                bliss.config._config['gui']['bsc_port'],
-                bottle.request.POST.name))
-
-        bottle.response.status = r.status_code
-    except requests.ConnectionError:
-        bottle.response.status = 500
-
-class TlmUdpServer(gevent.server.DatagramServer):
-    def handle(self, packet, address):
-        Sessions.addTelemetry(packet)
-
-# class PSUTlmUdpServer(gevent.server.DatagramServer):
-    # def handle(self, packet, address):
-        # Sessions.addPSUTelemetry(packet)
-
-class LogUdpServer (gevent.server.DatagramServer):
-    def __init__ (self, *args, **kwargs):
-        gevent.server.DatagramServer.__init__(self, *args, **kwargs)
-        self.parser = bliss.core.log.SysLogParser()
-
-    def handle(self, data, address):
-        msg = self.parser.parse(data)
-        msg['asctime'] = formatTime(msg['asctime'],
-                                    bliss.core.log.SysLogFormatter.SYS_DATEFMT,
-                                    bliss.core.log.LogFormatter.DATEFMT)
-        msg['levelname'] = '{:<30}'.format(msg['levelname'])
-        Sessions.addMessage(msg)
-
-def formatTime(t, currfmt, newfmt):
-    """Reformat time from one format to another"""
-    timetup = time.strptime(t, currfmt)
-    t_out   = time.strftime(newfmt, timetup)
-    return t_out
+@App.route('/<pathname:path>')
+def handle (pathname):
+    return bottle.static_file(pathname, root=HTMLRoot)

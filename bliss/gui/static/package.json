@@ -4,7 +4,7 @@
   "description": "BLISS GUI",
   "main": "index.js",
   "scripts": {
-    "build": "webpack --optimize-minimize",
+    "build": "webpack",
     "test": "NODE_PATH=`pwd`/js mocha"
   },
   "author": "bliss@jpl.nasa.gov",
@@ -22,7 +22,7 @@
     "jsdom": "^9.11.0",
     "jsdom-global": "^2.1.1",
     "lodash": "^4.16.6",
-    "mithril": "^1.0.0",
+    "mithril": "^1.0.1",
     "mocha": "^3.1.2",
     "sinon": "^1.17.6",
     "style-loader": "^0.13.1",

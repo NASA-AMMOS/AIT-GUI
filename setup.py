@@ -67,6 +67,7 @@ setup(
     author       = 'BLISS-Core Development Team',
     author_email = 'bliss@jpl.nasa.gov',
 
+    namespace_packages   = [ 'bliss' ],
     include_package_data = True,
 
     scripts = ['./bin/bliss_gui.py'],

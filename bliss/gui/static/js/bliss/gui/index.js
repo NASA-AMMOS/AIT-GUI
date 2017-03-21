@@ -1,8 +1,10 @@
 export * from './Clock.js'
+export * from './Field.js'
 export * from './Messages.js'
 export * from './TabSet.js'
 
-import {map} from 'lodash/map'
+import map from 'lodash/map'
+import { TelemetryDictionary } from '../tlm.js'
 
 
 let Registry = { }
@@ -87,9 +89,26 @@ function createMithrilNodes (elems) {
  */
 function init () {
     ready( () => {
-        const root  = document.body
-        const elems = map(root.childNodes, c => c)
+        const root   = document.body
+        const cloned = root.cloneNode(true)
+        const elems  = map(cloned.childNodes, c => c)
+
+        bliss.tlm.streams = { }
+
         m.mount(root, { view: () => createMithrilNodes(elems) })
+
+        m.request({ url: '/tlm/dict' }).then( (dict) => {
+            bliss.tlm.dict = new TelemetryDictionary(dict)
+
+            bliss.events.on('bliss:tlm:packet', () => {
+                // console.log('bliss:tlm:packet')
+                m.redraw()
+            })
+
+           // bliss.events.on('bliss:tlm:close', () => console.log('bliss:tlm:close') )
+           // bliss.events.on('bliss:tlm:open' , () => console.log('bliss:tlm:open')  )
+           // bliss.events.on('bliss:tlm:stale', () => console.log('bliss:tlm:stale') )
+        })
     })
 }
 

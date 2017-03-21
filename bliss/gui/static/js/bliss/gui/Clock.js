@@ -31,9 +31,11 @@ const Clock =
 
     // Mithril lifecycle method
     oninit (vnode) {
-        this._h24 = vnode.attrs.h24 || Clock._h24
-        this._utc = vnode.attrs.utc || Clock._utc
-        this._doy = vnode.attrs.doy || Clock._doy
+        const attrs = vnode.attrs
+
+        this._h24 = attrs.h24 !== undefined ? attrs.h24 : Clock._h24
+        this._utc = attrs.utc !== undefined ? attrs.utc : Clock._utc
+        this._doy = attrs.doy !== undefined ? attrs.doy : Clock._doy
         this.update()
     },
 

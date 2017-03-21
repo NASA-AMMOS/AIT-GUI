@@ -1,4 +1,3 @@
-import m from 'mithril'
 import { DOY, timezone } from './time'
 
 
@@ -22,7 +21,7 @@ function date (obj, { doy = false, utc = true } = {}) {
         formatted = yyyy + '-' + pad3( DOY(yyyy, mm, dd) )
     }
     else {
-        formatted = yyyy + '- ' + pad2(mm + 1) + '-' + pad2(dd)
+        formatted = yyyy + '-' + pad2(mm + 1) + '-' + pad2(dd)
     }
 
     return formatted
