@@ -64,7 +64,6 @@ setup(
     name = 'bliss-gui',
     version = '0.1.0',
     packages = ['bliss.gui'],
-    namespace_packages = ['bliss'],
     author = 'BLISS-Core Development Team',
     author_email = 'bliss@jpl.nasa.gov',
 
