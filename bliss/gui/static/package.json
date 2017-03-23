@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "webpack --optimize-minimize",
+    "dev-build": "webpack",
     "test": "NODE_PATH=`pwd`/js mocha"
   },
   "author": "bliss@jpl.nasa.gov",
