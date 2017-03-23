@@ -4,7 +4,7 @@
   "description": "BLISS GUI",
   "main": "index.js",
   "scripts": {
-    "build": "webpack",
+    "build": "webpack --optimize-minimize",
     "test": "NODE_PATH=`pwd`/js mocha"
   },
   "author": "bliss@jpl.nasa.gov",
