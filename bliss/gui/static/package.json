@@ -25,6 +25,7 @@
     "mithril": "^1.0.1",
     "mocha": "^3.1.2",
     "sinon": "^1.17.6",
+    "strftime": "^0.10.0",
     "style-loader": "^0.13.1",
     "url-loader": "^0.5.7",
     "webpack": "^1.13.3"
