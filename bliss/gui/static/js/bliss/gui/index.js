@@ -2,6 +2,7 @@ export * from './Clock.js'
 export * from './Field.js'
 export * from './Messages.js'
 export * from './TabSet.js'
+export * from './Command.js'
 
 import filter from 'lodash/filter'
 import map    from 'lodash/map'
@@ -89,12 +90,18 @@ function createMithrilNodes (elems) {
  * Initializes the BLISS GUI.
  */
 function init () {
-    ready( () => {
+    ready(() => {
         const root   = document.body
         const cloned = root.cloneNode(true)
         const elems  = map(cloned.childNodes, c => c)
 
-        bliss.tlm.streams = { }
+        bliss.tlm.streams = {}
+        bliss.cmd = {dict:{}}
+
+        bliss.cmd.promise = m.request({url: '/cmd/dict'})
+        bliss.cmd.promise.then((dict) => {
+            bliss.cmd.dict = dict
+        })
 
         m.mount(root, { view: () => createMithrilNodes(elems) })
 
@@ -102,13 +109,18 @@ function init () {
             bliss.tlm.dict = new TelemetryDictionary(dict)
 
             bliss.events.on('bliss:tlm:packet', () => {
-                // console.log('bliss:tlm:packet')
                 m.redraw()
             })
+        })
 
-           // bliss.events.on('bliss:tlm:close', () => console.log('bliss:tlm:close') )
-           // bliss.events.on('bliss:tlm:open' , () => console.log('bliss:tlm:open')  )
-           // bliss.events.on('bliss:tlm:stale', () => console.log('bliss:tlm:stale') )
+        let source = new EventSource('/events');
+        source.addEventListener('message', function (event) {
+            let e = $.parseJSON(event.data);
+            bliss.events.emit(e.name, e.data)
+        });
+
+        bliss.events.on('cmd:submit', () => {
+            $('#commanding-modal').modal('hide')
         })
     })
 }

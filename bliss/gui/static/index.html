@@ -35,11 +35,61 @@
     <bliss-tab title="Bop"> Bop </bliss-tab>
     <bliss-tab title="Clock">
       <h1>The current time</h1>
-      <bliss-clock class="navbar-text" doy="true">
+      <bliss-clock class="navbar-text" doy="true"></bliss-clock>
     </bliss-tab>
   </bliss-tabset>
 
-  <!-- <bliss-messages> </bliss-messages> -->
+  <br />
+  <hr />
+  <ul class="nav nav-tabs">
+    <li role="presentation" class="active">
+      <a href="#log-tab" aria-controls="log-tab" role=tab" data-toggle="tab">Logs</a>
+    </li>
+    <li role="presentation">
+      <a href="#command-tab" aria-controls="command-tab" role=tab" data-toggle="tab">Commanding</a>
+    </li>
+  </ul>
+  <!--<div class="tab-content" id='bliss-footer'>-->
+  <div class="tab-content">
+    <div role="tabpanel" class="tab-pane active" id="log-tab">
+      <bliss-messages></bliss-messages> 
+    </div>
+    <div role="tabpanel" class="tab-pane" id="command-tab">
+      <div class="row">
+        <div class="col-lg-3">
+          <br />
+          <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#commanding-modal">Command Configuration Window</button>
+        </div>
+        <div class="col-lg-4">
+          <bliss-commandinput></bliss-commandinput>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id='commanding-modal' tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="gridSystemModalLabel">Command Configuration</h4>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-lg-5">
+            <bliss-commandsearch>
+            </bliss-commandsearch>
+          </div>
+          <div class="col-lg-7">
+            <bliss-commandconfigure>
+            </bliss-commandconfigure>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 

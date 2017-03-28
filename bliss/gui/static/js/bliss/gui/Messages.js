@@ -48,8 +48,7 @@ const Messages =
         )
 
         return m('bliss-messages', vnode.attrs,
-                 m('hr',
-                 m('div', {class: 'container', id: 'blisslogs'}, rows)))
+                   m('div', {class: 'container', id: 'blisslogs'}, rows))
     }
 }
 
