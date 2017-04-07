@@ -3,7 +3,8 @@ export * from './Field.js'
 export * from './Messages.js'
 export * from './TabSet.js'
 
-import map from 'lodash/map'
+import filter from 'lodash/filter'
+import map    from 'lodash/map'
 import { TelemetryDictionary } from '../tlm.js'
 
 
@@ -80,7 +81,7 @@ function createMithrilNode (elem) {
  * @returns an array of Mithril vnodes.
  */
 function createMithrilNodes (elems) {
-    return map(elems, createMithrilNode)
+    return filter(map(elems, createMithrilNode), n => n !== null)
 }
 
 
