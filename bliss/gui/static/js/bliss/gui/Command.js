@@ -101,7 +101,6 @@ let CommandSelectionData = {
 const CommandSearch = {
     groupedCommands: {},
     commandFilter: '',
-    commandSelected: false,
     
     oninit(vnode) {
         bliss.cmd.promise.then(() => {
@@ -119,12 +118,6 @@ const CommandSearch = {
         $('#command-search').keyup((e) => {
             this.commandFilter = $('#command-search').val()
             m.redraw()
-        })
-
-        $('#command-search').blur((e) => {
-            if ($('#command-search').val() === '') {
-                $('.panel-collapse').collapse('hide')
-            }
         })
 
         $('#command-search-clear').mousedown((e) => {
@@ -160,7 +153,7 @@ const CommandSearch = {
                                        'data-parent': '#cmdTree',
                                        href: '#collapse' + k,
                                    },
-                                   k + ' Subsystem Commands')))
+                                   k)))
                 let commandList = map(v, (v) => {
                                        return m('li',
                                                 m('a',
@@ -171,7 +164,7 @@ const CommandSearch = {
                                                     'data-trigger': 'hover',
                                                     'data-content': v.desc,
                                                     onmousedown: () => {
-                                                        this.selectCommand(v)
+                                                        CommandSelectionData.activeCommand = v
                                                     }
                                                 },
                                                 v.name))})
@@ -191,7 +184,7 @@ const CommandSearch = {
         let commandSearchInput = m('input', {
                                        class: 'form-control',
                                        id: 'command-search',
-                                       placeholder: 'Filter command list ...',
+                                       placeholder: 'Search ...',
                                        type: 'search'
                                    })
         let commandSearchReset = m('div', {class: 'input-group-btn'},
@@ -220,16 +213,10 @@ const CommandSearch = {
 
     resetCommandFiltering() {
         $('#command-search').val('')
-        $('#command-search').blur()
+        $('.panel-collapse').collapse('hide')
         this.commandFilter = ''
         m.redraw()
     },
-
-    selectCommand(command) {
-        this.commandSelected = true
-        CommandSelectionData.activeCommand = command
-        this.resetCommandFiltering()
-    }
 }
 
 /**
@@ -278,6 +265,13 @@ const CommandConfigure = {
     generateCommandArgumentsForm(command) {
         let argdefns = Object.keys(command.argdefns)
                              .map((k) => command.argdefns[k])
+                             .filter((arg) => {
+                                 if (arg.fixed === true) {
+                                     return false
+                                 } else {
+                                     return true
+                                 }
+                             })
 
         // Argument definitions needs to be sorted in byte order for display
         argdefns.sort((a, b) => {
@@ -303,15 +297,15 @@ const CommandConfigure = {
         })
 
         var cmdArgs = map(argdefns, (arg) => {
-            let label = arg.fixed === true ? 'Fixed Value' : arg.name
             return m('div', {class: 'form-group'}, flatten([
-              m('label', label),
+              m('label', {class: 'col-lg-2 control-label'}, this.prettifyName(arg.name)),
               this.generateArgumentInput(arg)
             ]))
         })
         return m('form',
                  {
                      id: 'command-args-form',
+                     class: 'form-horizontal',
                      onsubmit: this.handleCommandFormSubmission,
                      method: 'POST',
                      action: '/cmd'
@@ -330,6 +324,15 @@ const CommandConfigure = {
     },
 
     /**
+     *
+     */
+     prettifyName(name) {
+         let name_parts = name.split('_')
+         name_parts = map(name_parts, (v) => v.charAt(0).toUpperCase() + v.slice(1))
+         return name_parts.join(' ')
+     },
+     
+    /**
      * Generate the argument input field for a given command's argument object.
      */
     generateArgumentInput(argument) {
@@ -337,26 +340,23 @@ const CommandConfigure = {
         if ('enum' in argument) {
             argInput = m('select', {class: 'form-control'},
                           map(argument.enum, (v, k) => {
-                            //return m('option', {value: v}, k)
-                            return m('option', {value: k}, k)
+                            return m('option', {value: k}, k + ' (' + v + ')')
                           })
                         )
         } else {
-            if (argument.fixed === true) {
-                argInput = m('input', {class: 'form-control', disabled: true, value: argument.value})
-            } else {
-                argInput = m('input', {class: 'form-control'})
-            }
+            argInput = m('input', {class: 'form-control'})
         }
 
         if ('units' in argument && argument.units !== 'none') {
-            argInput = m('div', {class: 'input-group'}, [
+            return m('div', {class: 'input-group col-lg-8'}, [
                 argInput,
                 m('div', {class: 'input-group-addon'}, argument.units)
             ])
+        } else {
+            return m('div', {class: 'input-group col-lg-8'}, [
+                argInput
+            ])
         }
-
-        return argInput
     },
     
     /**

@@ -72,6 +72,7 @@ bliss-messages .log-warning  { background-color: #fcf8e3; }
 
 #command-args-form {
     margin-top: 20px;
+    overflow-x: hidden;
 }
 
 #commanding-modal .modal-dialog {
