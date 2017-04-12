@@ -12,6 +12,7 @@ import collections
 import copy
 import json
 import os
+import socket
 import time
 import webbrowser
 
@@ -29,7 +30,6 @@ import bliss.core
 from bliss.core import log, gds, tlm, cmd, util, evr, pcap
 
 gevent.monkey.patch_all()
-
 
 if 'gui' in bliss.config and 'html_root' in bliss.config.gui:
     cfg_path = bliss.config.gui.html_root
@@ -50,6 +50,8 @@ Servers = [ ]
 
 bottle.debug(True)
 bottle.TEMPLATE_PATH.append(HTMLRoot)
+
+CmdHistFile = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bliss-gui-cmdhist.pcap')
 
 
 class Deque (object):
@@ -346,6 +348,67 @@ def handle():
 def handle():
     return json.dumps( tlm.getDefaultDict().toDict() )
 
+@App.route('/cmd/dict', method='GET')
+def handle():
+    print '/cmd/dict'
+    return json.dumps(cmd.getDefaultDict().toDict())
+
+@App.route('/cmd/hist.json', method='GET')
+def handle():
+    cmds = []
+
+    try:
+        with pcap.open(CmdHistFile, 'r') as stream:
+            cmds = [cmdname for (header, cmdname) in stream]
+    except IOError:
+        pass
+
+    return json.dumps(list(set(cmds)))
+
+@App.route('/cmd', method='POST')
+def handle():
+    with Sessions.current() as session:
+        command = bottle.request.forms.get('command').strip()
+
+        if len(command) > 0:
+            cmddict = cmd.getDefaultCmdDict()
+            host = '127.0.0.1'
+            port = 3075
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            verbose = False
+
+            if cmddict is not None:
+                args = command.split()
+                name = args[0]
+                args = [util.toNumber(t, t) for t in args[1:]]
+                cmdobj = cmddict.create(name, *args)
+                messages = []
+
+            if cmdobj is None:
+                log.error('unrecognized command: %s' % name)
+            elif not cmdobj.validate(messages):
+                for msg in messages:
+                    log.error(msg)
+            else:
+                encoded = cmdobj.encode()
+
+                if verbose:
+                    size = len(cmdobj.name)
+                    pad = (size - len(cmdobj.name) + 1) * ' '
+                    gds.hexdump(encoded, preamble=cmdobj.name + ':' + pad)
+
+                try:
+                    log.info('Sending to %s:%d: %s', host, port, cmdobj.name)
+                    sock.sendto(encoded, (host, port))
+
+                    with pcap.open(CmdHistFile, 'a') as output:
+                        output.write(command)
+
+                    Sessions.addEvent('cmd:hist', command)
+                except socket.error, err:
+                    log.error(str(err))
+                except IOError, err:
+                    log.error(str(err))
 
 @App.route('/log', method='GET')
 def handle():
