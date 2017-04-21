@@ -45,6 +45,8 @@ else:
     import pkg_resources
     HTMLRoot = pkg_resources.resource_filename('bliss.gui', 'static/')
 
+SEQRoot = pkg_resources.resource_filename('bliss.gui', 'seq/')
+
 App     = bottle.Bottle()
 Servers = [ ]
 
@@ -469,3 +471,37 @@ def handle(pname):
 @App.route('/<pathname:path>')
 def handle (pathname):
     return bottle.static_file(pathname, root=HTMLRoot)
+
+
+@App.route('/seq', method='GET')
+def handle():
+    """Endpoint that provides a JSON array of filenames in the SEQRoot
+    directory."""
+    files = [ fn for fn in os.listdir(SEQRoot) if fn.endswith('.txt') ]
+    return json.dumps(sorted(files))
+
+
+@App.route('/seq', method='POST')
+def handle():
+    bn_seqfile = bottle.request.forms.get('seqfile')
+    gevent.spawn(bgExecSeq, bn_seqfile)
+
+
+def bgExecSeq(bn_seqfile):
+    seqfile = os.path.join(SEQRoot, bn_seqfile)
+    if not os.path.isfile(seqfile):
+        msg  = "Sequence file not found.  "
+        msg += "Reload page to see updated list of files."
+        log.error(msg)
+        return
+
+    log.info("Executing sequence: " + seqfile)
+    Sessions.addEvent('seq:exec', bn_seqfile)
+    seq_p = gevent.subprocess.Popen(["bliss_seq_send.py", seqfile],
+                                    stdout=gevent.subprocess.PIPE)
+    seq_out, seq_err = seq_p.communicate()
+    if seq_p.returncode is not 0:
+        Sessions.addEvent('seq:err', bn_seqfile + ': ' + seq_err)
+        return
+
+    Sessions.addEvent('seq:done', bn_seqfile)

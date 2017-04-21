@@ -3,6 +3,7 @@ export * from './Field.js'
 export * from './Messages.js'
 export * from './TabSet.js'
 export * from './Command.js'
+export * from './Sequence.js'
 
 import filter from 'lodash/filter'
 import map    from 'lodash/map'
