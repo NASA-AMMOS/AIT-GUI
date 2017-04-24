@@ -62,7 +62,7 @@ class CustomInstallCmd(install):
 
 setup(
     name = 'bliss-gui',
-    version = '0.1.1',
+    version = '0.2.0',
     packages = ['bliss.gui'],
     author = 'BLISS-Core Development Team',
     author_email = 'bliss@jpl.nasa.gov',
@@ -71,7 +71,7 @@ setup(
     include_package_data = True,
 
     scripts = ['./bin/bliss_gui.py'],
-    install_requires = ['bliss-core>=0.13.0'],
+    install_requires = ['bliss-core>=0.14.0'],
 
     cmdclass = {
         "install": CustomInstallCmd,
