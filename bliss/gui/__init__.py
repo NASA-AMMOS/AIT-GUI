@@ -467,5 +467,9 @@ def handle(pname):
 
 
 @App.route('/<pathname:path>')
-def handle (pathname):
+def handle(pathname):
+    return load_bliss_static_file(pathname)
+
+
+def load_bliss_static_file(pathname):
     return bottle.static_file(pathname, root=HTMLRoot)
