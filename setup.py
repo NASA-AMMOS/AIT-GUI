@@ -72,6 +72,13 @@ setup(
 
     scripts = ['./bin/bliss_gui.py'],
     install_requires = ['bliss-core>=0.14.0'],
+    extras_require = {
+        'docs':  [
+            'Sphinx',
+            'sphinx_rtd_theme',
+            'sphinxcontrib-httpdomain'
+        ]
+    },
 
     cmdclass = {
         "install": CustomInstallCmd,
