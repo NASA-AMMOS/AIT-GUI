@@ -10,16 +10,34 @@
     <div class="navbar-header">
       <a class="navbar-brand" href="#">BLISS GUI</a><br>
     </div>
+    <ul class="nav navbar-nav navbar-left">
+      <li><p class="navbar-text bliss-status-indicators">
+            <bliss-simmonitor on='sim:iss:on'
+                       off='sim:iss:off'
+                       pending='sim:iss:pending'
+                       error='sim:iss:error'
+                       default='off' action='/sim/iss/'></bliss-simmonitor>
+             ISS</p></li>
+    </ul>
 
     <ul class="nav navbar-nav navbar-right">
       <li><p class="navbar-text">Telemetry Status:</p></li>
 
-      <li><p class="navbar-text" id="ptlm-status">
-            <i class="fa fa-circle"></i> PSU</p></li>
-
-      <li><p class="navbar-text" id="tlm-status">
-            <i class="fa fa-circle"></i> FSW</p></li>
-
+      <li><p class="navbar-text bliss-status-indicators" id="ptlm-status">
+            <bliss-led on='bliss:psu:packet'
+                       off='bliss:psu:close'
+                       pending='bliss:psu:open'
+                       error='bliss:psu:stale'
+                       default='pending'></bliss-led>
+             PSU</p></li>
+        
+      <li><p class="navbar-text bliss-status-indicators" id="ptlm-status">
+            <bliss-led on='bliss:tlm:packet'
+                       off='bliss:tlm:close'
+                       pending='bliss:tlm:open'
+                       error='bliss:tlm:stale'
+                       default='pending'></bliss-led>
+             FSW</p></li>
       <li><bliss-clock class="navbar-text" doy="true"></bliss-clock></li>
     </ul>
   </div>

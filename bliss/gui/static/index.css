@@ -64,6 +64,20 @@ bliss-messages .log-notice   { background-color: #d9edf7; }
 bliss-messages .log-program  { background-color: #d9edf7; }
 bliss-messages .log-warning  { background-color: #fcf8e3; }
 
+.bliss-led-on {color: green}
+.bliss-led-start {color: green}
+.bliss-led-pending {color: yellow}
+.bliss-led-error {color: red}
+.bliss-led-off {color: red}
+.bliss-led-stop {color: red}
+
+.glyphicon.glyphicon-dot:before {
+    margin: 0px;
+    padding: 0px;
+    content: "\25cf";
+    font-size: 1.5em;
+}
+
 .popover {
     width: 400px;
     min-width: 200px;
@@ -110,4 +124,16 @@ bliss-messages .log-warning  { background-color: #fcf8e3; }
     width: 100%;
     height: 435px;
     overflow-y: auto;
+}
+
+p.navbar-text.bliss-status-indicators {
+    margin-top: 10px;
+}
+
+span.sim-monitor.glyphicon-play {
+    margin-top: 7px;
+}
+
+span.sim-monitor.glyphicon-stop {
+    margin-top: 7px;
 }

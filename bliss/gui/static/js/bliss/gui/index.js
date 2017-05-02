@@ -1,6 +1,7 @@
 export * from './Clock.js'
 export * from './Field.js'
 export * from './Messages.js'
+export * from './Status.js'
 export * from './TabSet.js'
 export * from './Command.js'
 export * from './Sequence.js'
