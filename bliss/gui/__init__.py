@@ -505,6 +505,8 @@ def bgExecSeq(bn_seqfile):
                                     stdout=gevent.subprocess.PIPE)
     seq_out, seq_err = seq_p.communicate()
     if seq_p.returncode is not 0:
+        if not seq_err:
+            seq_err = "Unknown Error"
         Sessions.addEvent('seq:err', bn_seqfile + ': ' + seq_err)
         return
 

@@ -10,19 +10,19 @@ const Sequence = {
     },
 
     handleFormSubmit() {
-        let url  = $('#form-seq').attr('action');
-        let $btn = $('#form-seq button');
+        let url = document.getElementById("form-seq").getAttribute('action')
+        let $btn = document.getElementById('send-seq-btn')
         let data = new FormData()
-        data.append('seqfile', $('#seqfile').val())
+        data.append('seqfile', document.getElementById('seqfile').value)
 
-        $btn.prop('disabled', true);
+        $btn.setAttribute("disabled", "disabled")
 
         m.request({method: 'POST', url: url, data: data}).
             then(() => {
-                $btn.prop('disabled', false)
+                $btn.removeAttribute("disabled")
             }).
             catch((e) => {
-                $btn.prop('disabled', false)
+                $btn.removeAttribute("disabled")
                 console.log(e.message)
             })
         return false
