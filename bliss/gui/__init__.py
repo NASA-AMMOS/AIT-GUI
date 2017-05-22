@@ -247,6 +247,10 @@ def getBrowserName(browser):
 def init(host=None, port=8000):
     global Servers
 
+    @App.route('/bliss/gui/static/<pathname:path>')
+    def handle(pathname):
+        return bottle.static_file(pathname, root=HTMLRoot)
+
     if host is None:
         host = 'localhost'
 
@@ -466,15 +470,6 @@ def handle(pname):
             bottle.response.content_type  = 'text/event-stream'
             bottle.response.cache_control = 'no-cache'
             yield 'data: %s\n\n' % json.dumps(msg)
-
-
-@App.route('/<pathname:path>')
-def handle(pathname):
-    return load_bliss_static_file(pathname)
-
-
-def load_bliss_static_file(pathname):
-    return bottle.static_file(pathname, root=HTMLRoot)
 
 
 @App.route('/seq', method='GET')
