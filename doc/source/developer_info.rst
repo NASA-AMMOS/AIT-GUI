@@ -11,6 +11,8 @@ First you need to determine the version number for the release. **bliss-gui** us
 
 Update the project documentation to use the correct version names. The `conf.py <https://github.jpl.nasa.gov/bliss/bliss-gui/blob/master/doc/source/conf.py>`_ file contains a **version** and **release** option. Both of these should be updated to point to the version number for this release. The appropriate version number must also be set in the project's **setup.py** file and the `package.json <https://github.jpl.nasa.gov/bliss/bliss-gui/blob/master/bliss/gui/static/package.json>`_ file. Commit and push these changes to master.
 
+You will need to generate the latest bundled static files for release. From the **bliss/gui/static** folder you can run a build with **npm run build**. Be sure to commit and push these changes as well.
+
 Generate Release Notes
 ^^^^^^^^^^^^^^^^^^^^^^
 
