@@ -10,6 +10,7 @@ BLISS Graphical User Interface (GUI).
 
 import collections
 import copy
+import datetime
 import json
 import os
 import socket
@@ -469,7 +470,16 @@ def handle(pname):
 
             bottle.response.content_type  = 'text/event-stream'
             bottle.response.cache_control = 'no-cache'
-            yield 'data: %s\n\n' % json.dumps(msg)
+            yield 'data: %s\n\n' % json.dumps(msg, default=default_json_encode)
+
+
+def default_json_encode(o):
+    if type(o) == type(bliss.core.evr.EVRDefn):
+        return o.toDict()
+    elif type(o) == type(datetime.datetime.now()):
+        # Return the datetime as seconds since the GPS epoch
+        epoch = datetime.datetime(1980, 1, 6)
+        return (o - epoch).total_seconds()
 
 
 @App.route('/seq', method='GET')
