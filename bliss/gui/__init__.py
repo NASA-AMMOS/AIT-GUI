@@ -506,7 +506,7 @@ def bgExecSeq(bn_seqfile):
 
     log.info("Executing sequence: " + seqfile)
     Sessions.addEvent('seq:exec', bn_seqfile)
-    seq_p = gevent.subprocess.Popen(["bliss_seq_send.py", seqfile],
+    seq_p = gevent.subprocess.Popen(["bliss-seq-send", seqfile],
                                     stdout=gevent.subprocess.PIPE)
     seq_out, seq_err = seq_p.communicate()
     if seq_p.returncode is not 0:
