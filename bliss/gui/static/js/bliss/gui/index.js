@@ -8,7 +8,7 @@ export * from './Sequence.js'
 
 import filter from 'lodash/filter'
 import map    from 'lodash/map'
-import { TelemetryDictionary } from '../tlm.js'
+import { TelemetryDictionary, TelemetryStream } from '../tlm.js'
 
 
 let Registry = { }
@@ -97,9 +97,7 @@ function init () {
         const cloned = root.cloneNode(true)
         const elems  = map(cloned.childNodes, c => c)
 
-        bliss.tlm.streams = {}
-        bliss.cmd = {dict:{}}
-
+        bliss.cmd        = { dict: {} }
         bliss.cmd.promise = m.request({url: '/cmd/dict'})
         bliss.cmd.promise.then((dict) => {
             bliss.cmd.dict = dict
@@ -108,7 +106,10 @@ function init () {
         m.mount(root, { view: () => createMithrilNodes(elems) })
 
         m.request({ url: '/tlm/dict' }).then( (dict) => {
-            bliss.tlm.dict = new TelemetryDictionary(dict)
+            let url = 'ws://' + location.host + '/tlm/realtime'
+
+            bliss.tlm.dict   = TelemetryDictionary.parse(dict)
+            bliss.tlm.stream = new TelemetryStream(url, bliss.tlm.dict)
 
             bliss.events.on('bliss:tlm:packet', () => {
                 m.redraw()
@@ -117,7 +118,7 @@ function init () {
 
         let source = new EventSource('/events');
         source.addEventListener('message', function (event) {
-            let e = $.parseJSON(event.data);
+            let e = JSON.parse(event.data);
             bliss.events.emit(e.name, e.data)
         });
 

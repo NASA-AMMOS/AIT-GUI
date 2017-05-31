@@ -8,110 +8,64 @@ The bliss.gui module provides the web-based (HTML5/CSS/Javascript)
 BLISS Graphical User Interface (GUI).
 """
 
+
+# Gevent Monkey Patching
+#
+# From http://www.gevent.org/intro.html:
+#
+#     The functions in gevent.monkey carefully replace functions and
+#     classes in the standard socket module with their cooperative
+#     counterparts. That way even the modules that are unaware of
+#     gevent can benefit from running in a multi-greenlet environment.
+#
+# And:
+#
+#     When monkey patching, it is recommended to do so as early as
+#     possible in the lifetime of the process. If possible, monkey
+#     patching should be the first lines executed.
+#
+
+import gevent
+import gevent.event
+import gevent.monkey; gevent.monkey.patch_all()
+import geventwebsocket
+
 import collections
 import copy
 import json
 import os
 import socket
+import struct
 import time
 import webbrowser
 
 import bottle
-import gevent
-import gevent.event
-import gevent.monkey
-import geventwebsocket
+import pkg_resources
 import requests
 
 import bliss
-from bliss.core import log
-
 import bliss.core
-from bliss.core import log, gds, tlm, cmd, util, evr, pcap
 
-gevent.monkey.patch_all()
+from bliss.core import api, cfg, log, gds, tlm, cmd, util, evr, pcap
 
-if 'gui' in bliss.config and 'html_root' in bliss.config.gui:
-    cfg_path = bliss.config.gui.html_root
-    cfg_path = os.path.expanduser(cfg_path)
 
-    if os.path.isabs(cfg_path):
-        HTMLRoot = cfg_path
-    else:
-        HTMLRoot = os.path.join(bliss.config._ROOT_DIR, cfg_path)
+class HTMLRoot:
+    Fallback = os.path.join(bliss.config._ROOT_DIR, 'gui')
+    User     = bliss.config.get('gui.html.directory', Fallback)
+    Static   = pkg_resources.resource_filename('bliss.gui', 'static/build')
 
-    HTMLRoot = os.path.normpath(HTMLRoot)
-else:
-    import pkg_resources
-    HTMLRoot = pkg_resources.resource_filename('bliss.gui', 'static/')
+SEQRoot = os.path.join(bliss.config._ROOT_DIR, 'seq')
 
-SEQRoot = pkg_resources.resource_filename('bliss.gui', 'seq/')
+if not os.path.exists(SEQRoot):
+    SEQRoot = None
 
 App     = bottle.Bottle()
 Servers = [ ]
 
 bottle.debug(True)
-bottle.TEMPLATE_PATH.append(HTMLRoot)
+bottle.TEMPLATE_PATH.append(HTMLRoot.User)
 
 CmdHistFile = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bliss-gui-cmdhist.pcap')
-
-
-class Deque (object):
-    """Deque
-
-    A Python collections.deque that can be used in a Gevent context.
-    Get operations will block until an item is available in the Deque.
-    """
-
-    def __init__ (self, maxlen=None, deque=None):
-        """Creates a new Deque, optionally cloned from the existing deque.
-
-        If maxlen is not specified or is None, deques may grow to an
-        arbitrary length.  Otherwise, the deque is bounded to the
-        specified maximum length.  Once a bounded length deque is full,
-        when new items are added, a corresponding number of items are
-        discarded from the opposite end.
-        """
-        if deque is None:
-            self.deque = collections.deque(maxlen=maxlen)
-        else:
-            self.deque = copy.copy(deque)
-
-        self.event = gevent.event.Event()
-
-        if len(self.deque) > 0:
-            self.event.set()
-
-    def __copy__ (self):
-        """Creates a new copy of this Deque (via Python copy.copy())."""
-        return Deque(deque=self.deque)
-
-    def __len__ (self):
-        """The number of items in this Deque."""
-        return len(self.deque)
-
-    def get (self):
-        """Removes and returns the oldest item inserted into this Deque.
-        This method blocks if the Deque is empty.
-        """
-        self.event.wait()
-        item = self.deque.popleft()
-
-        if len(self.deque) is 0:
-            self.event.clear()
-
-        return item
-
-    def put (self, item):
-        """Adds item to this Deque.
-
-        This method does not block.  Either the Deque grows to consume
-        available memory, or if this Deque has a maxlen, the oldest
-        inserted item is removed.
-        """
-        self.deque.append(item)
-        self.event.set()
-        
 
 
 class Session (object):
@@ -126,9 +80,9 @@ class Session (object):
         """Creates a new Session, capable of storing up to maxlen items of
         each event, message, and telemetry type.
         """
-        self.events          = Deque(maxlen)
-        self.messages        = Deque(maxlen)
-        self.telemetry       = collections.defaultdict(lambda: Deque(maxlen))
+        self.events          = api.GeventDeque(maxlen=maxlen)
+        self.messages        = api.GeventDeque(maxlen=maxlen)
+        self.telemetry       = api.GeventDeque(maxlen=maxlen)
         self._maxlen         = maxlen
         self._store          = store
         self._numConnections = 0
@@ -170,24 +124,25 @@ class SessionStore (dict):
         """Creates a new SessionStore."""
         dict.__init__(self, *args, **kwargs)
 
-    def addTelemetry (self, name, packet):
+    def addTelemetry (self, defn, packet):
         """Adds a telemetry packet to all Sessions in the store."""
-        SessionStore.History.telemetry[name].put(packet)
+        item = (defn, packet)
+        SessionStore.History.telemetry.append(item)
         for session in self.values():
-            session.telemetry[name].put(packet)
-            
+            session.telemetry.append(item)
+
     def addMessage (self, msg):
         """Adds a log message to all Sessions in the store."""
-        SessionStore.History.messages.put(msg)
+        SessionStore.History.messages.append(msg)
         for session in self.values():
-            session.messages.put(msg)
+            session.messages.append(msg)
 
     def addEvent (self, name, data):
         """Adds an event to all Sessions in the store."""
         event = { 'name': name, 'data': data }
-        SessionStore.History.events.put(event)
+        SessionStore.History.events.append(event)
         for session in self.values():
-            session.events.put(event)
+            session.events.append(event)
 
     def current (self):
         """Returns the current Session for this HTTP connection or raise an
@@ -227,17 +182,17 @@ class UdpSysLogServer (gevent.server.DatagramServer):
 
 
 class UdpTelemetryServer (gevent.server.DatagramServer):
-    def __init__ (self, listener, name):
+    def __init__ (self, listener, defn):
         super(UdpTelemetryServer, self).__init__(listener)
-        self._name = name
+        self._defn = defn
 
     def start (self):
-        values = self._name, self.server_host, self.server_port
+        values = self._defn.name, self.server_host, self.server_port
         log.info('Listening for %s telemetry on %s:%d (UDP)' % values)
         super(UdpTelemetryServer, self).start()
 
     def handle (self, packet, address):
-        Sessions.addTelemetry(self._name, packet)
+        Sessions.addTelemetry(self._defn, packet)
 
 
 def getBrowserName(browser):
@@ -249,14 +204,20 @@ def init(host=None, port=8000):
 
     @App.route('/bliss/gui/static/<pathname:path>')
     def handle(pathname):
-        return bottle.static_file(pathname, root=HTMLRoot)
+        return bottle.static_file(pathname, root=HTMLRoot.Static)
+
+    @App.route('/<pathname:path>')
+    def handle(pathname):
+        return bottle.static_file(pathname, root=HTMLRoot.User)
 
     if host is None:
         host = 'localhost'
 
     for t in bliss.config.gui.telemetry:
-        stream = t['stream']
-        Servers.append( UdpTelemetryServer(stream['port'], stream['name']) )
+        stream = cfg.BlissConfig(config=t).stream
+        defn   = tlm.getDefaultDict().get(stream.name, None)
+        if defn:
+            Servers.append( UdpTelemetryServer(stream.port, defn) )
 
     Servers.append( UdpSysLogServer(':%d' % 2514)     )
     Servers.append( gevent.pywsgi.WSGIServer(
@@ -306,6 +267,15 @@ def wait():
 Sessions = SessionStore()
 
 
+def __setResponseToEventStream():
+    bottle.response.content_type  = 'text/event-stream'
+    bottle.response.cache_control = 'no-cache'
+
+def __setResponseToJSON():
+    bottle.response.content_type  = 'application/json'
+    bottle.response.cache_control = 'no-cache'
+
+
 @App.route('/')
 def handle ():
     Sessions.create()
@@ -316,14 +286,12 @@ def handle ():
 def handle ():
     """Endpoint that pushes Server-Sent Events to client"""
     with Sessions.current() as session:
-        bottle.response.content_type  = 'text/event-stream'
-        bottle.response.cache_control = 'no-cache'
+        __setResponseToEventStream()
         yield 'event: connected\ndata:\n\n'
 
         while True:
-            event = session.events.get()
-            bottle.response.content_type  = 'text/event-stream'
-            bottle.response.cache_control = 'no-cache'
+            event = session.events.popleft()
+            __setResponseToEventStream()
             yield 'data: %s\n\n' % json.dumps(event)
 
 
@@ -339,25 +307,22 @@ def handle ():
 def handle():
     """Endpoint that pushes syslog output to client"""
     with Sessions.current() as session:
-        bottle.response.content_type  = 'text/event-stream'
-        bottle.response.cache_control = 'no-cache'
+        __setResponseToEventStream()
         yield 'event: connected\ndata:\n\n'
 
         while True:
-            msg = session.messages.get()
-            bottle.response.content_type  = 'text/event-stream'
-            bottle.response.cache_control = 'no-cache'
+            msg = session.messages.popleft()
+            __setResponseToEventStream()
             yield 'data: %s\n\n' % json.dumps(msg)
 
 
 @App.route('/tlm/dict', method='GET')
 def handle():
-    return json.dumps( tlm.getDefaultDict().toDict() )
+    return json.dumps( tlm.getDefaultDict().toJSON() )
 
 @App.route('/cmd/dict', method='GET')
 def handle():
-    print '/cmd/dict'
-    return json.dumps(cmd.getDefaultDict().toDict())
+    return json.dumps( cmd.getDefaultDict().toJSON() )
 
 @App.route('/cmd/hist.json', method='GET')
 def handle():
@@ -420,64 +385,40 @@ def handle():
 def handle():
     """Endpoint that pushes syslog output to client"""
     with Sessions.current() as session:
-        bottle.response.content_type  = 'text/event-stream'
-        bottle.response.cache_control = 'no-cache'
+        __setResponseToEventStream()
         yield 'event: connected\ndata:\n\n'
 
         while True:
-            msg = session.messages.get()
-            bottle.response.content_type  = 'text/event-stream'
-            bottle.response.cache_control = 'no-cache'
+            msg = session.messages.popleft()
+            __setResponseToEventStream()
             yield 'data: %s\n\n' % json.dumps(msg)
 
 
-@App.route('/tlm/stream')
+@App.route('/tlm/realtime')
 def handle():
     with Sessions.current() as session:
-        # A byte of padding makes sure that the stream is treated as binary.
-        pad     = bytearray(1)
-        wsock   = bottle.request.environ.get('wsgi.websocket')
+        # A null-byte pad ensures wsock is treated as binary.
+        pad   = bytearray(1)
+        wsock = bottle.request.environ.get('wsgi.websocket')
 
         if not wsock:
             bottle.abort(400, 'Expected WebSocket request.')
 
         while True:
-            tlm = session.telemetry.get()
-            # The byte of 0x00 padding makes sure that the stream is treated as
-            # binary data
-            wsock.send(pad + tlm)
-
-
-@App.route('/tlm/realtime/<pname>/json', method='GET')
-def handle(pname):
-    """Endpoint that pushes syslog output to client"""
-    with Sessions.current() as session:
-        defn = tlm.getDefaultDict()[pname]
-        hist = tlm.PacketHistory(defn)
-
-        bottle.response.content_type  = 'text/event-stream'
-        bottle.response.cache_control = 'no-cache'
-        yield 'event: connected\ndata:\n\n'
-
-        while True:
-            data   = session.telemetry[pname].get()
-            packet = tlm.Packet(defn, data, hist)
-            msg    = { }
-
-            for fname in defn.fieldmap.keys():
-                msg[fname] = getattr(packet, fname)
-
-            bottle.response.content_type  = 'text/event-stream'
-            bottle.response.cache_control = 'no-cache'
-            yield 'data: %s\n\n' % json.dumps(msg)
+            defn, data = session.telemetry.popleft()
+            wsock.send(pad + struct.pack('>I', defn.uid) + data)
 
 
 @App.route('/seq', method='GET')
 def handle():
     """Endpoint that provides a JSON array of filenames in the SEQRoot
     directory."""
-    files = [ fn for fn in os.listdir(SEQRoot) if fn.endswith('.txt') ]
-    return json.dumps(sorted(files))
+    if SEQRoot is None:
+        files = [ ]
+    else:
+        files = [ fn for fn in os.listdir(SEQRoot) if fn.endswith('.txt') ]
+
+        return json.dumps( sorted(files) )
 
 
 @App.route('/seq', method='POST')

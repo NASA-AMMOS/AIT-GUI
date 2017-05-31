@@ -1,17 +1,18 @@
+import * as dtype from './dtype'
+
+
 class FieldDefinition
 {
     constructor(args) {
         args = args === undefined ? {} : args
 
-        this.name    = args.name
-        this.pdt     = args.type && args.type.pdt
-        this.format  = args.type && args.type.format
-        this.mask    = args.mask
-        this.type    = args.type.name
-        this.enum    = args.enum
-        this.shift   = 0
-        this.le      = this.format.length > 0 && this.format[0] === '<'
-        this.bytes   = args.bytes
+        this.name   = args.name
+        this.mask   = args.mask
+        this.type   = dtype.get(args.type)
+        this.enum   = args.enum
+        this.shift  = 0
+        this.bytes  = args.bytes
+        this.dntoeu = args.dntoeu
 
         // Bytes can be either one integer or an array,
         // all we need is the head
@@ -20,11 +21,6 @@ class FieldDefinition
         }
         else {
             this.offset = args.bytes
-        }
-
-        if (this.format.length > 0 &&
-            this.format[0] === '<' || this.format[0] === '>') {
-            this.format = this.format.substr(1)
         }
 
         if (this.mask !== undefined && this.mask !== null) {
@@ -37,31 +33,23 @@ class FieldDefinition
 
 
     decode (view) {
-        let value
+        let value = null
 
-        switch (this.format) {
-            case 'b': value = view.getInt8   (this.offset, this.le); break;
-            case 'B': value = view.getUint8  (this.offset, this.le); break;
-            case 'h': value = view.getInt16  (this.offset, this.le); break;
-            case 'H': value = view.getUint16 (this.offset, this.le); break;
-            case 'i': value = view.getInt32  (this.offset, this.le); break;
-            case 'I': value = view.getUint32 (this.offset, this.le); break;
-            case 'f': value = view.getFloat32(this.offset, this.le); break;
-            case 'd': value = view.getFloat64(this.offset, this.le); break;
-            default:  break;
-        }
+        if (this.type) {
+            value = this.type.decode(view, this.offset)
 
-        if (this.mask !== undefined && this.mask !== null) {
-            value &= this.mask
-        }
+            if (this.mask !== undefined && this.mask !== null) {
+                value &= this.mask
+            }
 
-        if (this.shift > 0) {
-            value >>= this.shift
-        }
+            if (this.shift > 0) {
+                value >>= this.shift
+            }
 
-        // If enumeration exists, display that value
-        if (this.enum !== undefined) {
-            return this.enum[value]
+            // If enumeration exists, display that value
+            if (this.enum !== undefined) {
+                return this.enum[value]
+            }
         }
 
         return value
@@ -71,52 +59,57 @@ class FieldDefinition
 
 class Packet
 {
-    constructor (defn, data) {
+    constructor (defn, data, raw=false) {
         this._defn = defn
         this._data = data
+        this._raw  = raw
 
-        this._defn.fields.forEach( (field) => {
-            const getter = () => {
-                if (this.data instanceof DataView) {
-                    return field.decode(this.data)
-                }
-                else {
-                    return this.data[field.name]
-                }
+        for (let name in this._defn.fields) {
+            const getter = () => this.__get__(name)
+            Object.defineProperty(this, name, { get: getter })
+        }
+    }
+
+    __get__ (name) {
+        let value = undefined
+
+        if (this._data instanceof DataView) {
+            const defn = this._defn.fields[name]
+
+            if (defn) {
+                value = defn ? defn.decode(this._data) : undefined
             }
+            // else if (defn.dntoeu) {
+            //    value = defn.dntoeu.eval(this)
+            // }
+        }
 
-            Object.defineProperty(this, field.name, { get: getter })
-        })
+        return value
     }
 
+    __clone__ (data, raw=false) {
+        const proto = Object.getPrototypeOf(obj)
+        const props = Object.getOwnPropertyDescriptors(obj)
+        let   obj   = Object.create(proto, props)
 
-    get data () {
-        return this._data
-    }
+        obj._data = data
+        obj._raw  = raw
 
-
-    get defn () {
-        return this._defn
-    }
-
-
-    set data (value) {
-        this._data = value
+        return obj
     }
 }
 
 
 class PacketDefinition
 {
-    constructor (name, fields) {
-        this._name   = name
-        this._fields = [ ]
+    constructor (obj) {
+        this._name   = obj.name
+        this._desc   = obj.desc
+        this._fields = { }
+        this._uid    = obj.uid
 
-        for (let key in fields) {
-            const defn = new FieldDefinition( fields[key] )
-
-            this[key] = defn
-            this._fields.push(defn)
+        for (let key in obj.fields) {
+            this._fields[key] = new FieldDefinition( obj.fields[key] )
         }
     }
 
@@ -127,35 +120,79 @@ class PacketDefinition
     get name () {
         return this._name
     }
+
+    get uid () {
+        return this._uid
+    }
+
+    static parse (obj) {
+        if (typeof obj === 'string') {
+            obj = JSON.parse(obj)
+        }
+
+        return new PacketDefinition(obj)
+    }
 }
 
 
 class TelemetryDictionary
 {
-    constructor (json) {
-        for (let packet in json) {
-            let fields   = json[packet]['fields']
-            this[packet] = new bliss.tlm.PacketDefinition(packet, fields)
+    /**
+     * Creates a new (empty) TelemetryDictionary.
+     */
+    constructor () { }
+
+    /**
+     * Adds the given PacketDefinition to this TelemetryDictionary.
+     */
+    add (defn) {
+        if (defn instanceof PacketDefinition) {
+            this[defn.name] = defn
         }
+    }
+
+    /**
+     * Parses the given plain Javascript Object or JSON string and
+     * returns a new TelemetryDictionary, mapping packet names to
+     * PacketDefinitions.
+     */
+    static parse (obj) {
+        let dict = new TelemetryDictionary()
+
+        if (typeof obj === 'string') {
+            obj = JSON.parse(obj)
+        }
+
+        for (let name in obj) {
+            dict.add( new PacketDefinition(obj[name]) )
+        }
+
+        return dict
     }
 }
 
 
 class TelemetryStream
 {
-    constructor (url, defn) {
-        this._defn     = defn
+    constructor (url, dict) {
+        this._dict     = { }
         this._interval = 0
-        this._packet   = new Packet(defn)
-        this._socket   = new EventSource(url)
+        this._socket   = new WebSocket(url)
         this._stale    = 0
         this._url      = url
 
-        this._socket.onmessage = event => {
-            this.onMessage( JSON.parse(event.data) )
+        // Re-map telemetry dictionary to be keyed by a PacketDefinition
+        // 'id' instead of 'name'.
+        for (let name in dict) {
+            let defn             = dict[name]
+            this._dict[defn.uid] = defn
         }
-    }
 
+        this._socket.binaryType = 'arraybuffer'
+        this._socket.onclose    = event => this.onClose  (event)
+        this._socket.onmessage  = event => this.onMessage(event)
+        this._socket.onopen     = event => this.onOpen   (event)
+    }
 
     _emit (name, data) {
         bliss.events.emit('bliss:tlm:' + name, data)
@@ -167,15 +204,25 @@ class TelemetryStream
     }
 
 
-    onMessage (data) {
-        this._packet.data = data
+    onMessage (event) {
+        if ( !(event.data instanceof ArrayBuffer) ) return
 
-        clearInterval(this._interval)
-        this._stale    = 0
-        this._interval = setInterval(this.onStale.bind(this), 1500)
+        let uid  = new DataView(event.data, 1, 4).getUint32(0)
+        let data = new DataView(event.data, 5)
+        let defn = this._dict[uid]
 
-        bliss.packets.insert(this._defn.name, this._packet)
-        this._emit('packet', this._packet)
+        if (defn) {
+            // FIXME: packet.__clone__(data)?
+            let packet = new Packet(defn, data)
+            console.log(uid, defn.name)
+
+            clearInterval(this._interval)
+            this._stale    = 0
+            this._interval = setInterval(this.onStale.bind(this), 1500)
+
+            bliss.packets.insert(defn.name, packet)
+            this._emit('packet', packet)
+        }
     }
 
 
@@ -183,7 +230,7 @@ class TelemetryStream
         this._interval = setInterval(this.onStale.bind(this), 1500)
         this._stale    = 0
 
-        bliss.packets.create(this._defn.name)
+        //bliss.packets.create(this._defn.name)
         this._emit('open', this)
     }
 

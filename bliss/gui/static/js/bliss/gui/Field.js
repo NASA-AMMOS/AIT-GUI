@@ -19,16 +19,6 @@ const Field =
         const packet = buffer && buffer.get(0)
         let   value  = packet && packet[this._name]
 
-
-        if ( (bliss.tlm.dict !== undefined) && (bliss.tlm.streams[pname] === undefined) ) { 
-            const url  = '/tlm/realtime/' + pname + '/json'
-            const defn = bliss.tlm.dict[pname]
-
-            if (defn !== undefined) {
-                bliss.tlm.streams[pname] = new bliss.tlm.TelemetryStream(url, defn)
-            }
-        }
-        
         if (value === undefined) {
             value = 'N/A'
         }
