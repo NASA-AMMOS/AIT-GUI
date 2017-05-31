@@ -84,6 +84,10 @@ const SimStatus = Object.assign(Object.create(LED), {
         this.action = vnode.attrs.action
         bliss.events.on(vnode.attrs.on, () => {this._simRunning = true})
         bliss.events.on(vnode.attrs.off, () => {this._simRunning = false})
+
+        if (this._state === 'on') {
+            this._simRunning = true
+        }
     },
 
     view(vnode) {
