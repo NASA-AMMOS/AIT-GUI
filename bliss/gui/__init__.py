@@ -51,9 +51,8 @@ from bliss.core import api, cfg, log, gds, tlm, cmd, util, evr, pcap
 
 
 class HTMLRoot:
-    Fallback = os.path.join(bliss.config._ROOT_DIR, 'gui')
-    User     = bliss.config.get('gui.html.directory', Fallback)
-    Static   = pkg_resources.resource_filename('bliss.gui', 'static/build')
+    Static = pkg_resources.resource_filename('bliss.gui', 'static/')
+    User = bliss.config.get('gui.html.directory', Static)
 
 SEQRoot = os.path.join(bliss.config._ROOT_DIR, 'seq')
 
