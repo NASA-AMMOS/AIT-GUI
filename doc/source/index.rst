@@ -12,6 +12,7 @@ Contents:
    :maxdepth: 2
 
    bliss_gui
+   contribute
 
 
 Indices and tables

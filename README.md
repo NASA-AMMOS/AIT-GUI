@@ -64,3 +64,5 @@ You can keep the tests on "watch" mode so they run each time you make a change t
 ```
 npm test -- --watch
 ```
+
+Additional developer documentation is available in the [Contribution Guide](https://github.jpl.nasa.gov/pages/bliss/bliss-gui/contribute.html) file in the Sphinx docs.
