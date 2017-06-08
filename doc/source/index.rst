@@ -11,8 +11,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   developer_info
-
+   bliss_gui
 
 
 Indices and tables
