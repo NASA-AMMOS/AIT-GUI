@@ -1,5 +1,6 @@
 @import url("./node_modules/bootstrap/dist/css/bootstrap.css");
 @import url("./node_modules/bootstrap/dist/css/bootstrap-theme.css");
+@import url("./node_modules/codemirror/lib/codemirror.css")
 @import url("typeahead.css");
 /*@import url("./node_modules/jquery-ui/themes/base/all.css");*/
 
@@ -141,3 +142,13 @@ span.sim-monitor.glyphicon-play {
 span.sim-monitor.glyphicon-stop {
     margin-top: 7px;
 }
+
+codeMirrorExecGutter {
+    width: 20px;
+}
+
+.bliss-script-pause {color: red}
+.bliss-script-play {color: green}
+.bliss-script-stopped {color: black}
+.bliss-script-running {color: green}
+.bliss-script-error {color: red}

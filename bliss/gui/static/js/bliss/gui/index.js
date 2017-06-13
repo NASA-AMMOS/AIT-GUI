@@ -5,6 +5,7 @@ export * from './Status.js'
 export * from './TabSet.js'
 export * from './Command.js'
 export * from './Sequence.js'
+export * from './Script.js'
 
 import filter from 'lodash/filter'
 import map    from 'lodash/map'
