@@ -4,7 +4,7 @@ Usage:
   bliss-gui.py [<port> --host=<host> --browser=<browser>]
 
 Options:
-  port       GUI client HTTP connections port
+  port       GUI client HTTP connections port (default 8000)
   host       GUI client HTTP connections hostname
   browser    GUI client browser to start (may be "none")
 """
@@ -27,8 +27,7 @@ try:
     arguments = docopt.docopt(__doc__, version='bliss-gui 0.1.0')
     browser   = arguments['--browser']
     host      = arguments['--host']
-    port      = int(arguments['<port>']) or 8000
-
+    port      = int(arguments['<port>'] or 8000)
 
     if host is None:
         if sys.platform == 'darwin':
