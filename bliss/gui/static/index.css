@@ -12,6 +12,10 @@ bliss-clock {
     display: block;
 }
 
+bliss-field {
+    font-weight: normal;
+    text-align:  left;
+}
 
 /* Animate bliss-tab moves */
 bliss-tabset li {

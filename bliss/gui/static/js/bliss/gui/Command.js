@@ -85,10 +85,10 @@ const CommandInput = {
                                  name: 'command',
                                  placeholder: 'Select Command ...'
                              }),
-                           m('span', {class: 'input-group-btn'}, 
+                           m('span', {class: 'input-group-btn'},
                                m('button', {class: 'btn btn-success', type: 'submit'}, 'Send')
                            ),
-                       ]) 
+                       ])
                    ])
                )
     }
@@ -101,10 +101,10 @@ let CommandSelectionData = {
 const CommandSearch = {
     groupedCommands: {},
     commandFilter: '',
-    
+
     oninit(vnode) {
         bliss.cmd.promise.then(() => {
-            this.groupedCommands = groupBy(bliss.cmd.dict, (v) => {return v.subsystem})
+            this.groupedCommands = bliss.cmd.dict.bySubsystem
         })
     },
 
@@ -188,7 +188,7 @@ const CommandSearch = {
                                        type: 'search'
                                    })
         let commandSearchReset = m('div', {class: 'input-group-btn'},
-                                   m('button', {class: 'btn btn-default', id: 'command-search-clear'}, 
+                                   m('button', {class: 'btn btn-default', id: 'command-search-clear'},
                                      m('span', {
                                            class: 'glyphicon glyphicon-remove-circle',
                                        })))
@@ -263,8 +263,8 @@ const CommandConfigure = {
      * dictionary object.
      */
     generateCommandArgumentsForm(command) {
-        let argdefns = Object.keys(command.argdefns)
-                             .map((k) => command.argdefns[k])
+        let argdefns = Object.keys(command.arguments)
+                             .map((k) => command.arguments[k])
                              .filter((arg) => {
                                  if (arg.fixed === true) {
                                      return false
@@ -331,7 +331,7 @@ const CommandConfigure = {
          name_parts = map(name_parts, (v) => v.charAt(0).toUpperCase() + v.slice(1))
          return name_parts.join(' ')
      },
-     
+
     /**
      * Generate the argument input field for a given command's argument object.
      */
@@ -358,7 +358,7 @@ const CommandConfigure = {
             ])
         }
     },
-    
+
     /**
      * Handles construction of the command and submission to the backend
      */

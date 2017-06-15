@@ -197,7 +197,7 @@ class TelemetryStream
     _emit (name, data) {
         bliss.events.emit('bliss:tlm:' + name, data)
     }
-        
+
     onClose (event) {
         clearInterval(this._interval)
         this._emit('close', this)
@@ -214,7 +214,6 @@ class TelemetryStream
         if (defn) {
             // FIXME: packet.__clone__(data)?
             let packet = new Packet(defn, data)
-            console.log(uid, defn.name)
 
             clearInterval(this._interval)
             this._stale    = 0

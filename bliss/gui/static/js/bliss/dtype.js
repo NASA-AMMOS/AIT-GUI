@@ -1,4 +1,48 @@
 /**
+ * Number of milliseconds between the Unix and GPS Epochs.
+ */
+const GPSEpoch = 315964800000
+
+
+class CommandType
+{
+    constructor(name) {
+        this._name = name
+    }
+
+    get isTime() {
+        return false
+    }
+
+    decode(view, offset=0) {
+        const dict   = bliss.cmd.dict
+        const opcode = view.getUint16(offset, false)
+
+        return dict ? dict.getByOpcode(opcode) : opcode
+    }
+}
+
+
+class EVRType
+{
+    constructor(name) {
+        this._name = name
+    }
+
+    get isTime() {
+        return false
+    }
+
+    decode(view, offset=0) {
+        const dict = bliss.evr.dict
+        const code = view.getUint16(offset, false)
+
+        return dict ? dict.getByCode(code) : code
+    }
+}
+
+
+/**
  * PrimitiveType
  *
  * A PrimitiveType contains a number of fields that provide
@@ -56,6 +100,7 @@ class PrimitiveType
         }
     }
 
+    get isTime () { return false }
 
     /**
      * Decodes the given DataView (starting at optional byte offset)
@@ -65,6 +110,47 @@ class PrimitiveType
      */
     decode (view, offset=0) {
         return this._decode ? this._decode(view, offset) : null
+    }
+}
+
+
+class TimeType
+{
+    constructor(name) {
+        this._name = name
+    }
+
+    get isTime () {
+        return true
+    }
+}
+
+
+// FIXME: Time8 is relative, while Time32 and Time64 are absolute.
+class Time8Type extends TimeType
+{
+    decode (view, offset=0) {
+        return view.getUint8(offset, false) / 256.0
+    }
+}
+
+
+class Time32Type extends TimeType
+{
+    decode (view, offset=0) {
+        const tv_sec = view.getUint32(offset, false)
+        return new Date(GPSEpoch + (tv_sec * 1000))
+    }
+}
+
+
+class Time64Type extends TimeType
+{
+    decode (view, offset=0) {
+        const tv_sec   = view.getUint32(offset, false)
+        const tv_nsec  = view.getUint32(offset + 4, false)
+
+        return new Date(GPSEpoch + (tv_sec * 1000) + (tv_nsec / 1e6))
     }
 }
 
@@ -92,22 +178,27 @@ const PrimitiveTypeDecoder = {
 
 
 //
-// PrimitiveTypeMap
+// TypeMap
 //
 // Maps typenames to PrimitiveType.  Use bliss.dtype.get(typename).
 // (Populated below based on information in PrimitiveTypeDecoder).
 //
-let PrimitiveTypeMap = { }
+let TypeMap = { }
 Object.keys(PrimitiveTypeDecoder).map( (typename) => {
-    PrimitiveTypeMap[typename] = new PrimitiveType(typename)
+    TypeMap[typename] = new PrimitiveType(typename)
 })
 
+TypeMap['CMD16']  = new CommandType('CMD16')
+TypeMap['EVR16']  = new EVRType('EVR16')
+TypeMap['TIME8']  = new Time8Type ('TIME8' )
+TypeMap['TIME32'] = new Time32Type('TIME32')
+TypeMap['TIME64'] = new Time64Type('TIME64')
 
 /**
  * @returns the PrimitiveType for typename or undefined.
  */
 function get (typename) {
-    return PrimitiveTypeMap[typename]
+    return TypeMap[typename]
 }
 
 

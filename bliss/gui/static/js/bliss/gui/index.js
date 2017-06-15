@@ -8,6 +8,9 @@ export * from './Sequence.js'
 
 import filter from 'lodash/filter'
 import map    from 'lodash/map'
+
+import { CommandDictionary } from '../cmd.js'
+import { EVRDictionary     } from '../evr.js'
 import { TelemetryDictionary, TelemetryStream } from '../tlm.js'
 
 
@@ -97,13 +100,15 @@ function init () {
         const cloned = root.cloneNode(true)
         const elems  = map(cloned.childNodes, c => c)
 
-        bliss.cmd        = { dict: {} }
-        bliss.cmd.promise = m.request({url: '/cmd/dict'})
-        bliss.cmd.promise.then((dict) => {
-            bliss.cmd.dict = dict
+        bliss.cmd         = { dict: {} }
+        bliss.cmd.promise = m.request({ url: '/cmd/dict' })
+        bliss.cmd.promise.then( (dict) => {
+            bliss.cmd.dict = CommandDictionary.parse(dict)
         })
 
-        m.mount(root, { view: () => createMithrilNodes(elems) })
+        m.request({ url: '/evr/dict' }).then( (dict) => {
+            bliss.evr.dict = EVRDictionary.parse(dict)
+        })
 
         m.request({ url: '/tlm/dict' }).then( (dict) => {
             let url = 'ws://' + location.host + '/tlm/realtime'
@@ -125,6 +130,8 @@ function init () {
         bliss.events.on('cmd:submit', () => {
             $('#commanding-modal').modal('hide')
         })
+
+        m.mount(root, { view: () => createMithrilNodes(elems) })
     })
 }
 

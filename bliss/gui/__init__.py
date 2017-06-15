@@ -296,11 +296,16 @@ def handle ():
 
 
 @App.route('/events', method='POST')
-def handle ():
+def handle():
     with Sessions.current() as session:
         name = bottle.request.POST.name
         data = bottle.request.POST.data
         Sessions.addEvent(name, data)
+
+
+@App.route('/evr/dict', method='GET')
+def handle():
+    return json.dumps([ e.toJSON() for e in evr.getDefaultDict() ])
 
 
 @App.route('/messages', method='GET')
