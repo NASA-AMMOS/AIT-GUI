@@ -23,10 +23,13 @@ class FieldDefinition
             this.offset = args.bytes
         }
 
-        if (this.mask !== undefined && this.mask !== null) {
-            while (this.mask !== 0 && (this.mask & 1) === 0) {
+        // Set the shift based on the bitmask
+        let mask = this.mask
+
+        if (mask !== undefined && mask !== null) {
+            while (mask !== 0 && (mask & 1) === 0) {
                 this.shift += 1
-                this.mask >>= 1
+                mask >>= 1
             }
         }
     }
@@ -48,7 +51,7 @@ class FieldDefinition
 
             // If enumeration exists, display that value
             if (this.enum !== undefined) {
-                return this.enum[value]
+                value = this.enum[value]
             }
         }
 
