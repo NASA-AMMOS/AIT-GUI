@@ -54,10 +54,25 @@ class HTMLRoot:
     Static = pkg_resources.resource_filename('bliss.gui', 'static/')
     User = bliss.config.get('gui.html.directory', Static)
 
-SEQRoot = os.path.join(bliss.config._ROOT_DIR, 'seq')
+SEQRoot = bliss.config.get('sequence.directory', None)
 
-if not os.path.exists(SEQRoot):
-    SEQRoot = None
+default_cmd_hist = os.path.join(bliss.config._ROOT_DIR, 'bliss-gui-cmdhist.pcap')
+CmdHistFile = bliss.config.get('command.history.filename', default_cmd_hist)
+
+if SEQRoot and not os.path.isdir(SEQRoot):
+    msg = (
+        'sequence.directory points to a directory that does not exist. '
+        'Sequence loads may fail.'
+    )
+    bliss.core.log.warn(msg)
+
+if not os.path.isfile(CmdHistFile):
+    if not os.path.isdir(os.path.dirname(CmdHistFile)):
+        msg = (
+            'command.history.filename points to a directory that does not exist. '
+            'Command history will not be saved.'
+        )
+        bliss.core.log.warn(msg)
 
 App     = bottle.Bottle()
 Servers = [ ]
@@ -65,7 +80,6 @@ Servers = [ ]
 bottle.debug(True)
 bottle.TEMPLATE_PATH.append(HTMLRoot.User)
 
-CmdHistFile = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bliss-gui-cmdhist.pcap')
 
 
 class Session (object):
