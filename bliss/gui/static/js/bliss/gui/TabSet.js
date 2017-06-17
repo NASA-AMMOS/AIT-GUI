@@ -261,13 +261,13 @@ const TabSet =
      * is due primarily to the way Bootstrap tabs are styled and
      * needing to accomodate CSS animations to slide tabs left or
      * right to indicate where the dropped tab will be positioned.
-     */        
+     */
     tab (vnode, index) {
         const move  = TabSet.move.bind(this)
         const attrs = {
             class     : this.tabClass(index),
             key       : this._uid[index],
-            onclick   : ()  => this._active = index,
+            onclick   : ()  => { this._active = index; return false; },
             ondragover: (e) => this._drag.over(e, index),
             ondrop    : (e) => this._drag.drop(e, index, move)
         }
@@ -275,7 +275,7 @@ const TabSet =
         return m('li', attrs, this.anchor(vnode, index))
     },
 
-    
+
     /**
      * @returns the CSS class(es) for the tab at the given `index`.
      */

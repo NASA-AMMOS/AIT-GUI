@@ -54,11 +54,11 @@
 
 	var bliss = _interopRequireWildcard(_bliss);
 
-	var _index = __webpack_require__(176);
+	var _index = __webpack_require__(178);
 
 	var _index2 = _interopRequireDefault(_index);
 
-	__webpack_require__(188);
+	__webpack_require__(190);
 
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
@@ -1799,7 +1799,7 @@
 
 	var time = _interopRequireWildcard(_time);
 
-	var _tlm = __webpack_require__(174);
+	var _tlm = __webpack_require__(176);
 
 	var tlm = _interopRequireWildcard(_tlm);
 
@@ -2599,7 +2599,7 @@
 
 	var _evr = __webpack_require__(10);
 
-	var _tlm = __webpack_require__(174);
+	var _tlm = __webpack_require__(176);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -14713,7 +14713,7 @@
 	            class: this.tabClass(index),
 	            key: this._uid[index],
 	            onclick: function onclick() {
-	                return _this3._active = index;
+	                _this3._active = index;return false;
 	            },
 	            ondragover: function ondragover(e) {
 	                return _this3._drag.over(e, index);
@@ -22554,7 +22554,9 @@
 	exports.Sequence = Sequence;
 
 /***/ }),
-/* 174 */
+/* 174 */,
+/* 175 */,
+/* 176 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -22566,7 +22568,7 @@
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _dtype = __webpack_require__(175);
+	var _dtype = __webpack_require__(177);
 
 	var dtype = _interopRequireWildcard(_dtype);
 
@@ -22877,7 +22879,7 @@
 	exports.TelemetryStream = TelemetryStream;
 
 /***/ }),
-/* 175 */
+/* 177 */
 /***/ (function(module, exports) {
 
 	'use strict';
@@ -23199,14 +23201,12 @@
 	exports.get = get;
 
 /***/ }),
-/* 176 */
+/* 178 */
 /***/ (function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ }),
-/* 177 */,
-/* 178 */,
 /* 179 */,
 /* 180 */,
 /* 181 */,
@@ -23216,7 +23216,9 @@
 /* 185 */,
 /* 186 */,
 /* 187 */,
-/* 188 */
+/* 188 */,
+/* 189 */,
+/* 190 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(jQuery) {/*!
