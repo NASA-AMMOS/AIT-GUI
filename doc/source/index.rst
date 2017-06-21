@@ -12,6 +12,7 @@ Contents:
    :maxdepth: 2
 
    installation
+   new_project
    bliss_gui
    contribute
 
