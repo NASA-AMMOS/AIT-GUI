@@ -1,7 +1,13 @@
 import * as CodeMirror from 'codemirror'
 
 import map from 'lodash/map'
+import merge from 'lodash/merge'
 
+/**
+ * Multi-select input box that displays scripts provided by the backend REST
+ * API. When the user selects a value in the select box the component updates
+ * the ScriptSelectionData.selected attribute with the selected value.
+ */
 const ScriptSelect = {
     scripts: [],
 
@@ -15,8 +21,9 @@ const ScriptSelect = {
         let selectBox = document.getElementById('scriptSelectBox')
         selectBox.onchange = () => {
             vnode.attrs.ScriptSelectionData.selected = selectBox.value
+            document.activeElement.blur()
+            m.redraw()
         }
-        document.activeElement.blur()
     },
 
     view(vnode) {
@@ -29,7 +36,21 @@ const ScriptSelect = {
     },
 }
 
-const ScriptLoadModal = {
+/**
+ * Button component that handles user selected script loading.
+ *
+ * When the user clicks this button the script specified in the attribute
+ * `ScriptSelectionData.selected` is passed to the BLISS REST API for loading.
+ * The text returned from the loaded script is saved into the attribute
+ * `ScriptSelectionData.script_text`.
+ *
+ * Additional attributes can be passed into the component via the
+ * `additionalAttrs` attribute.
+ *
+ * The button is marked as disabled when `ScriptSelectionData.selected` is
+ * null.
+ */
+const ScriptLoadButton = {
     oncreate(vnode) {
         document.getElementById('loadScriptButton').onclick = () => {
             let scriptName = encodeURIComponent(vnode.attrs.ScriptSelectionData.selected)
@@ -39,6 +60,33 @@ const ScriptLoadModal = {
         }
     },
 
+    view(vnode) {
+        let btnAttrs = {
+          id: 'loadScriptButton',
+          class: 'btn btn-success',
+        }
+
+        merge(btnAttrs, vnode.attrs.additionalAttrs)
+
+        if (vnode.attrs.ScriptSelectionData.selected === null) {
+            btnAttrs.disabled = 'disabled'
+        }
+
+        return m('button', btnAttrs, 'Load')
+    }
+}
+
+/**
+ * A modal that allows the user to view scripts and select one to load.
+ *
+ * This modal uses the ScriptSelect and ScriptLoadButton components.
+ *
+ * Script selection and text data is passed through this component via the
+ * `ScriptSelectionData` dictionary attribute. The `selected` and `script_text`
+ * elements store the relevant information for passing between the ScriptSelect
+ * and ScriptLoadButton components.
+ */
+const ScriptLoadModal = {
     view(vnode) {
         let modalHeader = m('div', {class: 'modal-header'}, [
                               m('button', {
@@ -53,11 +101,10 @@ const ScriptLoadModal = {
                           m(ScriptSelect, {ScriptSelectionData: vnode.attrs.ScriptSelectionData}))
 
         let modalFooter = m('div', {class: 'modal-footer'},
-                            m('button', {
-                                id: 'loadScriptButton',
-                                class: 'btn btn-default',
-                                'data-dismiss': 'modal'
-                              }, "Load"))
+                            m(ScriptLoadButton, {
+                                ScriptSelectionData: vnode.attrs.ScriptSelectionData,
+                                additionalAttrs: {'data-dismiss': 'modal'}
+                            }))
 
         let scriptModal = m('div', {
                                 class: 'modal fade',
@@ -75,10 +122,24 @@ const ScriptLoadModal = {
                                   modalFooter
                                 ])))
 
-        return m('div', scriptModal)
+        return scriptModal
     }
 }
 
+/**
+ * Script execution control dashboard.
+ *
+ * This component allows the user to run a script that they've selected
+ * and loaded via the BLISS REST API. The script that the user has selected
+ * to run is passed into the component via the `ScriptSelectionData.selected`
+ * attribute.
+ *
+ * Functionality for the following buttons is not currently implemented:
+ *      Step back
+ *      Pause script execution
+ *      Reset script
+ *      Step forward
+ */
 const ScriptExecCtrl = {
     oncreate(vnode) {
         document.getElementById('scriptButtonRun').onclick = () => {
@@ -155,13 +216,24 @@ const ScriptExecCtrl = {
     }
 }
 
-const ScriptView = {
+/**
+ * Handle loaded script display and realtime execution status
+ *
+ * Displays a loaded script via the CodeMirror library and displays
+ * current script line execution data along with execution state
+ * information. The current line marker provides information on
+ * the script execution state via color changes while pointing at the
+ * current line of the script that is executing.
+ *
+ * black arrow: Indicates the script is loaded and prepared to
+ *                execute at the marked line.
+ * green arrow: Indicates the script is running at the marked line
+ * red arrow:   Indicates an error occurred at the marked line. See
+ *              the log messages for information on the encountered
+ *              error.
+ */
+const ScriptEditor = {
     _curr_line: 0,
-    _exec_state: 'init',
-    _script_select_data: {
-        selected: null,
-        scriptText: null
-    },
 
     oninit(vnode) {
         this._marker = document.createElement('span')
@@ -170,17 +242,8 @@ const ScriptView = {
             this._curr_line = lineNum - 1
         })
 
-        bliss.events.on('script:start', () => {
-            this._exec_state = 'running'
-        })
-
         bliss.events.on('script:done', () => {
             this._curr_line = 0
-            this._exec_state = 'stopped'
-        })
-
-        bliss.events.on('script:error', (e) => {
-            this._exec_state = 'error'
         })
     },
 
@@ -196,17 +259,52 @@ const ScriptView = {
     },
 
     view(vnode) {
-        if (this._script_select_data.scriptText !== null) {
-            this._cm.setValue(this._script_select_data.scriptText)
-
-            if (this._exec_state === 'init') {
-                this._exec_state = 'stopped'
-            }
+        if (vnode.attrs.ScriptSelectionData.scriptText !== null) {
+            this._cm.setValue(vnode.attrs.ScriptSelectionData.scriptText)
         }
 
-        if (this._cm !== undefined && this._exec_state !== 'init') {
-            this._marker.className = "glyphicon glyphicon-play bliss-script-" + this._exec_state
+        if (this._cm !== undefined && vnode.attrs.scriptState !== 'init') {
+            this._marker.className = "glyphicon glyphicon-play bliss-script-" +
+                                     vnode.attrs.scriptState
             this._cm.setGutterMarker(this._curr_line, 'codeMirrorExecGutter', this._marker)
+        }
+
+        const initHelpText = 'To load a script, click the Load Script button above.'
+        return m('form',
+                 m('textarea', {id: 'scriptviewer'}, initHelpText))
+    }
+}
+
+
+/**
+ * Manages global script states and component layout
+ */
+const Scripts = {
+    _exec_state: 'init',
+    _script_select_data: {
+        selected: null,
+        scriptText: null
+    },
+
+    oninit(vnode) {
+        this._marker = document.createElement('span')
+
+        bliss.events.on('script:start', () => {
+            this._exec_state = 'running'
+        })
+
+        bliss.events.on('script:done', () => {
+            this._exec_state = 'stopped'
+        })
+
+        bliss.events.on('script:error', (e) => {
+            this._exec_state = 'error'
+        })
+    },
+
+    view(vnode) {
+        if (this._script_select_data.scriptText !== null && this._exec_state === 'init') {
+            this._exec_state = 'stopped'
         }
 
         let header = m('div', {class: 'col-lg-8 col-lg-offset-2'},
@@ -217,20 +315,20 @@ const ScriptView = {
             scriptState: this._exec_state
         }))
 
-        const initHelpText = 'To load a script, click the Load Script button above.'
-        let editor = m('div', {class: 'col-lg-8 col-lg-offset-2'},
-                       m('form',
-                         //m('textarea', {id: 'scriptviewer'}, 'look at me i"m \ntext\nfoo\nbar\nbaz')))
-                         m('textarea', {id: 'scriptviewer'}, initHelpText)))
+        let scriptEditor = m('div', {class: 'col-lg-8 col-lg-offset-2'},
+                             m(ScriptEditor, {
+                                 ScriptSelectionData: this._script_select_data,
+                                 scriptState: this._exec_state
+                             }))
 
         return m('div', [
                   m('div', {class: 'row'}, header),
                   m('div', {class: 'row'}, scriptCtrl),
-                  m('div', {class: 'row'}, editor),
+                  m('div', {class: 'row'}, scriptEditor),
                   scriptLoad
                 ])
     }
 }
 
-export default {ScriptView}
-export {ScriptView}
+export default {Scripts, ScriptEditor, ScriptExecCtrl, ScriptLoadModal, ScriptLoadButton, ScriptSelect}
+export {Scripts, ScriptEditor, ScriptExecCtrl, ScriptLoadModal, ScriptLoadButton, ScriptSelect}
