@@ -617,7 +617,11 @@ def bgExecSeq(bn_seqfile):
 
 @App.route('/scripts', method='GET')
 def handle():
-    """Fetch a JSON array of filenames in the ScriptRoot directory."""
+    """ Return a JSON array of script filenames
+
+    Scripts are located via the script.directory configuration parameter.
+    """
+
     if ScriptRoot is None:
         files = []
     else:
@@ -628,10 +632,26 @@ def handle():
 
 @App.route('/scripts/load/<name>', method='GET')
 def handle(name):
+    """ Return the text of a script
+
+    Scripts are located via the script.directory configuration parameter.
+
+    :param name: The name of the script to load. Should be one of the values
+                 returned by **/scripts**.
+
+    :statuscode 400: When the script name cannot be located
+
+    **Example Response**:
+
+    .. sourcecode: json
+
+       {
+           script_text: "This is the example content of a fake script"
+       }
+    """
     script_path = os.path.join(ScriptRoot, name)
     if not os.path.exists(script_path):
-        # Need to handle missing path
-        pass
+        bottle.abort(400, "Script cannot be located")
 
     with open(script_path) as infile:
         script_text = infile.read()
@@ -641,12 +661,20 @@ def handle(name):
 
 @App.route('/script/run', method='POST')
 def handle():
+    """ Run a script
+
+    Scripts are located via the script.directory configuration parameter.
+
+    :formparam scriptPath: The name of the script to load. This should be one
+                           of the values returned by **/scripts**.
+
+    :statuscode 400: When the script name cannot be located
+    """
     script_name = bottle.request.forms.get('scriptPath')
     script_path = os.path.join(ScriptRoot, script_name)
 
     if not os.path.exists(script_path):
-        # Need to handle missing path
-        pass
+        bottle.abort(400, "Script cannot be located")
 
     gevent.spawn(bgExecScript, script_path)
 
