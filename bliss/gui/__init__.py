@@ -292,6 +292,7 @@ def __setResponseToJSON():
 
 @App.route('/')
 def handle ():
+    """Return index page"""
     Sessions.create()
     return bottle.template('index.html')
 
@@ -311,6 +312,11 @@ def handle ():
 
 @App.route('/events', method='POST')
 def handle():
+    """Add an event to the event stream
+    
+    :jsonparam name: The name of the event to add.
+    :jsonparam data: The data to include with the event.
+    """
     with Sessions.current() as session:
         name = bottle.request.POST.name
         data = bottle.request.POST.data
@@ -319,6 +325,39 @@ def handle():
 
 @App.route('/evr/dict', method='GET')
 def handle():
+    """Return JSON EVR dictionary
+    
+    **Example Response**:
+
+    .. sourcecode:: json
+
+       [
+           {
+               message: "No error",
+               code: 1,
+               name: "NO_ERROR",
+               desc: "No error"
+           },
+           {
+               message: "The first evr",
+               code: 2,
+               name: "EVR_1",
+               desc: "EVR 1"
+           },
+           {
+               message: "The second evr",
+               code: 3,
+               name: "EVR_2",
+               desc: "EVR 2"
+           },
+           {
+               message: "The third evr %s",
+               code: 4,
+               name: "EVR_3",
+               desc: "EVR 3"
+           }
+       ]
+    """
     return json.dumps([ e.toJSON() for e in evr.getDefaultDict() ])
 
 
@@ -337,14 +376,90 @@ def handle():
 
 @App.route('/tlm/dict', method='GET')
 def handle():
+    """Return JSON Telemetry dictionary
+
+    **Example Response**:
+
+    .. sourcecode: json
+
+       {
+           ExaplePacket1: {
+               uid: 1,
+               fields: {
+                   Voltage_B: {
+                       type: "MSB_U16",
+                       bytes: [2, 3],
+                       name: "Voltage_B",
+                       desc: "Voltage B as a 14-bit DN. Conversion to engineering units is TBD."
+                   },
+                   Voltage_C: {
+                       type: "MSB_U16",
+                       bytes: [4, 5],
+                       name: "Voltage_C",
+                       desc: "Voltage C as a 14-bit DN. Conversion to engineering units is TBD."
+                   },
+                   ...
+               }
+           },
+           ExamplePacket2: {
+               ...
+           }
+       }
+    """
     return json.dumps( tlm.getDefaultDict().toJSON() )
 
 @App.route('/cmd/dict', method='GET')
 def handle():
+    """Return JSON Command dictionary
+    
+    **Example Response**:
+
+    .. sourcecode: json
+
+       {
+           NO_OP: {
+               subsystem: "CORE",
+               name: "NO_OP",
+               title: "NO_OP",
+               opcode: 1,
+               arguments: [],
+               desc: "Standard NO_OP command. "
+           },
+           SEQ_START: {
+               subsystem: "CMD",
+               name: "SEQ_START",
+               title: "Start Sequence",
+               opcode: 2,
+               arguments: [
+                   {
+                       name: "sequence_id",
+                       bytes: [0, 1],
+                       units: "none",
+                       fixed: false,
+                       type: "MSB_U16",
+                       desc: "Sequence ID"
+                   }
+               ],
+               desc: "This command starts a specified command sequence. "
+            },
+           ...
+       }
+    """
     return json.dumps( cmd.getDefaultDict().toJSON() )
 
 @App.route('/cmd/hist.json', method='GET')
 def handle():
+    """Return sent command history
+    
+    **Example Response**:
+
+    .. sourcecode: json
+
+       [
+           "NO_OP",
+           "SEQ_START 3423"
+       ]
+    """
     cmds = []
 
     try:
@@ -357,6 +472,19 @@ def handle():
 
 @App.route('/cmd', method='POST')
 def handle():
+    """Send a given command
+    
+    :formparam command: The command that should be sent. If arguments
+                        are to be included they should be separated via
+                        whitespace.
+
+    **Example command format**
+
+    .. sourcecode:
+
+       myExampleCommand argumentOne argumentTwo
+                       
+    """
     with Sessions.current() as session:
         command = bottle.request.forms.get('command').strip()
 
@@ -415,6 +543,7 @@ def handle():
 
 @App.route('/tlm/realtime')
 def handle():
+    """Return telemetry packets in realtime to client"""
     with Sessions.current() as session:
         # A null-byte pad ensures wsock is treated as binary.
         pad   = bytearray(1)
@@ -430,8 +559,17 @@ def handle():
 
 @App.route('/seq', method='GET')
 def handle():
-    """Endpoint that provides a JSON array of filenames in the SEQRoot
-    directory."""
+    """Return a JSON array of filenames in the SEQRoot directory
+    
+    **Example Response**:
+
+    .. sourcecode: json
+
+       [
+            sequenceOne.txt,
+            sequenceTwo.txt
+       ]
+    """
     if SEQRoot is None:
         files = [ ]
     else:
@@ -442,6 +580,10 @@ def handle():
 
 @App.route('/seq', method='POST')
 def handle():
+    """Run requested sequence file
+    
+    :formparam seqfile: The sequence filename located in SEQRoot to execute
+    """
     bn_seqfile = bottle.request.forms.get('seqfile')
     gevent.spawn(bgExecSeq, bn_seqfile)
 
