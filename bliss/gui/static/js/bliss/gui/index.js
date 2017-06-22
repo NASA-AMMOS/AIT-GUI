@@ -127,10 +127,6 @@ function init () {
             bliss.events.emit(e.name, e.data)
         });
 
-        bliss.events.on('cmd:submit', () => {
-            $('#commanding-modal').modal('hide')
-        })
-
         m.mount(root, { view: () => createMithrilNodes(elems) })
     })
 }
