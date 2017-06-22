@@ -13,6 +13,7 @@ Contents:
 
    installation
    bliss_gui
+   rest_api
    contribute
 
 
