@@ -72,6 +72,9 @@ setup(
 
     scripts = ['./bin/bliss_gui.py'],
     install_requires = ['bliss-core>=0.17.0'],
+    dependency_links = [
+       'https://bliss.jpl.nasa.gov/pypi/simple/bliss-core/'
+    ],
     extras_require = {
         'docs':  [
             'Sphinx',
