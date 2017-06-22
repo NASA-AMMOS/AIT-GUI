@@ -9,6 +9,7 @@ Visit the :doc:`Installation Guide <installation` for installation information.
    :maxdepth: 2
 
    installation
+   new_project
    bliss_gui
    rest_api
    contribute
