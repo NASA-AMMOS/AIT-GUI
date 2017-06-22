@@ -28,6 +28,20 @@ Tag the Release
 
 Via the Github Releases page, draft a new release. Place the above version number as the tag version. The release title should be **BLISS GUI v<version number>**. Copy the change log into the release description box. If the release is not production ready be sure to check the pre-release box to note that. When finished, publish the release.
 
+Push Latest Docs to Github Pages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You will need to push the latest documentation to Github pages for the release. There is a script that helps you with the majority of this.
+
+.. code-block:: bash
+
+   cd build
+   ./update_docs_release.sh
+   git status # Check that everything looks correct
+   git commit -m "Update docs for <version>"
+   git push origin gh-pages
+   git checkout master
+
 Notify Relevant Parties of Release
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
