@@ -4,6 +4,15 @@
 const GPSEpoch = 315964800000
 
 
+/**
+ * Returns true if reading nbytes starting at offset is in-bounds for
+ * the given DataView, false otherwise.
+ */
+function inBounds (view, nbytes, offset) {
+    return (offset + nbytes) < view.byteLength
+}
+
+
 class CommandType
 {
     constructor(name) {
@@ -15,6 +24,8 @@ class CommandType
     }
 
     decode(view, offset=0) {
+        if (!inBounds(view, 2, offset)) return null
+
         const dict   = bliss.cmd.dict
         const opcode = view.getUint16(offset, false)
 
@@ -34,6 +45,8 @@ class EVRType
     }
 
     decode(view, offset=0) {
+        if (!inBounds(view, 2, offset)) return null
+
         const dict = bliss.evr.dict
         const code = view.getUint16(offset, false)
 
@@ -109,7 +122,8 @@ class PrimitiveType
      * @return the decoded value or null (on error).
      */
     decode (view, offset=0) {
-        return this._decode ? this._decode(view, offset) : null
+        return this._decode && inBounds(view, this._nbytes, offset) ?
+            this._decode(view, offset) : null
     }
 }
 
@@ -130,6 +144,7 @@ class TimeType
 class Time8Type extends TimeType
 {
     decode (view, offset=0) {
+        if (!inBounds(view, 1, offset)) return null
         return view.getUint8(offset, false) / 256.0
     }
 }
@@ -138,6 +153,8 @@ class Time8Type extends TimeType
 class Time32Type extends TimeType
 {
     decode (view, offset=0) {
+        if (!inBounds(view, 4, offset)) return null
+
         const tv_sec = view.getUint32(offset, false)
         return new Date(GPSEpoch + (tv_sec * 1000))
     }
@@ -147,6 +164,8 @@ class Time32Type extends TimeType
 class Time64Type extends TimeType
 {
     decode (view, offset=0) {
+        if (!inBounds(view, 8, offset)) return null
+
         const tv_sec   = view.getUint32(offset, false)
         const tv_nsec  = view.getUint32(offset + 4, false)
 
