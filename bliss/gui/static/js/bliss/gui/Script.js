@@ -136,26 +136,43 @@ const ScriptLoadModal = {
  *
  * Functionality for the following buttons is not currently implemented:
  *      Step back
- *      Pause script execution
  *      Reset script
  *      Step forward
  */
 const ScriptExecCtrl = {
+    oninit(vnode) {
+        this._script_state = vnode.attrs.scriptState
+    },
+
     oncreate(vnode) {
         document.getElementById('scriptButtonRun').onclick = () => {
-            if (vnode.attrs.ScriptSelectionData.selected !== null) {
-                let data = new FormData()
-                data.append('scriptPath', vnode.attrs.ScriptSelectionData.selected)
+            if (this._script_state === 'running') {
                 m.request({
-                    method: 'POST',
-                    url: '/script/run',
-                    data: data
+                    method: 'PUT',
+                    url: '/script/pause'
                 })
+            } else if (this._script_state === 'paused') {
+                m.request({
+                    method: 'PUT',
+                    url: '/script/run'
+                })
+            } else {
+                if (vnode.attrs.ScriptSelectionData.selected !== null) {
+                    let data = new FormData()
+                    data.append('scriptPath', vnode.attrs.ScriptSelectionData.selected)
+                    m.request({
+                        method: 'POST',
+                        url: '/script/run',
+                        data: data
+                    })
+                }
             }
         }
     },
 
     view(vnode) {
+        this._script_state = vnode.attrs.scriptState
+
         // Invert the script execution state to give us the button display
         // classes / states
         const btnDisplayState = vnode.attrs.scriptState === 'running' ? 'pause' : 'play'
@@ -264,8 +281,13 @@ const ScriptEditor = {
         }
 
         if (this._cm !== undefined && vnode.attrs.scriptState !== 'init') {
-            this._marker.className = "glyphicon glyphicon-play bliss-script-" +
-                                     vnode.attrs.scriptState
+            if (vnode.attrs.scriptState === 'paused') {
+                this._marker.className = "glyphicon glyphicon-pause bliss-script-" +
+                                         vnode.attrs.scriptState
+            } else {
+                this._marker.className = "glyphicon glyphicon-play bliss-script-" +
+                                         vnode.attrs.scriptState
+            }
             this._cm.setGutterMarker(this._curr_line, 'codeMirrorExecGutter', this._marker)
         }
 
@@ -299,6 +321,14 @@ const Scripts = {
 
         bliss.events.on('script:error', (e) => {
             this._exec_state = 'error'
+        })
+
+        bliss.events.on('script:pause', (e) => {
+            this._exec_state = 'paused'
+        })
+
+        bliss.events.on('script:resume', (e) => {
+            this._exec_state = 'running'
         })
     },
 

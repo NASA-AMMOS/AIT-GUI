@@ -148,6 +148,7 @@ codeMirrorExecGutter {
 }
 
 .bliss-script-pause {color: red}
+.bliss-script-paused {color: red}
 .bliss-script-play {color: green}
 .bliss-script-stopped {color: black}
 .bliss-script-running {color: green}

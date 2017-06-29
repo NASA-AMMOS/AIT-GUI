@@ -27,6 +27,7 @@ BLISS Graphical User Interface (GUI).
 
 import gevent
 import gevent.event
+import gevent.lock
 import gevent.monkey; gevent.monkey.patch_all()
 import geventwebsocket
 
@@ -615,6 +616,9 @@ def bgExecSeq(bn_seqfile):
     Sessions.addEvent('seq:done', bn_seqfile)
 
 
+script_exec_lock = gevent.lock.Semaphore(1)
+
+
 @App.route('/scripts', method='GET')
 def handle():
     """ Return a JSON array of script filenames
@@ -679,6 +683,20 @@ def handle():
     gevent.spawn(bgExecScript, script_path)
 
 
+@App.route('/script/run', method='PUT')
+def handle():
+    """ Resume a paused script """
+    script_exec_lock.release()
+    Sessions.addEvent('script:resume', None)
+
+
+@App.route('/script/pause', method='PUT')
+def handle():
+    """ Pause a running script """
+    script_exec_lock.acquire()
+    Sessions.addEvent('script:pause', None)
+
+
 def bgExecScript(script_path):
     debugger = BlissDB()
     with open(script_path) as infile:
@@ -705,3 +723,5 @@ class BlissDB(bdb.Bdb):
         # function calls).
         if fn == "<string>":
             Sessions.addEvent('script:step', frame.f_lineno)
+            script_exec_lock.acquire()
+            script_exec_lock.release()
