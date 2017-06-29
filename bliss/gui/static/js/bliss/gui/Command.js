@@ -10,6 +10,8 @@ var typeahead = require('typeahead.js/dist/typeahead.jquery');
 var Bloodhound = require('typeahead.js/dist/bloodhound');
 
 const CommandInput = {
+    _cntrl_toggled: false,
+
     oninit(vnode) {
         bliss.cmd.typeahead = {dict: {}, hist:{}}
 
@@ -62,6 +64,27 @@ const CommandInput = {
             m.request({method: 'POST', url: url, data: data})
             $('#command-typeahead').typeahead('val', '').focus()
         })
+
+        document.getElementById('command-typeahead').onkeyup = (e) => {
+            if (e.keyCode == 17) {
+                this._cntrl_toggled = false
+            }
+        }
+
+        document.getElementById('command-typeahead').onkeydown = (e) => {
+            if (e.keyCode == 17) {
+                this._cntrl_toggled = true
+            }
+
+            // If the user presses Enter without pressing Ctrl we
+            // cancel the submission
+            if (e.keyCode == 13 && ! this._cntrl_toggled) {
+                e.preventDefault()
+                return false
+            }
+
+            return true
+        }
     },
 
     view(vnode) {
@@ -88,7 +111,8 @@ const CommandInput = {
                            m('span', {class: 'input-group-btn'},
                                m('button', {class: 'btn btn-success', type: 'submit'}, 'Send')
                            ),
-                       ])
+                       ]),
+                       m('span', {id: 'commandHelpBlock', class: 'help-block'}, 'Ctrl + Enter to send command')
                    ])
                )
     }
