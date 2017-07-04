@@ -62,7 +62,7 @@ class CustomInstallCmd(install):
 
 setup(
     name = 'bliss-gui',
-    version = '0.4.0',
+    version = '0.5.0',
     packages = ['bliss.gui'],
     author = 'BLISS-Core Development Team',
     author_email = 'bliss@jpl.nasa.gov',
@@ -71,7 +71,7 @@ setup(
     include_package_data = True,
 
     scripts = ['./bin/bliss_gui.py'],
-    install_requires = ['bliss-core>=0.17.0'],
+    install_requires = ['bliss-core>=0.18.0'],
     dependency_links = [
        'https://bliss.jpl.nasa.gov/pypi/simple/bliss-core/'
     ],
