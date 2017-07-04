@@ -7,19 +7,71 @@ import { EVRDefinition }     from '../evr.js'
 
 const Field =
 {
+    /**
+     * Caches the current packet and raw value (for use by
+     * hasChanged()).
+     */
+    cache (packet) {
+        if (!packet) return
+
+        this._cached.packet = packet
+        this._cached.rawval = this.getValue(packet, true)
+    },
+
+
+    /**
+     * @returns the current packet displayed by this Field.
+     */
+    getPacket () {
+        const buffer = bliss.packets[this._pname]
+        return buffer && buffer.get(0)
+    },
+
+
+    /**
+     * @returns the value displayed by this Field, for the given
+     * packet.
+     *
+     * If the optional parameter raw is true, no conversions
+     * (e.g. DN-to-EU, Commands, EVRs, etc.) are performed when
+     * retrieving the packet value.
+     */
+    getValue (packet, raw=false) {
+        return packet && packet.__get__(this._fname, raw)
+    },
+
+
+    /**
+     * @returns true if the value displayed by this field has changed,
+     * false otherwise.
+     */
+    hasChanged () {
+        const packet = this.getPacket()
+        return this._cached.packet !== packet &&
+               this._cached.rawval !== this.getValue(packet, true)
+    },
+
+
     // Mithril lifecycle method
     oninit (vnode) {
-        this._name   = vnode.attrs.name
-        this._packet = vnode.attrs.packet
+        this._fname  = vnode.attrs.name
+        this._pname  = vnode.attrs.packet
+        this._cached = { packet: null, rawval: null }
+    },
+
+
+    // Mithril lifecycle method
+    onbeforeupdate (vnode, old) {
+        return this.hasChanged()
     },
 
 
     // Mithril view() method
     view (vnode) {
-        const pname  = this._packet
-        const buffer = bliss.packets[pname]
-        const packet = buffer && buffer.get(0)
-        let   value  = packet && packet[this._name]
+        const packet = this.getPacket()
+        let   value  = this.getValue(packet)
+
+        this.cache(packet)
 
         if (value === undefined || value === null) {
             value = 'N/A'
@@ -32,7 +84,7 @@ const Field =
         }
         else {
             if (vnode.attrs.format) {
-                const defn = packet._defn.fields[this._name]
+                const defn = packet._defn.fields[this._fname]
                 const type = defn && defn.type
 
                 value = (type && type.isTime) ?

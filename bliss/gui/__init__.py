@@ -52,26 +52,20 @@ from bliss.core import api, cfg, log, gds, tlm, cmd, util, evr, pcap
 
 class HTMLRoot:
     Static = pkg_resources.resource_filename('bliss.gui', 'static/')
-    User = bliss.config.get('gui.html.directory', Static)
+    User   = bliss.config.get('gui.html.directory', Static)
 
-SEQRoot = bliss.config.get('sequence.directory', None)
-
-default_cmd_hist = os.path.join(bliss.config._ROOT_DIR, 'bliss-gui-cmdhist.pcap')
-CmdHistFile = bliss.config.get('command.history.filename', default_cmd_hist)
+SEQRoot     = bliss.config.get('sequence.directory', None)
+CmdHistFile = bliss.config.get('command.history.filename',
+  os.path.join(bliss.config._ROOT_DIR, 'bliss-gui-cmdhist.pcap'))
 
 if SEQRoot and not os.path.isdir(SEQRoot):
-    msg = (
-        'sequence.directory points to a directory that does not exist. '
-        'Sequence loads may fail.'
-    )
+    msg = 'sequence.directory does not exist. Sequence loads may fail.'
     bliss.core.log.warn(msg)
 
 if not os.path.isfile(CmdHistFile):
     if not os.path.isdir(os.path.dirname(CmdHistFile)):
-        msg = (
-            'command.history.filename points to a directory that does not exist. '
-            'Command history will not be saved.'
-        )
+        msg  = 'command.history.filename directory does not exist.  '
+        msg += 'Command history will not be saved.'
         bliss.core.log.warn(msg)
 
 App     = bottle.Bottle()
@@ -100,7 +94,7 @@ class Session (object):
         self._maxlen         = maxlen
         self._store          = store
         self._numConnections = 0
-        
+
     def __enter__ (self):
         """Begins a Session context / connection."""
         self._numConnections += 1
@@ -313,7 +307,7 @@ def handle ():
 @App.route('/events', method='POST')
 def handle():
     """Add an event to the event stream
-    
+
     :jsonparam name: The name of the event to add.
     :jsonparam data: The data to include with the event.
     """
@@ -326,7 +320,7 @@ def handle():
 @App.route('/evr/dict', method='GET')
 def handle():
     """Return JSON EVR dictionary
-    
+
     **Example Response**:
 
     .. sourcecode:: json
@@ -411,7 +405,7 @@ def handle():
 @App.route('/cmd/dict', method='GET')
 def handle():
     """Return JSON Command dictionary
-    
+
     **Example Response**:
 
     .. sourcecode: json
@@ -450,7 +444,7 @@ def handle():
 @App.route('/cmd/hist.json', method='GET')
 def handle():
     """Return sent command history
-    
+
     **Example Response**:
 
     .. sourcecode: json
@@ -473,7 +467,7 @@ def handle():
 @App.route('/cmd', method='POST')
 def handle():
     """Send a given command
-    
+
     :formparam command: The command that should be sent. If arguments
                         are to be included they should be separated via
                         whitespace.
@@ -483,7 +477,7 @@ def handle():
     .. sourcecode:
 
        myExampleCommand argumentOne argumentTwo
-                       
+
     """
     with Sessions.current() as session:
         command = bottle.request.forms.get('command').strip()
@@ -560,7 +554,7 @@ def handle():
 @App.route('/seq', method='GET')
 def handle():
     """Return a JSON array of filenames in the SEQRoot directory
-    
+
     **Example Response**:
 
     .. sourcecode: json
@@ -581,7 +575,7 @@ def handle():
 @App.route('/seq', method='POST')
 def handle():
     """Run requested sequence file
-    
+
     :formparam seqfile: The sequence filename located in SEQRoot to execute
     """
     bn_seqfile = bottle.request.forms.get('seqfile')

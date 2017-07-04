@@ -67,38 +67,40 @@ class Packet
         this._data = data
         this._raw  = raw
 
-        for (let name in this._defn.fields) {
-            const getter = () => this.__get__(name)
-            Object.defineProperty(this, name, { get: getter })
+        if (Packet.prototype.__init__ === undefined) {
+            for (const name in this._defn.fields) {
+                //const getter = () => this.__get__(name)
+                Object.defineProperty(Packet.prototype, name, {
+                    get: function () {
+                        return this.__get__(name)
+                    }
+                })
+            }
+            Packet.prototype.__init__ = true
         }
     }
 
-    __get__ (name) {
+    __get__ (name, raw=false) {
         let value = undefined
 
         if (this._data instanceof DataView) {
             const defn = this._defn.fields[name]
 
             if (defn) {
-                value = defn ? defn.decode(this._data) : undefined
+                if (raw || this._raw || !defn.dntoeu) {
+                    value = defn.decode(this._data)
+                }
+                else if (defn.dntoeu && defn.dntoeu.equation) {
+                    value = this._defn.scope.eval(this, defn.dntoeu.equation)
+                }
             }
-            // else if (defn.dntoeu) {
-            //    value = defn.dntoeu.eval(this)
-            // }
         }
 
         return value
     }
 
     __clone__ (data, raw=false) {
-        const proto = Object.getPrototypeOf(obj)
-        const props = Object.getOwnPropertyDescriptors(obj)
-        let   obj   = Object.create(proto, props)
-
-        obj._data = data
-        obj._raw  = raw
-
-        return obj
+        return new Packet(this._defn, data, raw)
     }
 }
 
@@ -106,22 +108,38 @@ class Packet
 class PacketDefinition
 {
     constructor (obj) {
-        this._name   = obj.name
-        this._desc   = obj.desc
-        this._fields = { }
-        this._uid    = obj.uid
+        this._constants = obj.constants
+        this._desc      = obj.desc
+        this._fields    = { }
+        this._functions = obj.functions
+        this._history   = obj.history
+        this._name      = obj.name
+        this._scope     = new PacketScope(this)
+        this._uid       = obj.uid
 
         for (let key in obj.fields) {
             this._fields[key] = new FieldDefinition( obj.fields[key] )
         }
     }
 
+    get constants () {
+        return this._constants
+    }
+
     get fields () {
         return this._fields
     }
 
+    get functions () {
+        return this._functions
+    }
+
     get name () {
         return this._name
+    }
+
+    get scope () {
+        return this._scope
     }
 
     get uid () {
@@ -134,6 +152,73 @@ class PacketDefinition
         }
 
         return new PacketDefinition(obj)
+    }
+}
+
+
+class PacketScope
+{
+    /**
+     * Creates a new PacketScope based on the given PacketDefinition,
+     * which defines constants and functions.
+     *
+     * To evaluate an expression within the PacketScope, call
+     * PacketScope.eval(packet, expr).
+     */
+    constructor (defn) {
+        // The underlying scope object must be created using a
+        // Javascript Function object (with a string body), so that
+        // the scope it creates does not have 'use strict' semantics.
+        // (Since the code in this module is ES6, 'use strict'
+        // semantics are in effect by definition.)
+        //
+        // A function scope without 'use strict' allows the
+        // eval()uation of the string returned by this.toCode() to
+        // create new variables ("constants") and function definitions
+        // within the function scope.
+        //
+        // Thus, this._scope will contain definitions for each
+        // constant and function defined in the given packet
+        // definition.  New expressions will be evaluated in this
+        // scope when calling PacketScope.eval(packet, expr).
+        this._defn  = defn
+        this._scope = new Function(`
+            eval('${this.toCode()}')
+            return {
+              'eval': function(packet, expr) {
+                  var raw = packet.__clone__(packet._data, true)
+                  return eval(expr)
+              }
+            }
+        `).call()
+    }
+
+
+    /**
+     * Evaluates the given expression within the context of this
+     * PacketScope and the given Packet.  The packet parameter is
+     * first so that you can bind() this function to a packet and
+     * evaluate many expressions.
+     */
+    eval (packet, expr) {
+        return this._scope.eval(packet, expr)
+    }
+
+
+    toCode () {
+        let code = ''
+
+        for (const name in this._defn.constants) {
+            const value  = this._defn.constants[name]
+            code        += 'var ' + name + '=' + value + ';'
+        }
+
+        for (const sig in this._defn.functions) {
+            const body  = this._defn.functions[sig]
+            code       += 'function ' + sig + '{ return (' + body + ')};'
+        }
+
+        return code
     }
 }
 
@@ -248,6 +333,7 @@ export {
     FieldDefinition,
     Packet,
     PacketDefinition,
+    PacketScope,
     TelemetryDictionary,
     TelemetryStream
 }

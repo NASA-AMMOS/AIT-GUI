@@ -7,7 +7,7 @@ const Messages =
     _messages: [ ],
     _source  : null,
 
-    
+
     add (msg) {
         this._messages.push( this.normalizeMessage(msg) )
         m.redraw()
@@ -16,7 +16,9 @@ const Messages =
 
     updateMessageBoxScroll() {
         let messageBox = document.getElementById("blisslogs");
-        messageBox.scrollTop = messageBox.scrollHeight;
+        if (messageBox) {
+            messageBox.scrollTop = messageBox.scrollHeight;
+        }
     },
 
 

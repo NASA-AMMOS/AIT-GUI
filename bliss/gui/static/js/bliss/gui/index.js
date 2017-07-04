@@ -111,7 +111,7 @@ function init () {
         })
 
         m.request({ url: '/tlm/dict' }).then( (dict) => {
-            let url = 'ws://' + location.host + '/tlm/realtime'
+            const url = 'ws://' + location.host + '/tlm/realtime'
 
             bliss.tlm.dict   = TelemetryDictionary.parse(dict)
             bliss.tlm.stream = new TelemetryStream(url, bliss.tlm.dict)
