@@ -1,8 +1,7 @@
 @import url("./node_modules/bootstrap/dist/css/bootstrap.css");
 @import url("./node_modules/bootstrap/dist/css/bootstrap-theme.css");
-@import url("./node_modules/codemirror/lib/codemirror.css")
+@import url("./node_modules/codemirror/lib/codemirror.css");
 @import url("typeahead.css");
-/*@import url("./node_modules/jquery-ui/themes/base/all.css");*/
 
 body {
     padding-top: 70px;
