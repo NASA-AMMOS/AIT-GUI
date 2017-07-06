@@ -56,6 +56,7 @@ const ScriptLoadButton = {
             let scriptName = encodeURIComponent(vnode.attrs.ScriptSelectionData.selected)
             m.request('/scripts/load/' + scriptName).then((data) => {
                 vnode.attrs.ScriptSelectionData.scriptText = data.script_text
+                bliss.events.emit('script:loaded', null)
             })
         }
     },
@@ -250,18 +251,10 @@ const ScriptExecCtrl = {
  *              error.
  */
 const ScriptEditor = {
-    _curr_line: 0,
+    _scrollState: null,
 
     oninit(vnode) {
         this._marker = document.createElement('span')
-
-        bliss.events.on('script:step', (lineNum) => {
-            this._curr_line = lineNum - 1
-        })
-
-        bliss.events.on('script:done', () => {
-            this._curr_line = 0
-        })
     },
 
     oncreate(vnode) {
@@ -275,20 +268,37 @@ const ScriptEditor = {
         )
     },
 
-    view(vnode) {
-        if (vnode.attrs.ScriptSelectionData.scriptText !== null) {
-            this._cm.setValue(vnode.attrs.ScriptSelectionData.scriptText)
+    onbeforeupdate(vnode) {
+        if (this._cm !== undefined) {
+            this._scrollState = this._cm.getScrollInfo()
         }
+    },
 
-        if (this._cm !== undefined && vnode.attrs.scriptState !== 'init') {
-            if (vnode.attrs.scriptState === 'paused') {
-                this._marker.className = "glyphicon glyphicon-pause bliss-script-" +
-                                         vnode.attrs.scriptState
-            } else {
-                this._marker.className = "glyphicon glyphicon-play bliss-script-" +
-                                         vnode.attrs.scriptState
+    view(vnode) {
+        if (this._cm !== undefined) {
+            // Display the loaded script text in the editor
+            if (vnode.attrs.ScriptSelectionData.scriptText !== null) {
+                this._cm.setValue(vnode.attrs.ScriptSelectionData.scriptText)
             }
-            this._cm.setGutterMarker(this._curr_line, 'codeMirrorExecGutter', this._marker)
+
+            // Handle the gutter marker display parameters once we have a script
+            // loaded (AKA, when we're out of the init state).
+            if (vnode.attrs.scriptState !== 'init') {
+                if (vnode.attrs.scriptState === 'paused') {
+                    this._marker.className = "glyphicon glyphicon-pause bliss-script-" +
+                                             vnode.attrs.scriptState
+                } else {
+                    this._marker.className = "glyphicon glyphicon-play bliss-script-" +
+                                             vnode.attrs.scriptState
+                }
+                this._cm.setGutterMarker(vnode.attrs.currentLine, 'codeMirrorExecGutter', this._marker)
+            }
+
+            if (vnode.attrs.scriptState === 'running') {
+                this._cm.scrollIntoView(vnode.attrs.currentLine)
+            } else {
+                this._cm.scrollTo(this._scrollState.left, this._scrollState.top)
+            }
         }
 
         const initHelpText = 'To load a script, click the Load Script button above.'
@@ -298,57 +308,69 @@ const ScriptEditor = {
 }
 
 
+let ScriptsState = {
+    execState: 'init',
+    scriptSelectData: {
+        selected: null,
+        scriptText: null
+    },
+    currentLine: 0
+}
+
 /**
  * Manages global script states and component layout
  */
 const Scripts = {
-    _exec_state: 'init',
-    _script_select_data: {
-        selected: null,
-        scriptText: null
-    },
-
     oninit(vnode) {
         this._marker = document.createElement('span')
 
         bliss.events.on('script:start', () => {
-            this._exec_state = 'running'
+            ScriptsState.execState = 'running'
         })
 
         bliss.events.on('script:done', () => {
-            this._exec_state = 'stopped'
+            ScriptsState.execState = 'stopped'
         })
 
         bliss.events.on('script:error', (e) => {
-            this._exec_state = 'error'
+            ScriptsState.execState = 'error'
         })
 
         bliss.events.on('script:pause', (e) => {
-            this._exec_state = 'paused'
+            ScriptsState.execState = 'paused'
         })
 
         bliss.events.on('script:resume', (e) => {
-            this._exec_state = 'running'
+            ScriptsState.execState = 'running'
+        })
+        
+        bliss.events.on('script:loaded', (e) => {
+            ScriptsState.execState = 'stopped'
+        })
+
+        bliss.events.on('script:step', (lineNum) => {
+            ScriptsState.currentLine = lineNum - 1
+        })
+
+        bliss.events.on('script:done', () => {
+            ScriptsState.currentLine = 0
         })
     },
 
     view(vnode) {
-        if (this._script_select_data.scriptText !== null && this._exec_state === 'init') {
-            this._exec_state = 'stopped'
-        }
-
         let header = m('div', {class: 'col-lg-8 col-lg-offset-2'},
                        m('h3', 'Script Control Dashboard'))
-        let scriptLoad = m(ScriptLoadModal, {ScriptSelectionData: this._script_select_data})
+        let scriptLoad = m(ScriptLoadModal, {ScriptSelectionData: ScriptsState.scriptSelectData})
         let scriptCtrl = m('div', {class: 'col-lg-8 col-lg-offset-2'}, m(ScriptExecCtrl, {
-            ScriptSelectionData: this._script_select_data,
-            scriptState: this._exec_state
+            ScriptSelectionData: ScriptsState.scriptSelectData,
+            scriptState: ScriptsState.execState
         }))
 
         let scriptEditor = m('div', {class: 'col-lg-8 col-lg-offset-2'},
                              m(ScriptEditor, {
-                                 ScriptSelectionData: this._script_select_data,
-                                 scriptState: this._exec_state
+                                 ScriptSelectionData: ScriptsState.scriptSelectData,
+                                 scriptState: ScriptsState.execState,
+                                 currentLine: ScriptsState.currentLine
                              }))
 
         return m('div', [
