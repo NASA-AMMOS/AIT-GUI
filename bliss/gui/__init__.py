@@ -27,9 +27,11 @@ BLISS Graphical User Interface (GUI).
 
 import gevent
 import gevent.event
+import gevent.lock
 import gevent.monkey; gevent.monkey.patch_all()
 import geventwebsocket
 
+import bdb
 import collections
 import copy
 import datetime
@@ -37,6 +39,7 @@ import json
 import os
 import socket
 import struct
+import sys
 import time
 import webbrowser
 
@@ -54,12 +57,21 @@ class HTMLRoot:
     Static = pkg_resources.resource_filename('bliss.gui', 'static/')
     User   = bliss.config.get('gui.html.directory', Static)
 
-SEQRoot     = bliss.config.get('sequence.directory', None)
-CmdHistFile = bliss.config.get('command.history.filename',
-  os.path.join(bliss.config._ROOT_DIR, 'bliss-gui-cmdhist.pcap'))
+SEQRoot = bliss.config.get('sequence.directory', None)
+ScriptRoot = bliss.config.get('script.directory', None)
+
+default_cmd_hist = os.path.join(bliss.config._ROOT_DIR, 'bliss-gui-cmdhist.pcap')
+CmdHistFile = bliss.config.get('command.history.filename', default_cmd_hist)
 
 if SEQRoot and not os.path.isdir(SEQRoot):
     msg = 'sequence.directory does not exist. Sequence loads may fail.'
+    bliss.core.log.warn(msg)
+
+if ScriptRoot and not os.path.isdir(ScriptRoot):
+    msg = (
+        'script.directory points to a directory that does not exist. '
+        'Script loads may fail.'
+    )
     bliss.core.log.warn(msg)
 
 if not os.path.isfile(CmdHistFile):
@@ -602,3 +614,114 @@ def bgExecSeq(bn_seqfile):
         return
 
     Sessions.addEvent('seq:done', bn_seqfile)
+
+
+script_exec_lock = gevent.lock.Semaphore(1)
+
+
+@App.route('/scripts', method='GET')
+def handle():
+    """ Return a JSON array of script filenames
+
+    Scripts are located via the script.directory configuration parameter.
+    """
+
+    if ScriptRoot is None:
+        files = []
+    else:
+        files = [fn for fn in os.listdir(ScriptRoot) if fn.endswith('.py')]
+
+    return json.dumps(sorted(files))
+
+
+@App.route('/scripts/load/<name>', method='GET')
+def handle(name):
+    """ Return the text of a script
+
+    Scripts are located via the script.directory configuration parameter.
+
+    :param name: The name of the script to load. Should be one of the values
+                 returned by **/scripts**.
+
+    :statuscode 400: When the script name cannot be located
+
+    **Example Response**:
+
+    .. sourcecode: json
+
+       {
+           script_text: "This is the example content of a fake script"
+       }
+    """
+    script_path = os.path.join(ScriptRoot, name)
+    if not os.path.exists(script_path):
+        bottle.abort(400, "Script cannot be located")
+
+    with open(script_path) as infile:
+        script_text = infile.read()
+
+    return json.dumps({"script_text": script_text})
+
+
+@App.route('/script/run', method='POST')
+def handle():
+    """ Run a script
+
+    Scripts are located via the script.directory configuration parameter.
+
+    :formparam scriptPath: The name of the script to load. This should be one
+                           of the values returned by **/scripts**.
+
+    :statuscode 400: When the script name cannot be located
+    """
+    script_name = bottle.request.forms.get('scriptPath')
+    script_path = os.path.join(ScriptRoot, script_name)
+
+    if not os.path.exists(script_path):
+        bottle.abort(400, "Script cannot be located")
+
+    gevent.spawn(bgExecScript, script_path)
+
+
+@App.route('/script/run', method='PUT')
+def handle():
+    """ Resume a paused script """
+    script_exec_lock.release()
+    Sessions.addEvent('script:resume', None)
+
+
+@App.route('/script/pause', method='PUT')
+def handle():
+    """ Pause a running script """
+    script_exec_lock.acquire()
+    Sessions.addEvent('script:pause', None)
+
+
+def bgExecScript(script_path):
+    debugger = BlissDB()
+    with open(script_path) as infile:
+        script = infile.read()
+
+    Sessions.addEvent('script:start', None)
+    try:
+        debugger.run(script)
+        Sessions.addEvent('script:done', None)
+    except Exception as e:
+        bliss.core.log.error('Script execution error: {} - {}'.format(
+            sys.exc_info()[0].__name__,
+            e
+        ))
+        Sessions.addEvent('script:error', str(e))
+
+class BlissDB(bdb.Bdb):
+    def user_line(self, frame):
+        fn = self.canonic(frame.f_code.co_filename)
+        # When executing our script the code location will be
+        # denoted as "<string>" since we're passing the script
+        # to the debugger as such. If we don't check for this we'll
+        # end up with a bunch of execution noise (specifically gevent
+        # function calls).
+        if fn == "<string>":
+            Sessions.addEvent('script:step', frame.f_lineno)
+            script_exec_lock.acquire()
+            script_exec_lock.release()
