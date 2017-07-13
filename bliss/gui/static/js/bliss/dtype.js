@@ -9,7 +9,7 @@ const GPSEpoch = 315964800000
  * the given DataView, false otherwise.
  */
 function inBounds (view, nbytes, offset) {
-    return (offset + nbytes) < view.byteLength
+    return (offset + nbytes) <= view.byteLength
 }
 
 
