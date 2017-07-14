@@ -17,19 +17,27 @@ const Sequence = {
 
         $btn.setAttribute("disabled", "disabled")
 
-        m.request({method: 'POST', url: url, data: data}).
-            then(() => {
-                $btn.removeAttribute("disabled")
-            }).
-            catch((e) => {
-                $btn.removeAttribute("disabled")
-                console.log(e.message)
-            })
+        m.request({method: 'POST', url: url, data: data})
         return false
     },
 
     oninit(vnode) {
         this.refreshSequenceList()
+    },
+
+    oncreate(vnode) {
+        const submitBtn = vnode.dom.getElementsByTagName('button')[1]
+        bliss.events.on('seq:exec', () => {
+            submitBtn.setAttribute("disabled", "disabled")
+        })
+
+        bliss.events.on('seq:done', () => {
+            submitBtn.removeAttribute("disabled")
+        })
+
+        bliss.events.on('seq:err', () => {
+            submitBtn.removeAttribute("disabled")
+        })
     },
 
     view(vnode) {
