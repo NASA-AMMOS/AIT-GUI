@@ -59,9 +59,8 @@ class HTMLRoot:
 
 SEQRoot = bliss.config.get('sequence.directory', None)
 ScriptRoot = bliss.config.get('script.directory', None)
-
-default_cmd_hist = os.path.join(bliss.config._ROOT_DIR, 'bliss-gui-cmdhist.pcap')
-CmdHistFile = bliss.config.get('command.history.filename', default_cmd_hist)
+CmdHistFile = bliss.config.get('command.history.filename',
+                os.path.join(bliss.config._ROOT_DIR, 'bliss-gui-cmdhist.pcap'))
 
 if SEQRoot and not os.path.isdir(SEQRoot):
     msg = 'sequence.directory does not exist. Sequence loads may fail.'
