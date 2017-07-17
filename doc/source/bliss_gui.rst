@@ -5,8 +5,7 @@ The BLISS GUI provides an easily customizable and extendible interface for monit
 
 .. code-block:: bash
 
-   cd $BLISS_ROOT/bin
-   ./bliss_gui.py
+   $ bliss-gui
 
 GUI Customization
 -----------------
@@ -51,7 +50,7 @@ You can send example telemetry data to the GUI for testing using **bliss_tlm_sen
 
 .. code-block:: bash
 
-   bliss-tlm-send /path/to/sometestdata.pcap
+   $ bliss-tlm-send /path/to/sometestdata.pcap
 
 You will need to ensure that the **tlm.yaml** used when generating the example PCAP data matches the **tlm.yaml** you're using when running **bliss_tlm_send**, otherwise you will end up with data that looks odd in the UI.
 
