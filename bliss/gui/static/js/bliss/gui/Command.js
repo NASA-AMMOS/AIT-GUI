@@ -11,6 +11,7 @@ var Bloodhound = require('typeahead.js/dist/bloodhound');
 
 const CommandInput = {
     _cntrl_toggled: false,
+    _cmding_disabled: false,
 
     oninit(vnode) {
         bliss.cmd.typeahead = {dict: {}, hist:{}}
@@ -55,7 +56,6 @@ const CommandInput = {
             })
         })
 
-
         $('#command-submit-form').submit((e) => {
             e.preventDefault()
             let url = $('#command-submit-form').attr('action')
@@ -76,18 +76,35 @@ const CommandInput = {
                 this._cntrl_toggled = true
             }
 
-            // If the user presses Enter without pressing Ctrl we
-            // cancel the submission
-            if (e.keyCode == 13 && ! this._cntrl_toggled) {
+            // If the user presses Enter without pressing Ctrl or
+            // if commanding is currently disabled we cancel
+            // the submission.
+            if ((e.keyCode == 13 && ! this._cntrl_toggled) || this.cmding_disabled) {
                 e.preventDefault()
                 return false
             }
 
             return true
         }
+
+        const submitBtn = vnode.dom.getElementsByTagName('button')[0]
+        bliss.events.on('seq:exec', () => {
+            this._cmding_disabled = true
+        })
+
+        bliss.events.on('seq:done', () => {
+            this._cmding_disabled = false
+        })
+
+        bliss.events.on('seq:err', () => {
+            this._cmding_disabled = false
+        })
     },
 
     view(vnode) {
+        let submitBtnAttrs = {class: 'btn btn-success', type: 'submit'}
+        if (this._cmding_disabled) {submitBtnAttrs['disabled'] = 'disabled'}
+
         return m('div', {id: 'bliss-command-input'},
                  m('form',
                    {
@@ -109,7 +126,7 @@ const CommandInput = {
                                  placeholder: 'Select Command ...'
                              }),
                            m('span', {class: 'input-group-btn'},
-                               m('button', {class: 'btn btn-success', type: 'submit'}, 'Send')
+                               m('button', submitBtnAttrs, 'Send')
                            ),
                        ]),
                        m('span', {id: 'commandHelpBlock', class: 'help-block'}, 'Ctrl + Enter to send command')
@@ -248,6 +265,21 @@ const CommandSearch = {
  * command (specified via CommandSelectionData.activeCommand)
  */
 const CommandConfigure = {
+    _cmding_disabled: false,
+    oninit(vnode) {
+        bliss.events.on('seq:exec', () => {
+            this._cmding_disabled = true
+        })
+
+        bliss.events.on('seq:done', () => {
+            this._cmding_disabled = false
+        })
+
+        bliss.events.on('seq:err', () => {
+            this._cmding_disabled = false
+        })
+    },
+
     view(vnode) {
         let commandSelection = null
         // If a command has been selected, render the command customization screen
@@ -326,6 +358,10 @@ const CommandConfigure = {
               this.generateArgumentInput(arg)
             ]))
         })
+
+        let submitBtnAttrs = {class: 'btn btn-default', type: 'submit'}
+        if (this._cmding_disabled) {submitBtnAttrs['disabled'] = 'disabled'}
+
         return m('form',
                  {
                      id: 'command-args-form',
@@ -342,7 +378,7 @@ const CommandConfigure = {
                            value: CommandSelectionData.activeCommand.name
                        }),
                      cmdArgs,
-                     m('button', {class: "btn btn-default", type: "submit"}, "Send Command")
+                     m('button', submitBtnAttrs, "Send Command")
                  ]
                 )
     },
