@@ -62,7 +62,7 @@ class CustomInstallCmd(install):
 
 setup(
     name = 'bliss-gui',
-    version = '0.5.0',
+    version = '0.6.0',
     packages = find_packages(exclude=['tests']),
     author = 'BLISS-Core Development Team',
     author_email = 'bliss@jpl.nasa.gov',
