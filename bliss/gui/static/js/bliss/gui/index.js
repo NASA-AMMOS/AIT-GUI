@@ -123,6 +123,11 @@ function init () {
             })
         })
 
+        m.request({url: '/limit/dict'}).then((dict) => {
+            bliss.limit = {}
+            bliss.limit.dict = dict
+        })
+
         let source = new EventSource('/events');
         source.addEventListener('message', function (event) {
             let e = JSON.parse(event.data);

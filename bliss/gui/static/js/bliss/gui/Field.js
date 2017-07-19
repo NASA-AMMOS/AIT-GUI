@@ -51,6 +51,55 @@ const Field =
                this._cached.rawval !== this.getValue(packet, true)
     },
 
+    /**
+     * Check if a limit exists for the field.
+     */
+    hasLimitCheck() {
+        if (this._limits === null) {
+            if (typeof bliss.limit === 'undefined') return false
+
+            let limitIndex = this._pname + '.' + this._fname
+            if (limitIndex in bliss.limit.dict) {
+                this._limits = bliss.limit.dict[this._pname + '.' + this._fname]
+            } else {
+                this._limits = false
+            }
+        }
+
+        return this._limits
+    },
+
+    /**
+     * Check if a value is within the limit range(s) specified as an error
+     */
+    valueIsInErrorRange(value) {
+        if ('value' in this._limits) {
+            if (typeof(this._limits.value.error === 'string')) {
+                return value === this._limits.value.error
+            } else {
+                return this._limits.value.error.includes(value)
+            }
+        } else {
+            return (value > this._limits.upper.error ||
+                    value < this._limits.lower.error)
+        }
+    },
+
+    /**
+     * Check if a value is within the limit range(s) specified as a warning
+     */
+    valueIsInWarnRange(value) {
+        if ('value' in this._limits) {
+            if (typeof(this._limits.value.warn === 'string')) {
+                return value === this._limits.value.warn
+            } else {
+                return this._limits.value.warn.includes(value)
+            }
+        } else {
+            return (value > this._limits.upper.warn ||
+                    value < this._limits.lower.warn)
+        }
+    },
 
     // Mithril lifecycle method
     oninit (vnode) {
@@ -58,6 +107,7 @@ const Field =
         this._pname  = vnode.attrs.packet
         this._raw    = vnode.attrs.raw === true
         this._cached = { packet: null, rawval: null }
+        this._limits = null
     },
 
 
@@ -91,6 +141,18 @@ const Field =
                 value = (type && type.isTime) ?
                     strftime.utc()(vnode.attrs.format, value) :
                     sprintf(vnode.attrs.format, value)
+            }
+
+            if (this.hasLimitCheck()) {
+                if (! 'class' in vnode.attrs) {
+                    vnode.attrs.class = ""
+                }
+
+                if (this.valueIsInErrorRange(value)) {
+                    vnode.attrs.class += "alert alert-danger"
+                } else if (this.valueIsInWarnRange(value)) {
+                    vnode.attrs.class += "alert alert-warning"
+                }
             }
         }
 
