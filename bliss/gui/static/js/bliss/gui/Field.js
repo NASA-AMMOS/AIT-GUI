@@ -56,6 +56,7 @@ const Field =
     oninit (vnode) {
         this._fname  = vnode.attrs.name
         this._pname  = vnode.attrs.packet
+        this._raw    = vnode.attrs.raw === true
         this._cached = { packet: null, rawval: null }
     },
 
@@ -69,7 +70,7 @@ const Field =
     // Mithril view() method
     view (vnode) {
         const packet = this.getPacket()
-        let   value  = this.getValue(packet)
+        let   value  = this.getValue(packet, this._raw)
 
         this.cache(packet)
 
