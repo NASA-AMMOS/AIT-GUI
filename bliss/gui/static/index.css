@@ -17,6 +17,10 @@ bliss-field {
     text-align:  left;
 }
 
+bliss-plot {
+    display: block;
+}
+
 /* Animate bliss-tab moves */
 bliss-tabset li {
     transition: .15s ease-in-out;
