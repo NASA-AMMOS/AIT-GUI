@@ -28,6 +28,44 @@ const Plot =
 
 
     /**
+     * Processes a `<bliss-plot-xxx>` tag by dispatching to the
+     * appropriate `processTagXXX()` method.
+     */
+    processTag (vnode) {
+        if (vnode.tag === 'bliss-plot-series') {
+            this.processTagSeries(vnode)
+        }
+        else if (vnode.tag === 'bliss-plot-time') {
+            this.processTagTime(vnode)
+        }
+    },
+
+
+    /**
+     * Process tag: `<bliss-plot-series type="..." caption="..." ...>`.
+     */
+    processTagSeries (vnode) {
+        const name   = vnode.attrs.name
+        const packet = vnode.attrs.packet
+        const type   = vnode.attrs.type
+        const id     = packet + '.' + name
+
+        this._options.series.push({
+            id:      id,
+            name:    vnode.attrs.caption || name,
+            color:   vnode.attrs.color,
+            data:    [ ],
+            tooltip: { valueDecimals: 2 },
+            type:    type,
+            showInNavigator: true
+        })
+
+        this._packets[packet] = this._packets[packet] || [ ]
+        this._packets[packet].push(name)
+    },
+
+
+    /**
      * Process tag: `<bliss-plot-time packet="..." name="...">`.
      */
     processTagTime (vnode) {
@@ -67,30 +105,7 @@ const Plot =
         this._packets = { }
         this._time    = null
 
-        vnode.children.forEach( (child) => {
-            if (child.tag === 'bliss-plot-time') {
-                this.processTagTime(child)
-            }
-            else if (child.tag.startsWith('bliss-plot-')) {
-                const name   = child.attrs.name
-                const packet = child.attrs.packet
-                const type   = child.tag.substr(11)
-                const id     = packet + '.' + name
-
-                this._options.series.push({
-                    id:      id,
-                    name:    child.attrs.caption || name,
-                    color:   child.attrs.color,
-                    data:    [ ],
-                    tooltip: { valueDecimals: 2 },
-                    type:    type,
-                    showInNavigator: true
-                })
-
-                this._packets[packet] = this._packets[packet] || [ ]
-                this._packets[packet].push(name)
-            }
-        })
+        vnode.children.forEach(child => this.processTag(child))
 
         if (this._time === null) {
             this._time = new PlotTimeField()
