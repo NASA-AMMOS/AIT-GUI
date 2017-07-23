@@ -5,6 +5,46 @@ import Highcharts from 'highcharts/highstock';
 window.Highcharts = Highcharts
 
 
+function createOptions (attrs) {
+    return {
+        credits: {
+            enabled: false
+        },
+
+        legend: {
+            enabled: true
+        },
+
+        rangeSelector: {
+            buttons: [
+                { count: 1 , text: '1m' , type: 'minute' },
+                { count: 10, text: '10m', type: 'minute' },
+                { count: 30, text: '30m', type: 'minute' },
+                { count:  1, text: '1h' , type: 'hour'   },
+                { count:  6, text: '6h' , type: 'hour'   },
+                { count: 12, text: '12h', type: 'hour'   },
+                { count:  1, text: '1d' , type: 'day'    },
+            ],
+            inputEnabled: false,
+        },
+
+        series: [ ],
+
+        title: {
+            text: attrs.title
+        },
+
+        xAxis: {
+            title: { text: 'Time (UTC)' }
+        },
+
+        yAxis: {
+            title: { text: attrs['y-title'] }
+        }
+    }
+}
+
+
 const Plot =
 {
     /**
@@ -21,7 +61,18 @@ const Plot =
             if (series) {
                 const x = this._time.get(packet)
                 const y = packet.__get__(name)
-                series.addPoint([x, y], true, series.data.length > 600)
+                series.addPoint([x, y])
+
+                // Zoom axis once after data spans 60 seconds
+                if (this._initZoom === false) {
+                    const extremes = this._chart.axes[0].getExtremes()
+                    const duration = (extremes.max - extremes.min) / 1e3
+
+                    if (duration >= 60) {
+                        this._chart.rangeSelector.clickButton(0, true)
+                        this._initZoom = true
+                    }
+                }
             }
         })
     },
@@ -60,6 +111,7 @@ const Plot =
             showInNavigator: true
         })
 
+        // For each packet, maintain a list of fields to plot
         this._packets[packet] = this._packets[packet] || [ ]
         this._packets[packet].push(name)
     },
@@ -75,35 +127,10 @@ const Plot =
 
     // Mithril lifecycle method
     oninit (vnode) {
-        this._options = {
-            credits: {
-                enabled: false
-            },
-
-            legend: {
-                enabled: true
-            },
-
-            rangeSelector: {
-                enabled: false
-            },
-
-            series: [ ],
-
-            title: {
-                text: vnode.attrs.title
-            },
-
-            xAxis: {
-                title: { text: 'Time (UTC)' }
-            },
-
-            yAxis: {
-                title: { text: vnode.attrs['y-title'] }
-            }
-        }
-        this._packets = { }
-        this._time    = null
+        this._options  = createOptions(vnode.attrs)
+        this._packets  = { }
+        this._time     = null
+        this._initZoom = false
 
         vnode.children.forEach(child => this.processTag(child))
 
