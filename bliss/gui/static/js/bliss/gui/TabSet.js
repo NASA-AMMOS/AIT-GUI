@@ -117,8 +117,6 @@ const DragDrop =
  *     </div>
  *     <!-- Repeat for the contents of all three tabs -->
  *
- * Plus a BLISS TabSet only renders the contents of the active tab.
- *
  * Tabs may also be rendered as Bootstrap pills, stacked, justified,
  * etc. by adding the [appropriate CSS
  * classes](http://getbootstrap.com/components/#nav) to a
@@ -161,16 +159,16 @@ const TabSet =
     /**
      * Mithril `view()`-helper method
      *
-     * Renders the content of the currently active tab using Bootstrap
-     * styling.  The passed-in `vnode` is the active `<bliss-tab>`.
+     * Renders the content of the given tab using Bootstrap styling.
+     *
+     * NOTE: The passed-in `index` is is used to determine if the tab
+     * is the active and to lookup the Mithril key for the element.
      */
-    content (vnode, uid) {
-        const attrs = { key: uid }
+    content (vnode, index) {
+        const attrs   = { key: this._uid[index] }
+        const classes = this.isActive(index) ? '.tab-pane.active' : '.tab-pane'
 
-
-        return m('bliss-tab', vnode.attrs,
-                 m('.tab-content',
-                   m('.tab-pane.active', attrs, vnode.children || vnode.text)))
+        return m(classes, attrs, vnode.children || vnode.text)
     },
 
 
@@ -300,13 +298,11 @@ const TabSet =
      * Renders this TabSet and its constituent tabs.
      */
     view (vnode) {
-        const tabs      = this.reorder( this.filterTabs(vnode.children) )
-        const activeTab = tabs[ this._active ]
-        const activeUID = this._uid[ this._active ]
+        const tabs = this.reorder( this.filterTabs(vnode.children) )
 
         return m('bliss-tabset', [
             m('ul.nav', vnode.attrs, tabs.map( TabSet.tab.bind(this) )),
-            this.content(activeTab, activeUID)
+            m('.tab-content', tabs.map( TabSet.content.bind(this) ))
         ])
     }
 }
