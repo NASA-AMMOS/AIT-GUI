@@ -367,8 +367,6 @@ const Scripts = {
     },
 
     view(vnode) {
-        let header = m('div', {class: 'col-lg-8 col-lg-offset-2'},
-                       m('h3', 'Script Control Dashboard'))
         let scriptLoad = m(ScriptLoadModal, {ScriptSelectionData: ScriptsState.scriptSelectData})
         let scriptCtrl = m('div', {class: 'col-lg-8 col-lg-offset-2'}, m(ScriptExecCtrl, {
             ScriptSelectionData: ScriptsState.scriptSelectData,
@@ -383,7 +381,6 @@ const Scripts = {
                              }))
 
         return m('div', [
-                  m('div', {class: 'row'}, header),
                   m('div', {class: 'row'}, scriptCtrl),
                   m('div', {class: 'row'}, scriptEditor),
                   scriptLoad
