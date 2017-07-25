@@ -696,6 +696,14 @@ def handle():
     Sessions.addEvent('script:pause', None)
 
 
+@App.route('/script/step', method='PUT')
+def handle():
+    """ Step a paused script """
+    script_exec_lock.release()
+    gevent.sleep(0)
+    script_exec_lock.acquire()
+
+
 def bgExecScript(script_path):
     debugger = BlissDB()
     with open(script_path) as infile:
@@ -712,6 +720,7 @@ def bgExecScript(script_path):
         ))
         Sessions.addEvent('script:error', str(e))
 
+
 class BlissDB(bdb.Bdb):
     def user_line(self, frame):
         fn = self.canonic(frame.f_code.co_filename)
@@ -722,6 +731,7 @@ class BlissDB(bdb.Bdb):
         # function calls).
         if fn == "<string>":
             Sessions.addEvent('script:step', frame.f_lineno)
+            gevent.sleep(0)
             script_exec_lock.acquire()
             script_exec_lock.release()
 

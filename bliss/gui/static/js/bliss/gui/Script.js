@@ -169,6 +169,17 @@ const ScriptExecCtrl = {
                 }
             }
         }
+
+        let scriptFwdBtn = vnode.dom.getElementsByClassName('glyphicon-step-forward')[0]
+        scriptFwdBtn.onclick = () => {
+            scriptFwdBtn.setAttribute('disabled', 'disabled')
+            m.request({
+                    method: 'PUT',
+                    url: '/script/step'
+            }).then(() => {
+                scriptFwdBtn.removeAttribute('disabled')
+            })
+        }
     },
 
     view(vnode) {
@@ -196,7 +207,7 @@ const ScriptExecCtrl = {
 
         let runButton = m('div', runBtnAttrs)
 
-        // NOTE: The Reset, Step Back, and Step Forward buttons are not
+        // NOTE: The Reset, and Step Back buttons are not
         // currently implemented. They are marked as disabled for the interim.
         let resetButton = m('div', {
             class: 'btn glyphicon glyphicon-refresh',
@@ -210,11 +221,16 @@ const ScriptExecCtrl = {
             id: 'scriptButtonBack'
         })
 
-        let stepForwardButton = m('div', {
+        let stepForwardAttrs = {
             class: 'btn glyphicon glyphicon-step-forward',
-            disabled: 'disabled',
             id: 'scriptButtonForward'
-        })
+        }
+
+        if (this._script_state !== 'paused') {
+            stepForwardAttrs['disabled'] = 'disabled'
+        }
+
+        let stepForwardButton = m('div', stepForwardAttrs)
 
         let loadButton = m('div', {
             class: 'btn glyphicon glyphicon-download-alt',
