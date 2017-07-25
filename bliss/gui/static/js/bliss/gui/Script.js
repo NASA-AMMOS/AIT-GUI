@@ -215,12 +215,6 @@ const ScriptExecCtrl = {
             id: 'scriptButtonReset'
         })
 
-        let stepBackButton = m('div', {
-            class: 'btn glyphicon glyphicon-step-backward',
-            disabled: 'disabled',
-            id: 'scriptButtonBack'
-        })
-
         let stepForwardAttrs = {
             class: 'btn glyphicon glyphicon-step-forward',
             id: 'scriptButtonForward'
@@ -239,7 +233,6 @@ const ScriptExecCtrl = {
         })
 
         let buttonDashboard = m('div', [
-                                 stepBackButton,
                                  runButton,
                                  resetButton,
                                  stepForwardButton,
