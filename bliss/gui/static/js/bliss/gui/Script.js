@@ -17,20 +17,15 @@ const ScriptSelect = {
         })
     },
 
-    oncreate(vnode) {
-        let selectBox = document.getElementById('scriptSelectBox')
-        selectBox.onchange = () => {
-            vnode.attrs.ScriptSelectionData.selected = selectBox.value
-            document.activeElement.blur()
-            m.redraw()
-        }
-    },
-
     view(vnode) {
         return m('select', {
                    id: 'scriptSelectBox',
                    class: 'form-control',
-                   multiple: 'true'
+                   multiple: 'true',
+                   onchange: (e) => {
+                       vnode.attrs.ScriptSelectionData.selected = e.target.value
+                       document.activeElement.blur()
+                   }
                  },
                  this.scripts)
     },
@@ -51,20 +46,17 @@ const ScriptSelect = {
  * null.
  */
 const ScriptLoadButton = {
-    oncreate(vnode) {
-        document.getElementById('loadScriptButton').onclick = () => {
-            let scriptName = encodeURIComponent(vnode.attrs.ScriptSelectionData.selected)
-            m.request('/scripts/load/' + scriptName).then((data) => {
-                vnode.attrs.ScriptSelectionData.scriptText = data.script_text
-                bliss.events.emit('script:loaded', null)
-            })
-        }
-    },
-
     view(vnode) {
         let btnAttrs = {
           id: 'loadScriptButton',
           class: 'btn btn-success',
+          onclick: (e) => {
+              let scriptName = encodeURIComponent(vnode.attrs.ScriptSelectionData.selected)
+              m.request('/scripts/load/' + scriptName).then((data) => {
+                  vnode.attrs.ScriptSelectionData.scriptText = data.script_text
+                  bliss.events.emit('script:loaded', null)
+              })
+          }
         }
 
         merge(btnAttrs, vnode.attrs.additionalAttrs)
@@ -145,43 +137,6 @@ const ScriptExecCtrl = {
         this._script_state = vnode.attrs.scriptState
     },
 
-    oncreate(vnode) {
-        document.getElementById('scriptButtonRun').onclick = () => {
-            if (this._script_state === 'running') {
-                m.request({
-                    method: 'PUT',
-                    url: '/script/pause'
-                })
-            } else if (this._script_state === 'paused') {
-                m.request({
-                    method: 'PUT',
-                    url: '/script/run'
-                })
-            } else {
-                if (vnode.attrs.ScriptSelectionData.selected !== null) {
-                    let data = new FormData()
-                    data.append('scriptPath', vnode.attrs.ScriptSelectionData.selected)
-                    m.request({
-                        method: 'POST',
-                        url: '/script/run',
-                        data: data
-                    })
-                }
-            }
-        }
-
-        let scriptFwdBtn = vnode.dom.getElementsByClassName('glyphicon-step-forward')[0]
-        scriptFwdBtn.onclick = () => {
-            scriptFwdBtn.setAttribute('disabled', 'disabled')
-            m.request({
-                    method: 'PUT',
-                    url: '/script/step'
-            }).then(() => {
-                scriptFwdBtn.removeAttribute('disabled')
-            })
-        }
-    },
-
     view(vnode) {
         this._script_state = vnode.attrs.scriptState
 
@@ -191,7 +146,30 @@ const ScriptExecCtrl = {
 
         let runBtnAttrs = {
             class: 'btn glyphicon glyphicon-' + btnDisplayState,
-            id: 'scriptButtonRun'
+            id: 'scriptButtonRun',
+            onclick: (e) => {
+                if (this._script_state === 'running') {
+                    m.request({
+                        method: 'PUT',
+                        url: '/script/pause'
+                    })
+                } else if (this._script_state === 'paused') {
+                    m.request({
+                        method: 'PUT',
+                        url: '/script/run'
+                    })
+                } else {
+                    if (vnode.attrs.ScriptSelectionData.selected !== null) {
+                        let data = new FormData()
+                        data.append('scriptPath', vnode.attrs.ScriptSelectionData.selected)
+                        m.request({
+                            method: 'POST',
+                            url: '/script/run',
+                            data: data
+                        })
+                    }
+                }
+            }
         }
 
         // The Run button should be disabled in situations where running doesn't
@@ -217,7 +195,16 @@ const ScriptExecCtrl = {
 
         let stepForwardAttrs = {
             class: 'btn glyphicon glyphicon-step-forward',
-            id: 'scriptButtonForward'
+            id: 'scriptButtonForward',
+            onclick: (e) => {
+                e.target.setAttribute('disabled', 'disabled')
+                m.request({
+                        method: 'PUT',
+                        url: '/script/step'
+                }).then(() => {
+                    e.target.removeAttribute('disabled')
+                })
+            }
         }
 
         if (this._script_state !== 'paused') {
@@ -268,7 +255,7 @@ const ScriptEditor = {
 
     oncreate(vnode) {
         this._cm = CodeMirror.fromTextArea(
-            document.getElementById('scriptviewer'),
+            vnode.dom.elements['scriptview'],
             {
                 lineNumbers: true,
                 readOnly: true,
@@ -312,7 +299,7 @@ const ScriptEditor = {
 
         const initHelpText = 'To load a script, click the Load Script button above.'
         return m('form',
-                 m('textarea', {id: 'scriptviewer'}, initHelpText))
+                 m('textarea', {name: 'scriptview'}, initHelpText))
     }
 }
 
