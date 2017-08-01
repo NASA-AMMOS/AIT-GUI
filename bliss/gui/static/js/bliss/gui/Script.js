@@ -23,7 +23,7 @@ const ScriptSelect = {
                    class: 'form-control',
                    multiple: 'true',
                    onchange: (e) => {
-                       vnode.attrs.ScriptSelectionData.selected = e.target.value
+                       vnode.attrs.ScriptSelectionData.selected = e.currentTarget.value
                        document.activeElement.blur()
                    }
                  },

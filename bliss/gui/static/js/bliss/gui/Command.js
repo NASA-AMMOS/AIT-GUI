@@ -83,9 +83,9 @@ const CommandInput = {
                        id:'command-submit-form',
                        onsubmit: (e) => {
                            e.preventDefault()
-                           let url = e.target.getAttribute('action')
+                           let url = e.currentTarget.getAttribute('action')
                            let data = new FormData()
-                           data.append('command', e.target.elements['command'].value)
+                           data.append('command', e.currentTarget.elements['command'].value)
                            m.request({method: 'POST', url: url, data: data})
                            $('#command-typeahead').typeahead('val', '').focus()
                        }
@@ -214,7 +214,7 @@ const CommandSearch = {
                                            $('.panel-collapse').collapse('show')
                                        },
                                        onkeyup: (e) => {
-                                           this.commandFilter = e.target.value
+                                           this.commandFilter = e.currentTarget.value
                                        },
                                    })
         let commandSearchReset = m('div', {class: 'input-group-btn'},
@@ -223,7 +223,7 @@ const CommandSearch = {
                                         id: 'command-search-clear',
                                         onmousedown: (e) => {
                                             e.preventDefault()
-                                            e.target.parentElement.parentElement.elements['command-search'].value = ''
+                                            e.currentTarget.parentElement.parentElement.elements['command-search'].value = ''
                                             this.commandFilter = ''
                                         }
                                      },
