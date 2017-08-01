@@ -56,38 +56,6 @@ const CommandInput = {
             })
         })
 
-        $('#command-submit-form').submit((e) => {
-            e.preventDefault()
-            let url = $('#command-submit-form').attr('action')
-            let data = new FormData()
-            data.append('command', $('#command-typeahead').val())
-            m.request({method: 'POST', url: url, data: data})
-            $('#command-typeahead').typeahead('val', '').focus()
-        })
-
-        document.getElementById('command-typeahead').onkeyup = (e) => {
-            if (e.keyCode == 17) {
-                this._cntrl_toggled = false
-            }
-        }
-
-        document.getElementById('command-typeahead').onkeydown = (e) => {
-            if (e.keyCode == 17) {
-                this._cntrl_toggled = true
-            }
-
-            // If the user presses Enter without pressing Ctrl or
-            // if commanding is currently disabled we cancel
-            // the submission.
-            if ((e.keyCode == 13 && ! this._cntrl_toggled) || this.cmding_disabled) {
-                e.preventDefault()
-                return false
-            }
-
-            return true
-        }
-
-        const submitBtn = vnode.dom.getElementsByTagName('button')[0]
         bliss.events.on('seq:exec', () => {
             this._cmding_disabled = true
         })
@@ -112,7 +80,15 @@ const CommandInput = {
                        role: 'form',
                        method: 'POST',
                        action: '/cmd',
-                       id:'command-submit-form'
+                       id:'command-submit-form',
+                       onsubmit: (e) => {
+                           e.preventDefault()
+                           let url = e.target.getAttribute('action')
+                           let data = new FormData()
+                           data.append('command', e.target.elements['command'].value)
+                           m.request({method: 'POST', url: url, data: data})
+                           $('#command-typeahead').typeahead('val', '').focus()
+                       }
                    },
                    [
                        m('label', 'Send Command:'),
@@ -123,7 +99,27 @@ const CommandInput = {
                                  id: 'command-typeahead',
                                  type: 'text',
                                  name: 'command',
-                                 placeholder: 'Select Command ...'
+                                 placeholder: 'Select Command ...',
+                                 onkeyup: (e) => {
+                                     if (e.keyCode == 17) {
+                                         this._cntrl_toggled = false
+                                     }
+                                 },
+                                 onkeydown: (e) => {
+                                     if (e.keyCode == 17) {
+                                         this._cntrl_toggled = true
+                                     }
+
+                                     // If the user presses Enter without pressing Ctrl or
+                                     // if commanding is currently disabled we cancel
+                                     // the submission.
+                                     if ((e.keyCode == 13 && ! this._cntrl_toggled) || this.cmding_disabled) {
+                                         e.preventDefault()
+                                         return false
+                                     }
+
+                                     return true
+                                 }
                              }),
                            m('span', {class: 'input-group-btn'},
                                m('button', submitBtnAttrs, 'Send')
@@ -151,20 +147,6 @@ const CommandSearch = {
 
     oncreate(vnode) {
         $(() => {$('[data-toggle="popover"]').popover()})
-
-        $('#command-search').focus((e) => {
-            $('.panel-collapse').collapse('show')
-        })
-
-        $('#command-search').keyup((e) => {
-            this.commandFilter = $('#command-search').val()
-            m.redraw()
-        })
-
-        $('#command-search-clear').mousedown((e) => {
-            e.preventDefault()
-            this.resetCommandFiltering()
-        })
     },
 
     view(vnode) {
@@ -225,15 +207,30 @@ const CommandSearch = {
         let commandSearchInput = m('input', {
                                        class: 'form-control',
                                        id: 'command-search',
+                                       name: 'command-search',
                                        placeholder: 'Search ...',
-                                       type: 'search'
+                                       type: 'search',
+                                       onfocus: (e) => {
+                                           $('.panel-collapse').collapse('show')
+                                       },
+                                       onkeyup: (e) => {
+                                           this.commandFilter = e.target.value
+                                       },
                                    })
         let commandSearchReset = m('div', {class: 'input-group-btn'},
-                                   m('button', {class: 'btn btn-default', id: 'command-search-clear'},
+                                   m('button', {
+                                        class: 'btn btn-default',
+                                        id: 'command-search-clear',
+                                        onmousedown: (e) => {
+                                            e.preventDefault()
+                                            e.target.parentElement.parentElement.elements['command-search'].value = ''
+                                            this.commandFilter = ''
+                                        }
+                                     },
                                      m('span', {
                                            class: 'glyphicon glyphicon-remove-circle',
                                        })))
-        let commandSearchBox = m('div', {class: 'input-group'}, [
+        let commandSearchBox = m('form', {class: 'input-group', onsubmit: () => {return false}}, [
                                      commandSearchInput,
                                      commandSearchReset
                                  ])
@@ -250,13 +247,6 @@ const CommandSearch = {
                               cmdAccordions)
                         ])
         return cmdTree
-    },
-
-    resetCommandFiltering() {
-        $('#command-search').val('')
-        $('.panel-collapse').collapse('hide')
-        this.commandFilter = ''
-        m.redraw()
     },
 }
 
@@ -286,15 +276,12 @@ const CommandConfigure = {
         if (CommandSelectionData.activeCommand !== null) {
             commandSelection = m('div', {id: 'commandCustomizer'}, [
                                  m('div', {class: 'row'},
-                                   //m('div', {class: 'col-lg-4 col-lg-offset-1'},
                                    m('div', {class: 'col-lg-12'},
                                      m('h3', CommandSelectionData.activeCommand.name))),
                                  m('div', {class: 'row'},
-                                   //m('div', {class: 'col-lg-7 col-lg-offset-1'},
                                    m('div', {class: 'col-lg-10 col-lg-offset-1'},
                                      m('div', CommandSelectionData.activeCommand.desc.replace(/(\r\n|\n|\r)/gm," ")))),
                                  m('div', {class: 'row'},
-                                   //m('div', {class: 'col-lg-7 col-lg-offset-1'},
                                    m('div', {class: 'col-lg-10 col-lg-offset-1'},
                                      this.generateCommandArgumentsForm(CommandSelectionData.activeCommand))),
                                ])
