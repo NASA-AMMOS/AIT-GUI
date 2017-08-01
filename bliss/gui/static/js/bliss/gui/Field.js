@@ -141,6 +141,13 @@ const Field =
                 value = (type && type.isTime) ?
                     strftime.utc()(vnode.attrs.format, value) :
                     sprintf(vnode.attrs.format, value)
+            } else {
+                // If the Field doesn't have a format specified and is
+                // displaying a float we default to 5 digits after the
+                // decimal point.
+                if (! isNaN(value) && ! Number.isInteger(value)) {
+                    value = Number(value).toFixed(5)
+                }
             }
 
             if (this.hasLimitCheck()) {
