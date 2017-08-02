@@ -67,23 +67,11 @@
 
   <br />
   <hr />
-  <ul class="nav nav-tabs">
-    <li role="presentation" class="active">
-      <a href="#log-tab" aria-controls="log-tab" role=tab" data-toggle="tab">Logs</a>
-    </li>
-    <li role="presentation">
-      <a href="#command-tab" aria-controls="command-tab" role=tab" data-toggle="tab">Commanding</a>
-    </li>
-    <li role="presentation">
-      <a href="#sequence-tab" aria-controls="sequence-tab" role=tab" data-toggle="tab">Sequences</a>
-    </li>
-  </ul>
-  <!--<div class="tab-content" id='bliss-footer'>-->
-  <div class="tab-content">
-    <div role="tabpanel" class="tab-pane active" id="log-tab">
+  <bliss-tabset class='nav-tabs'>
+    <bliss-tab title='Logs'>
       <bliss-messages></bliss-messages> 
-    </div>
-    <div role="tabpanel" class="tab-pane" id="command-tab">
+    </bliss-tab>
+    <bliss-tab title='Commanding'>
       <div class="row">
         <div class="col-lg-2">
           <br />
@@ -93,11 +81,11 @@
           <bliss-commandinput></bliss-commandinput>
         </div>
       </div>
-    </div>
-    <div role="tabpanel" class="tab-pane" id="sequence-tab">
+    </bliss-tab>
+    <bliss-tab title='Sequences'>
       <bliss-sequence></bliss-sequence> 
-    </div>
-  </div>
+    </bliss-tab>
+  </bliss-tabset>
 </div>
 
 
