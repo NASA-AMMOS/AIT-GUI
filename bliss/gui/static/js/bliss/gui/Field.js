@@ -73,32 +73,40 @@ const Field =
      * Check if a value is within the limit range(s) specified as an error
      */
     valueIsInErrorRange(value) {
-        if ('value' in this._limits) {
-            if (typeof(this._limits.value.error === 'string')) {
+        if ('value' in this._limits && 'error' in this._limits.value) {
+            if (typeof(this._limits.value.error) === 'string') {
                 return value === this._limits.value.error
             } else {
                 return this._limits.value.error.includes(value)
             }
         } else {
-            return (value > this._limits.upper.error ||
-                    value < this._limits.lower.error)
+            if ('upper' in this._limits && 'error' in this._limits.upper) {
+                return value > this._limits.upper.error
+            } else if ('lower' in this._limits && 'error' in this._limits.lower) {
+                return value < this._limits.lower.error
+            }
         }
+        return false
     },
 
     /**
      * Check if a value is within the limit range(s) specified as a warning
      */
     valueIsInWarnRange(value) {
-        if ('value' in this._limits) {
-            if (typeof(this._limits.value.warn === 'string')) {
+        if ('value' in this._limits && 'warn' in this._limits.value) {
+            if (typeof(this._limits.value.warn) === 'string') {
                 return value === this._limits.value.warn
             } else {
                 return this._limits.value.warn.includes(value)
             }
         } else {
-            return (value > this._limits.upper.warn ||
-                    value < this._limits.lower.warn)
+            if ('upper' in this._limits && 'warn' in this._limits.upper) {
+                return value > this._limits.upper.warn
+            } else if ('lower' in this._limits && 'warn' in this._limits.lower) {
+                return value < this._limits.lower.warn
+            }
         }
+        return false
     },
 
     // Mithril lifecycle method
