@@ -736,6 +736,6 @@ class BlissDB(bdb.Bdb):
             script_exec_lock.release()
 
 
-@App.route('/limit/dict')
+@App.route('/limits/dict')
 def handle():
     return json.dumps(limits.getDefaultDict().toJSON())

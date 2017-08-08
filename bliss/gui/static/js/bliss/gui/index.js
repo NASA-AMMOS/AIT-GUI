@@ -123,9 +123,9 @@ function init () {
             })
         })
 
-        m.request({url: '/limit/dict'}).then((dict) => {
-            bliss.limit = {}
-            bliss.limit.dict = dict
+        m.request({url: '/limits/dict'}).then((dict) => {
+            bliss.limits = {}
+            bliss.limits.dict = dict
         })
 
         let source = new EventSource('/events');
