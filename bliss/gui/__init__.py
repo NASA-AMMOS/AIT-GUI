@@ -50,7 +50,7 @@ import requests
 import bliss
 import bliss.core
 
-from bliss.core import api, cfg, cmd, evr, gds, limit, log, pcap, tlm, util
+from bliss.core import api, cfg, cmd, evr, gds, limits, log, pcap, tlm, util
 
 
 class HTMLRoot:
@@ -738,4 +738,4 @@ class BlissDB(bdb.Bdb):
 
 @App.route('/limit/dict')
 def handle():
-    return json.dumps(limit.getDefaultDict().toJSON())
+    return json.dumps(limits.getDefaultDict().toJSON())
