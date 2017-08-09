@@ -10,6 +10,7 @@ git checkout gh-pages
 \cp doc/build/html/*.html .
 \cp doc/build/html/*.js .
 \cp -r doc/build/html/_static .
+\cp -r doc/build/html/_images .
 git add *.html *.js _static
 
 echo
