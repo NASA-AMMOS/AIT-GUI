@@ -56,11 +56,11 @@ const Field =
      */
     hasLimitCheck() {
         if (this._limits === null) {
-            if (typeof bliss.limit === 'undefined') return false
+            if (typeof bliss.limits === 'undefined') return false
 
             let limitIndex = this._pname + '.' + this._fname
-            if (limitIndex in bliss.limit.dict) {
-                this._limits = bliss.limit.dict[this._pname + '.' + this._fname]
+            if (limitIndex in bliss.limits.dict) {
+                this._limits = bliss.limits.dict[this._pname + '.' + this._fname]
             } else {
                 this._limits = false
             }
