@@ -167,16 +167,15 @@ const CommandSearch = {
 
             cmdAccordions = flatMap(displayCommands, (v, k) => {
                 // Generate the accordion header for the current subsystem key
-                let header = m('div', {class: 'panel-heading', role: 'tab', id: 'heading' + k},
-                               m('h4', {class: 'panel-title'},
-                                 m('a',
-                                   {
-                                       role: 'button',
-                                       'data-toggle': 'collapse',
-                                       'data-parent': '#cmdTree',
-                                       href: '#collapse' + k,
-                                   },
-                                   k)))
+                let header = m('a',
+                                {
+                                    class: 'panel-heading',
+                                    role: 'tab',
+                                    id: 'heading' + k,
+                                    'data-toggle': 'collapse',
+                                    'data-target': '#collapse' + k
+                                },
+                                m('h4', {class: 'panel-title'}, k))
                 let commandList = map(v, (v) => {
                                        return m('li',
                                                 m('a',
@@ -199,8 +198,11 @@ const CommandSearch = {
                                  id: 'collapse' + k,
                              },
                              m('div', {class: 'panel-body'},
-                               m('ul', commandList)))
-                return [header, body]
+                               m('ul', {class: 'command-list'}, commandList)))
+                return m('div', {
+                            class: 'panel panel-default',
+                         },
+                         [header, body])
             })
         }
 
@@ -241,10 +243,7 @@ const CommandSearch = {
                             style: 'margin-top: 20px;'},
                         [
                             commandSearchBox,
-                            m('div', {
-                                class: 'panel panel-default',
-                                id: 'cmdAccordions'},
-                              cmdAccordions)
+                            cmdAccordions
                         ])
         return cmdTree
     },

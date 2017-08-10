@@ -134,6 +134,15 @@ bliss-messages .log-warning  { background-color: #fcf8e3; }
     overflow-y: auto;
 }
 
+.panel-heading {
+    display: block;
+    cursor: pointer;
+}
+
+.command-list {
+    list-style-type: none;
+}
+
 p.navbar-text.bliss-status-indicators {
     margin-top: 10px;
 }
