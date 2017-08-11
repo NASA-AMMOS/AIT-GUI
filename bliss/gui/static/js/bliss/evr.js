@@ -26,8 +26,8 @@ class EVRDictionary
 
     /**
      * Parses the given plain Javascript Object or JSON string and
-     * returns a new EVRDictionary, mapping packet names to
-     * PacketDefinitions.
+     * returns a new EVRDictionary, mapping EVR names to
+     * EVRDefinitions.
      */
     static parse (obj) {
         let dict = new EVRDictionary()
@@ -36,8 +36,8 @@ class EVRDictionary
             obj = JSON.parse(obj)
         }
 
-        for (let n = 0; n < obj.length; ++n) {
-            dict.add( new EVRDefinition(obj[n]) )
+        for (let k in obj) {
+            dict.add(new EVRDefinition(obj[k]))
         }
 
         return dict

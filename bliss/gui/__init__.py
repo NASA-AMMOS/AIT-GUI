@@ -330,40 +330,8 @@ def handle():
 
 @App.route('/evr/dict', method='GET')
 def handle():
-    """Return JSON EVR dictionary
-
-    **Example Response**:
-
-    .. sourcecode:: json
-
-       [
-           {
-               message: "No error",
-               code: 1,
-               name: "NO_ERROR",
-               desc: "No error"
-           },
-           {
-               message: "The first evr",
-               code: 2,
-               name: "EVR_1",
-               desc: "EVR 1"
-           },
-           {
-               message: "The second evr",
-               code: 3,
-               name: "EVR_2",
-               desc: "EVR 2"
-           },
-           {
-               message: "The third evr %s",
-               code: 4,
-               name: "EVR_3",
-               desc: "EVR 3"
-           }
-       ]
-    """
-    return json.dumps([ e.toJSON() for e in evr.getDefaultDict() ])
+    """Return JSON EVR dictionary"""
+    return json.dumps(evr.getDefaultDict().toJSON())
 
 
 @App.route('/messages', method='GET')
