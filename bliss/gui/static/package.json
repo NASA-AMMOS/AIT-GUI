@@ -27,6 +27,7 @@
     "jsdom-global": "^2.1.1",
     "lodash": "^4.16.6",
     "mithril": "^1.1.0",
+    "mithril-query": "^2.2.0",
     "mocha": "^3.1.2",
     "sinon": "^1.17.6",
     "strftime": "^0.10.0",
