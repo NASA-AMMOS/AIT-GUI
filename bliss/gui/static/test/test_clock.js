@@ -1,6 +1,9 @@
 require('jsdom-global')()
 import 'babel-polyfill'
 
+global.window = Object.assign(require('mithril/test-utils/domMock.js')(), require('mithril/test-utils/pushStateMock')())
+var mq = require('mithril-query')
+
 var chai = require('chai')
 chai.should()
 
@@ -26,5 +29,14 @@ describe('Clock object', function () {
         clock._doy.should.equal(false)
         clock.toggleDOY()
         clock._doy.should.equal(true)
+    })
+
+    it('should output proper DOM format', function() {
+        let clock = bliss.gui.Clock
+        let output = mq(clock)
+        output.should.have('bliss-clock')
+        output.should.have('bliss-clock > span.date')
+        output.should.have('bliss-clock > span.time')
+        output.should.have('bliss-clock > span.tz')
     })
 })
