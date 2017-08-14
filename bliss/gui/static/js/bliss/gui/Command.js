@@ -19,6 +19,18 @@ const CommandInput = {
         bliss.events.on('cmd:hist', (cmdname) => {
             bliss.cmd.typeahead.hist.add([cmdname])
         })
+
+        bliss.events.on('seq:exec', () => {
+            this._cmding_disabled = true
+        })
+
+        bliss.events.on('seq:done', () => {
+            this._cmding_disabled = false
+        })
+
+        bliss.events.on('seq:err', () => {
+            this._cmding_disabled = false
+        })
     },
 
     oncreate(vnode) {
@@ -54,18 +66,6 @@ const CommandInput = {
                 source:    bliss.cmd.typeahead.dict,
                 templates: {header: '<h4 class="typeahead-heading">Dictionary</h4>'},
             })
-        })
-
-        bliss.events.on('seq:exec', () => {
-            this._cmding_disabled = true
-        })
-
-        bliss.events.on('seq:done', () => {
-            this._cmding_disabled = false
-        })
-
-        bliss.events.on('seq:err', () => {
-            this._cmding_disabled = false
         })
     },
 
