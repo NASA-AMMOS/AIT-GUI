@@ -546,7 +546,7 @@ def handle():
     if SEQRoot is None:
         files = [ ]
     else:
-        files = [ fn for fn in os.listdir(SEQRoot) if fn.endswith('.txt') ]
+        files = util.listAllFiles(SEQRoot, '.txt')
 
         return json.dumps( sorted(files) )
 
@@ -596,7 +596,7 @@ def handle():
     if ScriptRoot is None:
         files = []
     else:
-        files = [fn for fn in os.listdir(ScriptRoot) if fn.endswith('.py')]
+        files = util.listAllFiles(ScriptRoot, '.py')
 
     return json.dumps(sorted(files))
 
