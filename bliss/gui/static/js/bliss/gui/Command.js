@@ -9,6 +9,43 @@ import values from 'lodash/values'
 var typeahead = require('typeahead.js/dist/typeahead.jquery');
 var Bloodhound = require('typeahead.js/dist/bloodhound');
 
+const CommandHistory = {
+    _cmdHistory: null,
+
+    refreshCommandHistory() {
+        m.request({url: '/cmd/hist.json?detailed=true'}).then((dict) => {
+            this._cmdHistory = dict
+        })
+    },
+
+    oninit(vnode) {
+        this.refreshCommandHistory()
+
+        bliss.events.on('cmd:hist', () => {
+            this.refreshCommandHistory()
+        })
+    },
+
+    view(vnode) {
+        return m('table', {class: 'table table-striped'}, [
+            m('thead',
+                m('tr', [
+                    m('th', 'Timestamp'),
+                    m('th', 'Executed Command')
+                ])
+            ),
+            m('tbody',
+                map(this._cmdHistory, (c) => {
+                    return m('tr', [
+                        m('td', c['timestamp']),
+                        m('td', c['command'])
+                    ])
+                })
+            )
+        ])
+    }
+}
+
 const CommandInput = {
     _cntrl_toggled: false,
     _cmding_disabled: false,
@@ -431,5 +468,5 @@ const CommandConfigure = {
     },
 }
 
-export default {CommandInput, CommandSearch, CommandConfigure}
-export {CommandInput, CommandSearch, CommandConfigure}
+export default {CommandHistory, CommandInput, CommandSearch, CommandConfigure}
+export {CommandHistory, CommandInput, CommandSearch, CommandConfigure}

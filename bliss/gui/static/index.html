@@ -94,6 +94,26 @@
     <bliss-tab title='Logs'>
       <bliss-messages></bliss-messages> 
     </bliss-tab>
+    <bliss-tab title='Commanding'>
+      <div class="row">
+        <div class="col-lg-2">
+          <br />
+          <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#commanding-modal">Command Browser</button>
+        </div>
+        <div class="col-lg-10">
+          <bliss-commandinput></bliss-commandinput>
+        </div>
+      </div>
+    </bliss-tab>
+    <bliss-tab title='Command History'>
+      <div class="row">
+        <div class="col-lg-12">
+          <div style="height:200px;overflow:auto;">
+            <bliss-commandhistory></bliss-commandhistory>
+          </div>
+        </div>
+      </div>
+    </bliss-tab>
     <bliss-tab title='Sequences'>
       <bliss-sequence></bliss-sequence> 
     </bliss-tab>
