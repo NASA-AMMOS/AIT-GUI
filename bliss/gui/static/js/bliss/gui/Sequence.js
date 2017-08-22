@@ -1,6 +1,7 @@
 import map from 'lodash/map'
 
 const Sequence = {
+    _disableControls: false,
     sequences: [],
 
     refreshSequenceList() {
@@ -23,24 +24,32 @@ const Sequence = {
 
     oninit(vnode) {
         this.refreshSequenceList()
-    },
 
-    oncreate(vnode) {
-        const submitBtn = vnode.dom.getElementsByTagName('button')[1]
         bliss.events.on('seq:exec', () => {
-            submitBtn.setAttribute("disabled", "disabled")
+            this._disableControls = true
         })
 
         bliss.events.on('seq:done', () => {
             submitBtn.removeAttribute("disabled")
+            this._disableControls = false
         })
 
         bliss.events.on('seq:err', () => {
-            submitBtn.removeAttribute("disabled")
+            this._disableControls = false
         })
     },
 
     view(vnode) {
+        let submitBtnAttrs = {
+            id: 'send-seq-btn',
+            type: 'submit',
+            class: 'btn btn-success'
+        }
+
+        if (self._disableControls) {
+            submitBtnAttrs['disabled'] = 'disabled'
+        }
+
         return m('form',
                  {
                      class: 'form-horizontal',
@@ -74,13 +83,7 @@ const Sequence = {
                            this.sequences)
                      ]),
                      m('div', {class: 'form-group'},
-                       m('button',
-                         {
-                             id: 'send-seq-btn',
-                             type: 'submit',
-                             class: 'btn btn-success'
-                         },
-                         'Send'))
+                       m('button', submitBtnAttrs, 'Send'))
                 ])
     },
 }
