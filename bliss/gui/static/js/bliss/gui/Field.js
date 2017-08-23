@@ -136,10 +136,10 @@ const Field =
             value = 'N/A'
         }
         else if (value instanceof CommandDefinition) {
-            value = value.opcode ? value.name : 'N/A'
+            value = value.name ? value.name : (value.opcode ? value.opcode : 'Unidentified Cmd')
         }
         else if (value instanceof EVRDefinition) {
-            value = value.code ? value.name : 'N/A'
+            value = value.name ? value.name : (value.code ? value.code : 'Unidentified EVR')
         }
         else {
             if (vnode.attrs.format) {
