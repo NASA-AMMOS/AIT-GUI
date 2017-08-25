@@ -16,7 +16,7 @@ import bliss.gui
 try:
     bliss.core.log.begin()
     parser = argparse.ArgumentParser()
-    parser.add_argument('--browser', dest='browser')
+    parser.add_argument('--browser', dest='browser', default='none')
     parser.add_argument('--host', dest='host')
     parser.add_argument('port', nargs='?', type=int, default=bliss.config.get('gui.port', 8080))
 
