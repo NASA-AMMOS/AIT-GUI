@@ -1,18 +1,9 @@
 #!/usr/bin/env python
-"""
-Usage:
-  bliss-gui.py [<port> --host=<host> --browser=<browser>]
 
-Options:
-  port       GUI client HTTP connections port (default 8000)
-  host       GUI client HTTP connections hostname
-  browser    GUI client browser to start (may be "none")
-"""
-
+import argparse
 import socket
 import sys
 
-import docopt
 import gevent
 import gevent.monkey
 import geventwebsocket
@@ -24,10 +15,15 @@ import bliss.gui
 
 try:
     bliss.core.log.begin()
-    arguments = docopt.docopt(__doc__, version='bliss-gui 0.1.0')
-    browser   = arguments['--browser']
-    host      = arguments['--host']
-    port      = int(arguments['<port>'] or bliss.config.get('gui.port', 8080))
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--browser', dest='browser')
+    parser.add_argument('--host', dest='host')
+    parser.add_argument('port', nargs='?', type=int, default=bliss.config.get('gui.port', 8080))
+
+    arguments = parser.parse_args()
+    browser = arguments.browser
+    host = arguments.host
+    port = arguments.port
 
     if host is None:
         if sys.platform == 'darwin':
