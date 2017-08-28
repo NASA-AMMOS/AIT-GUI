@@ -18,10 +18,15 @@ class EVRDictionary
     }
 
     /**
-     * Returns the EVRDefinition with the given code.
+     * Returns the EVRDefinition with the given code or the
+     * supplied code if no definition exists for it.
      */
     getByCode (code) {
-        return this._codes[code]
+        if (this._codes[code]) {
+            return this._codes[code]
+        } else {
+            return code
+        }
     }
 
     /**

@@ -30,10 +30,15 @@ class CommandDictionary
     }
 
     /**
-     * Returns the CommandDefinition with the given opcode.
+     * Returns the CommandDefinition with the given opcode or the
+     * given opcode if no definition exists for it.
      */
     getByOpcode (opcode) {
-        return this._byOpcode[opcode]
+        if (this._byOpcode[opcode]) {
+            return this._byOpcode[opcode]
+        } else {
+            return opcode
+        }
     }
 
     /**
