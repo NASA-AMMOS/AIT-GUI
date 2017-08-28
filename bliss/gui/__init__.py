@@ -85,6 +85,14 @@ Servers = [ ]
 bottle.debug(True)
 bottle.TEMPLATE_PATH.append(HTMLRoot.User)
 
+try:
+    with open(os.path.join(HTMLRoot.Static, 'package.json')) as infile:
+        package_data = json.loads(infile.read())
+    VERSION = 'BLISS GUI v{}'.format(package_data['version'])
+    log.info('Running {}'.format(VERSION))
+except:
+    VERSION = ''
+    log.warn('Unable to determine which BLISS GUI Version is running')
 
 
 class Session (object):
@@ -299,7 +307,7 @@ def __setResponseToJSON():
 def handle ():
     """Return index page"""
     Sessions.create()
-    return bottle.template('index.html')
+    return bottle.template('index.html', version=VERSION)
 
 
 @App.route('/events', method='GET')
