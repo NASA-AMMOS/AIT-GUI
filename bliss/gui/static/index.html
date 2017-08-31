@@ -6,7 +6,6 @@
 <body>
 
 <div class="navbar navbar-inverse navbar-fixed-top">
-  <div class="container">
     <div class="navbar-header">
       <a class="navbar-brand" href="#">BLISS GUI</a><br>
     </div>
@@ -30,7 +29,7 @@
                        error='bliss:psu:stale'
                        default='pending'></bliss-led>
              PSU</p></li>
-        
+
       <li><p class="navbar-text bliss-status-indicators" id="ptlm-status">
             <bliss-led on='bliss:tlm:packet'
                        off='bliss:tlm:close'
@@ -40,89 +39,71 @@
              FSW</p></li>
       <li><bliss-clock class="navbar-text" doy="true"></bliss-clock></li>
     </ul>
-  </div>
 </div>
 
-<div class="container">
-  <bliss-tabset class="nav-tabs">
-    <bliss-tab title="Foo">
-        Counter: <bliss-field name="Counter"></bliss-field>
-    </bliss-tab>
-    <bliss-tab title="Bar"> Bar </bliss-tab>
-    <bliss-tab title="Baz"> Baz </bliss-tab>
-    <bliss-tab title="Bop"> Bop </bliss-tab>
-    <bliss-tab title="Clock">
-      <h1>The current time</h1>
-      <bliss-clock class="navbar-text" doy="true"></bliss-clock>
-    </bliss-tab>
-    <bliss-tab title="Script Control">
-      <div class='row'>
-        <div class='col-lg-12'>
-          <h3>Script Control Dashboard</h3>
-        </div>
-      </div>
-      <bliss-scripts></bliss-scripts>
-    </bliss-tab>
-    <bliss-tab title='Commanding'>
-      <div class="row">
-        <br />
-      </div>
-      <div class="row">
-        <div class="col-lg-12">
-          <bliss-commandinput></bliss-commandinput>
-        </div>
-      </div>
-      <div class="row">
-        <hr />
-      </div>
-      <div class="row">
-        <div class="col-lg-5" style="height:500px;overflow:auto;">
-          <bliss-commandsearch>
-          </bliss-commandsearch>
-        </div>
-        <div class="col-lg-7" style="height:500px;overflow:auto;">
-          <bliss-commandconfigure>
-          </bliss-commandconfigure>
-        </div>
-      </div>
-    </bliss-tab>
-  </bliss-tabset>
+<div class='site-container'>
+  <div class='telemcontainer'>
+    <bliss-tabset class="nav-tabs">
+      <bliss-tab title="Foo">
+          Counter: <bliss-field name="Counter"></bliss-field>
+      </bliss-tab>
+      <bliss-tab title="Bar"> Bar </bliss-tab>
+      <bliss-tab title="Baz"> Baz </bliss-tab>
+      <bliss-tab title="Bop"> Bop </bliss-tab>
+      <bliss-tab title="Clock">
+        <h1>The current time</h1>
+        <bliss-clock class="navbar-text" doy="true"></bliss-clock>
+      </bliss-tab>
+    </bliss-tabset>
+  </div>
+  
 
-  <br />
-  <hr />
-  <bliss-tabset class='nav-tabs'>
-    <bliss-tab title='Logs'>
-      <bliss-messages></bliss-messages> 
-    </bliss-tab>
-    <bliss-tab title='Commanding'>
-      <div class="row">
-        <div class="col-lg-2">
-          <br />
-          <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#commanding-modal">Command Browser</button>
-        </div>
-        <div class="col-lg-10">
-          <bliss-commandinput></bliss-commandinput>
-        </div>
-      </div>
-    </bliss-tab>
-    <bliss-tab title='Command History'>
-      <div class="row">
-        <div class="col-lg-12">
-          <div style="height:200px;overflow:auto;">
-            <bliss-commandhistory></bliss-commandhistory>
+  <div class='ctrlcontainer'>
+    <bliss-tabset class='nav-tabs'>
+      <bliss-tab title='Logs'>
+        <bliss-messages></bliss-messages>
+      </bliss-tab>
+      <bliss-tab title='Commanding'>
+        <div class='cmd-tab-container'>
+          <div class="cmd-browser-container" style="height:500px;overflow:auto;">
+            <bliss-commandsearch>
+            </bliss-commandsearch>
+          </div>
+          <div class="cmd-config-container" style="height:500px;overflow:auto;">
+            <bliss-commandconfigure>
+            </bliss-commandconfigure>
+          </div>
+          <div class='cmd-search-container'>
+            <bliss-commandinput></bliss-commandinput>
+            <hr />
           </div>
         </div>
-      </div>
-    </bliss-tab>
-    <bliss-tab title='Sequences'>
-      <bliss-sequence></bliss-sequence> 
-    </bliss-tab>
-  </bliss-tabset>
+      </bliss-tab>
+      <bliss-tab title='Command History'>
+        <div class="row">
+          <div class="col-lg-12">
+            <div style="height:200px;overflow:auto;">
+              <bliss-commandhistory></bliss-commandhistory>
+            </div>
+          </div>
+        </div>
+      </bliss-tab>
+      <bliss-tab title='Sequences'>
+        <bliss-sequence></bliss-sequence> 
+      </bliss-tab>
+      <bliss-tab title="Script Control">
+        <div class='row'>
+          <div class='col-lg-12'>
+            <h3>Script Control Dashboard</h3>
+          </div>
+        </div>
+        <bliss-scripts></bliss-scripts>
+      </bliss-tab>
+    </bliss-tabset>
+  </div>
 
-  <div class='row'>
-    <div class='col-lg-2 col-lg-offset-10'>
-      <div class='text-muted'><small>{{version}}</small></div>
-    </div>
+  <div class='rightnotifycontainer'>
+    <div class='text-muted'><small>{{version}}</small></div>
   </div>
 </div>
 
