@@ -440,16 +440,44 @@ def handle():
            "NO_OP",
            "SEQ_START 3423"
        ]
+
+    If you set the **detailed** query string flag the JSON
+    returned will include timestamp information.
+
+    **Example Detailed Response**
+
+    .. sourcecode: json
+
+        [
+            {
+                "timestamp": "2017-08-01 15:41:13.117805",
+                "command": "NO_OP"
+            },
+            {
+                "timestamp": "2017-08-01 15:40:23.339886",
+                "command": "NO_OP"
+            }
+        ]
     """
     cmds = []
 
     try:
         with pcap.open(CmdHistFile, 'r') as stream:
-            cmds = [cmdname for (header, cmdname) in stream]
+            if 'detailed' in bottle.request.query:
+                cmds = [
+                    {
+                        'timestamp': str(header.timestamp),
+                        'command': cmdname
+                    }
+                    for (header, cmdname) in stream
+                ]
+                return json.dumps(list(reversed(cmds)))
+            else:
+                cmds = [cmdname for (header, cmdname) in stream]
+                return json.dumps(list(set(cmds)))
     except IOError:
         pass
 
-    return json.dumps(list(set(cmds)))
 
 @App.route('/cmd', method='POST')
 def handle():
