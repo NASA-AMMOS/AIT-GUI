@@ -63,6 +63,29 @@
       </div>
       <bliss-scripts></bliss-scripts>
     </bliss-tab>
+    <bliss-tab title='Commanding'>
+      <div class="row">
+        <br />
+      </div>
+      <div class="row">
+        <div class="col-lg-12">
+          <bliss-commandinput></bliss-commandinput>
+        </div>
+      </div>
+      <div class="row">
+        <hr />
+      </div>
+      <div class="row">
+        <div class="col-lg-5" style="height:500px;overflow:auto;">
+          <bliss-commandsearch>
+          </bliss-commandsearch>
+        </div>
+        <div class="col-lg-7" style="height:500px;overflow:auto;">
+          <bliss-commandconfigure>
+          </bliss-commandconfigure>
+        </div>
+      </div>
+    </bliss-tab>
   </bliss-tabset>
 
   <br />
@@ -70,17 +93,6 @@
   <bliss-tabset class='nav-tabs'>
     <bliss-tab title='Logs'>
       <bliss-messages></bliss-messages> 
-    </bliss-tab>
-    <bliss-tab title='Commanding'>
-      <div class="row">
-        <div class="col-lg-2">
-          <br />
-          <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#commanding-modal">Command Browser</button>
-        </div>
-        <div class="col-lg-10">
-          <bliss-commandinput></bliss-commandinput>
-        </div>
-      </div>
     </bliss-tab>
     <bliss-tab title='Sequences'>
       <bliss-sequence></bliss-sequence> 
@@ -93,30 +105,5 @@
     </div>
   </div>
 </div>
-
-
-<div class="modal fade" id='commanding-modal' tabindex="-1" role="dialog">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="gridSystemModalLabel">Command Browser</h4>
-      </div>
-      <div class="modal-body">
-        <div class="row">
-          <div class="col-lg-5">
-            <bliss-commandsearch>
-            </bliss-commandsearch>
-          </div>
-          <div class="col-lg-7">
-            <bliss-commandconfigure>
-            </bliss-commandconfigure>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
 
 </body>
