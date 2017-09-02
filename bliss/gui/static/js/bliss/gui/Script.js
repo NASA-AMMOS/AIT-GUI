@@ -19,7 +19,6 @@ const ScriptSelect = {
 
     view(vnode) {
         return m('select', {
-                   id: 'scriptSelectBox',
                    class: 'form-control',
                    multiple: 'true',
                    onchange: (e) => {
@@ -39,16 +38,12 @@ const ScriptSelect = {
  * The text returned from the loaded script is saved into the attribute
  * `ScriptSelectionData.script_text`.
  *
- * Additional attributes can be passed into the component via the
- * `additionalAttrs` attribute.
- *
  * The button is marked as disabled when `ScriptSelectionData.selected` is
  * null.
  */
 const ScriptLoadButton = {
     view(vnode) {
         let btnAttrs = {
-          id: 'loadScriptButton',
           class: 'btn btn-success',
           onclick: (e) => {
               let scriptName = encodeURIComponent(vnode.attrs.ScriptSelectionData.selected)
@@ -59,7 +54,7 @@ const ScriptLoadButton = {
           }
         }
 
-        merge(btnAttrs, vnode.attrs.additionalAttrs)
+        merge(btnAttrs, vnode.attrs)
 
         if (vnode.attrs.ScriptSelectionData.selected === null) {
             btnAttrs.disabled = 'disabled'
@@ -96,12 +91,11 @@ const ScriptLoadModal = {
         let modalFooter = m('div', {class: 'modal-footer'},
                             m(ScriptLoadButton, {
                                 ScriptSelectionData: vnode.attrs.ScriptSelectionData,
-                                additionalAttrs: {'data-dismiss': 'modal'}
+                                'data-dismiss': 'modal'
                             }))
 
         let scriptModal = m('div', {
                                 class: 'modal fade',
-                                id: 'scriptModal',
                                 tabindex: '-1',
                                 role: 'dialog'
                             },
@@ -125,12 +119,12 @@ const ScriptLoadModal = {
  * This component allows the user to run a script that they've selected
  * and loaded via the BLISS REST API. The script that the user has selected
  * to run is passed into the component via the `ScriptSelectionData.selected`
- * attribute.
+ * attribute. The function that the load button should perform when clicked is
+ * expected to be provided as the attribute `loadButtonAction`.
  *
  * Functionality for the following buttons is not currently implemented:
  *      Step back
  *      Reset script
- *      Step forward
  */
 const ScriptExecCtrl = {
     oninit(vnode) {
@@ -146,7 +140,6 @@ const ScriptExecCtrl = {
 
         let runBtnAttrs = {
             class: 'btn glyphicon glyphicon-' + btnDisplayState,
-            id: 'scriptButtonRun',
             onclick: (e) => {
                 if (this._script_state === 'running') {
                     m.request({
@@ -190,12 +183,10 @@ const ScriptExecCtrl = {
         let resetButton = m('div', {
             class: 'btn glyphicon glyphicon-refresh',
             disabled: 'disabled',
-            id: 'scriptButtonReset'
         })
 
         let stepForwardAttrs = {
             class: 'btn glyphicon glyphicon-step-forward',
-            id: 'scriptButtonForward',
             onclick: (e) => {
                 e.target.setAttribute('disabled', 'disabled')
                 m.request({
@@ -215,8 +206,7 @@ const ScriptExecCtrl = {
 
         let loadButton = m('div', {
             class: 'btn glyphicon glyphicon-download-alt',
-            'data-toggle': 'modal',
-            'data-target': '#scriptModal'
+            onclick: vnode.attrs.loadButtonAction
         })
 
         let buttonDashboard = m('div', [
@@ -295,6 +285,8 @@ const ScriptEditor = {
             } else {
                 this._cm.scrollTo(this._scrollState.left, this._scrollState.top)
             }
+
+            this._cm.refresh()
         }
 
         const initHelpText = 'To load a script, click the Load Script button above.'
@@ -319,6 +311,7 @@ let ScriptsState = {
 const Scripts = {
     oninit(vnode) {
         this._marker = document.createElement('span')
+        this._script_load_toggle = true
 
         bliss.events.on('script:start', () => {
             ScriptsState.execState = 'running'
@@ -342,6 +335,7 @@ const Scripts = {
         
         bliss.events.on('script:loaded', (e) => {
             ScriptsState.execState = 'stopped'
+            this._script_load_toggle = !this._script_load_toggle
         })
 
         bliss.events.on('script:step', (lineNum) => {
@@ -354,23 +348,43 @@ const Scripts = {
     },
 
     view(vnode) {
-        let scriptLoad = m(ScriptLoadModal, {ScriptSelectionData: ScriptsState.scriptSelectData})
-        let scriptCtrl = m('div', {class: 'col-lg-8 col-lg-offset-2'}, m(ScriptExecCtrl, {
+        let scriptLoad = m(ScriptSelect, {ScriptSelectionData: ScriptsState.scriptSelectData})
+        let scriptCtrl = m('div', {class: 'col-lg-12'}, m(ScriptExecCtrl, {
             ScriptSelectionData: ScriptsState.scriptSelectData,
-            scriptState: ScriptsState.execState
+            scriptState: ScriptsState.execState,
+            loadButtonAction: () => {
+                this._script_load_toggle = !this._script_load_toggle
+            }
         }))
 
-        let scriptEditor = m('div', {class: 'col-lg-8 col-lg-offset-2'},
+        let scriptEditor = m('div', {class: 'col-lg-12'},
                              m(ScriptEditor, {
                                  ScriptSelectionData: ScriptsState.scriptSelectData,
                                  scriptState: ScriptsState.execState,
                                  currentLine: ScriptsState.currentLine
                              }))
 
+        let loadBlockAttrs = {}
+        if (this._script_load_toggle) {
+            loadBlockAttrs['style'] = 'display:none;'
+        }
+
         return m('div', [
                   m('div', {class: 'row'}, scriptCtrl),
+                  m('div', loadBlockAttrs, [
+                    m('div', {class: 'row'}, m('br')),
+                    m('div', {class: 'row'},
+                      m('div', {class: 'col-lg-12'}, scriptLoad)
+                    ),
+                    m('div', {class: 'row'}, m('div', {class: 'col-lg-1 col-lg-offset-11'}, [
+                      m('br'),
+                      m(ScriptLoadButton, {
+                          ScriptSelectionData: ScriptsState.scriptSelectData,
+                      })
+                    ])),
+                    m('div', {class: 'row'}, m('br')),
+                  ]),
                   m('div', {class: 'row'}, scriptEditor),
-                  scriptLoad
                 ])
     }
 }
