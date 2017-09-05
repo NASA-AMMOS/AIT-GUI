@@ -97,19 +97,6 @@ bliss-messages .log-warning  { background-color: #fcf8e3; }
     overflow-x: hidden;
 }
 
-#commanding-modal .modal-dialog {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-#commanding-modal .modal-content {
-  height: auto;
-  min-height: 100%;
-  border-radius: 0;
-}
-
 #cmdAccordions {
     margin-top: 20px;
     height: 455px;
@@ -165,3 +152,77 @@ codeMirrorExecGutter {
 .bliss-script-stopped {color: black}
 .bliss-script-running {color: green}
 .bliss-script-error {color: red}
+
+/**
+ * Main Site Layout
+ */
+@media (min-width: 1945px) {
+    .site-container {
+        display: grid;
+        grid-template-columns: 2fr 4fr;
+        grid-template-rows: auto 1fr 10px;
+        grid-template-areas:
+            "ctrl        telem"
+            "footer      footer"
+            "leftnote    rightnote";
+        grid-gap: 40px;
+
+        margin-left: 20px;
+        margin-right: 20px;
+    }
+}
+
+@media (max-width: 1944px) {
+    .site-container {
+        display: grid;
+
+        grid-template-columns: auto auto;
+        grid-template-rows: 80vh auto 10px;
+        grid-template-areas:
+            "telem    telem"
+            "ctrl     ctrl"
+            "leftnote rightnote";
+
+
+        margin-left: 20px;
+        margin-right: 20px;
+    }
+}
+
+.telemcontainer {
+    grid-area: telem;
+}
+
+.ctrlcontainer {
+    grid-area: ctrl;
+}
+
+.rightnotifycontainer {
+    grid-area: rightnote;
+    text-align: right;
+}
+
+/**
+ * Command Tab Layout
+ */
+.cmd-tab-container {
+    display: grid;
+    grid-template-columns: 5fr 7fr;
+    grid-template-rows: 100px auto;
+    grid-template-areas:
+        "cmdsearch  cmdsearch"
+        "cmdbrowser cmdconfig";
+    grid-gap: 20px;
+}
+
+.cmd-search-container {
+    grid-area: cmdsearch;
+}
+
+.cmd-browser-container {
+    grid-area: cmdbrowser;
+}
+
+.cmd-config-container {
+    grid-area: cmdconfig
+}
