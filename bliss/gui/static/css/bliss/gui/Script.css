@@ -1,0 +1,10 @@
+.bliss-script--pause {color: red}
+.bliss-script--paused {color: red}
+.bliss-script--play {color: green}
+.bliss-script--stopped {color: black}
+.bliss-script--running {color: green}
+.bliss-script--error {color: red}
+
+.bliss-script__load_dialog--hidden {
+    display: none;
+}
