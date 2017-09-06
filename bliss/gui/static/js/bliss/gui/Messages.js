@@ -4,25 +4,18 @@ import * as format from 'bliss/format'
 
 const Messages =
 {
-    _messages: [ ],
-    _source  : null,
+    _messages: [],
+    _source: null,
+    _scrollTop: 0,
+    _updateScroll: true,
 
 
-    add (msg) {
-        this._messages.push( this.normalizeMessage(msg) )
+    add(msg) {
+        this._messages.push(this.normalizeMessage(msg))
         m.redraw()
     },
 
-
-    updateMessageBoxScroll() {
-        let messageBox = document.getElementById("blisslogs");
-        if (messageBox) {
-            messageBox.scrollTop = messageBox.scrollHeight;
-        }
-    },
-
-
-    normalizeMessage (msg) {
+    normalizeMessage(msg) {
         return {
             timestamp: Date.parse(msg.asctime),
             severity : msg.levelname,
@@ -30,29 +23,45 @@ const Messages =
         }
     },
 
-
-    oninit (vode) {
-        this._source           = new EventSource('/messages')
+    oninit(vode) {
+        this._source = new EventSource('/messages')
         this._source.onmessage = event => {
             this.add(JSON.parse(event.data))
-            this.updateMessageBoxScroll()
         }
     },
 
+    onupdate(vnode) {
+        if (this._updateScroll) {
+            this._scrollTop = vnode.dom.children.item(0).scrollHeight
+        }
 
-    view (vnode) {
-        const rows = this._messages.map( msg =>
-            m('div', { class: 'row log-' + msg.severity.toLowerCase() }, [
-                m('div', {class: 'col-lg-3'}, format.datetime(msg.timestamp)),
-                m('div', {class: 'col-lg-2'}, msg.severity),
-                m('div', {class: 'col-lg-7'}, msg.message)
+        vnode.dom.children.item(0).scrollTop = this._scrollTop
+    },
+
+    view(vnode) {
+        const rows = this._messages.map(msg =>
+            m('div', {class: 'bliss-messages__entry bliss-messages__entry--' + msg.severity.toLowerCase()}, [
+                m('div', {class: 'bliss-messages__timestamp'}, format.datetime(msg.timestamp)),
+                m('div', {class: 'bliss-messages__severity'}, msg.severity),
+                m('div', {class: 'bliss-messages__message'}, msg.message)
             ])
         )
 
         return m('bliss-messages', vnode.attrs,
-                   m('div', {class: 'container', id: 'blisslogs'}, rows))
+                   m('div', {
+                    class: 'bliss-messages',
+                    onscroll: (e) => {
+                        let msg_window = vnode.dom.children.item(0)
+                        if (msg_window.scrollTop == msg_window.scrollHeight - msg_window.clientHeight) {
+                            this._updateScroll = true;
+                        } else {
+                            this._updateScroll = false;
+                            this._scrollTop = vnode.dom.children.item(0).scrollTop
+                        }
+                    }
+                   }, rows))
     }
 }
 
 export default Messages
-export { Messages }
+export {Messages}
