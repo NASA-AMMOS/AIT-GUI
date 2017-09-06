@@ -10,14 +10,13 @@ const Sequence = {
         })
     },
 
-    handleFormSubmit() {
-        let url = document.getElementById("form-seq").getAttribute('action')
-        let $btn = document.getElementById('send-seq-btn')
+    handleFormSubmit(event) {
+        event.preventDefault()
+        let url = event.currentTarget.getAttribute('action')
         let data = new FormData()
-        data.append('seqfile', document.getElementById('seqfile').value)
+        data.append('seqfile', event.currentTarget.querySelector('select').value)
 
-        $btn.setAttribute("disabled", "disabled")
-
+        this._disableControls = true
         m.request({method: 'POST', url: url, data: data})
         return false
     },
@@ -27,46 +26,45 @@ const Sequence = {
 
         bliss.events.on('seq:exec', () => {
             this._disableControls = true
+            m.redraw()
         })
 
         bliss.events.on('seq:done', () => {
-            submitBtn.removeAttribute("disabled")
             this._disableControls = false
+            m.redraw()
         })
 
         bliss.events.on('seq:err', () => {
             this._disableControls = false
+            m.redraw()
         })
     },
 
     view(vnode) {
         let submitBtnAttrs = {
-            id: 'send-seq-btn',
             type: 'submit',
             class: 'btn btn-success'
         }
 
-        if (self._disableControls) {
+        if (this._disableControls) {
             submitBtnAttrs['disabled'] = 'disabled'
         }
 
         return m('form',
                  {
                      class: 'form-horizontal',
-                     id: 'form-seq',
                      role: 'form',
                      method: 'POST',
                      action: '/seq',
-                     onsubmit: () => {return this.handleFormSubmit()}
+                     onsubmit: (e) => {this.handleFormSubmit(e)}
                  }, [
                      m('div', {class: 'form-group'}, [
-                         m('label', {style: 'width: 50%'}, 'Send Sequence'),
-                         m('div', {style: 'width: 50%; float: right; text-align: right'},
+                         m('label', 'Send Sequence'),
+                         m('div', {class: 'bliss-sequence__controls'},
                            m('button',
                              {
                                  type: 'button',
-                                 class: 'btn btn-default seq-refresh-btn',
-                                 style: 'line-height: 75%; font-size:75%',
+                                 class: 'btn btn-default bliss-sequence__refresh',
                                  onclick: () => {this.refreshSequenceList()}
                              }, [
                                  m('span', {class: 'glyphicon glyphicon-refresh'}),
@@ -78,7 +76,6 @@ const Sequence = {
                            {
                                class: 'form-control',
                                multiple: 'true',
-                               id: 'seqfile'
                            },
                            this.sequences)
                      ]),
