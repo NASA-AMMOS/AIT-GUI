@@ -173,7 +173,7 @@ const ScriptExecCtrl = {
             vnode.attrs.scriptState === 'error') {
             runBtnAttrs.disabled = 'disabled'
         } else {
-            runBtnAttrs.class += ' bliss-script-' + btnDisplayState
+            runBtnAttrs.class += ' bliss-script--' + btnDisplayState
         }
 
         let runButton = m('div', runBtnAttrs)
@@ -271,10 +271,10 @@ const ScriptEditor = {
             // loaded (AKA, when we're out of the init state).
             if (vnode.attrs.scriptState !== 'init') {
                 if (vnode.attrs.scriptState === 'paused') {
-                    this._marker.className = "glyphicon glyphicon-pause bliss-script-" +
+                    this._marker.className = "glyphicon glyphicon-pause bliss-script--" +
                                              vnode.attrs.scriptState
                 } else {
-                    this._marker.className = "glyphicon glyphicon-play bliss-script-" +
+                    this._marker.className = "glyphicon glyphicon-play bliss-script--" +
                                              vnode.attrs.scriptState
                 }
                 this._cm.setGutterMarker(vnode.attrs.currentLine, 'codeMirrorExecGutter', this._marker)
@@ -366,7 +366,7 @@ const Scripts = {
 
         let loadBlockAttrs = {}
         if (this._script_load_toggle) {
-            loadBlockAttrs['style'] = 'display:none;'
+            loadBlockAttrs['class'] = 'bliss-script__load_dialog--hidden'
         }
 
         return m('div', [
