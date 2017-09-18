@@ -5,23 +5,23 @@ const Sequence = {
     sequences: [],
 
     refreshSequenceList() {
-        m.request('/seq').then((data) => {
+        m.request(this._action).then((data) => {
             this.sequences = map(data, (value) => {return m('option', {value: value}, value)})
         })
     },
 
     handleFormSubmit(event) {
         event.preventDefault()
-        let url = event.currentTarget.getAttribute('action')
         let data = new FormData()
         data.append('seqfile', event.currentTarget.querySelector('select').value)
 
         this._disableControls = true
-        m.request({method: 'POST', url: url, data: data})
+        m.request({method: 'POST', url: this._action, data: data})
         return false
     },
 
     oninit(vnode) {
+        this._action = vnode.attrs.action || '/seq'
         this.refreshSequenceList()
 
         bliss.events.on('seq:exec', () => {
@@ -55,7 +55,6 @@ const Sequence = {
                      class: 'form-horizontal',
                      role: 'form',
                      method: 'POST',
-                     action: '/seq',
                      onsubmit: (e) => {this.handleFormSubmit(e)}
                  }, [
                      m('div', {class: 'form-group'}, [
