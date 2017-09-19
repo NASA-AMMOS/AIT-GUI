@@ -1,0 +1,39 @@
+.bliss-messages {
+    display: block;
+    overflow-y: auto;
+    height: 200px;
+    width: 100%;
+    word-break: break-word;
+}
+
+.bliss-messages__entry {
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: row;
+    justify-content: flex-start;
+    padding-top: 5px;
+}
+
+.bliss-messages__entry--command  { background-color: #d9edf7; }
+.bliss-messages__entry--critical { background-color: #f2dede; }
+.bliss-messages__entry--error    { background-color: #f2dede; }
+.bliss-messages__entry--info     { background-color: #ffffff; }
+.bliss-messages__entry--notice   { background-color: #d9edf7; }
+.bliss-messages__entry--program  { background-color: #d9edf7; }
+.bliss-messages__entry--warning  { background-color: #fcf8e3; }
+
+.bliss-messages__timestamp {
+    order: 1;
+    min-width: 166px;
+    margin-right: 7px;
+}
+
+.bliss-messages__severity {
+    order: 2;
+    min-width: 73px;
+    margin-right: 5px;
+}
+
+.bliss-messages__message {
+    order: 3;
+}

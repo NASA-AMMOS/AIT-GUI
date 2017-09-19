@@ -16,12 +16,14 @@ global.bliss = bliss
 import m from 'mithril'
 global.m = m
 
+import cloneDeep from 'lodash/cloneDeep'
+
 describe('CommandInput object', function () {
     let ci = null
     let ciOut = null
 
     beforeEach(function() {
-        ci = bliss.gui.CommandInput
+        ci = cloneDeep(bliss.gui.CommandInput)
         ciOut = mq(ci)
     })
 
