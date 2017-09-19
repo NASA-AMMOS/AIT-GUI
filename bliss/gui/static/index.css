@@ -11,6 +11,7 @@
  */
 @import "./css/bliss/gui/Script.css";
 @import "./css/bliss/gui/Messages.css";
+@import "./css/bliss/gui/Sequence.css";
 
 body {
     padding-top: 70px;
