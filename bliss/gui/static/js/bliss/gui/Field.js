@@ -73,40 +73,46 @@ const Field =
      * Check if a value is within the limit range(s) specified as an error
      */
     valueIsInErrorRange(value) {
+        let isError = false;
         if ('value' in this._limits && 'error' in this._limits.value) {
             if (typeof(this._limits.value.error) === 'string') {
-                return value === this._limits.value.error
+                isError = value === this._limits.value.error
             } else {
-                return this._limits.value.error.includes(value)
+                isError = this._limits.value.error.includes(value)
             }
         } else {
             if ('upper' in this._limits && 'error' in this._limits.upper) {
-                return value > this._limits.upper.error
-            } else if ('lower' in this._limits && 'error' in this._limits.lower) {
-                return value < this._limits.lower.error
+                isError = value > this._limits.upper.error
+            }
+            
+            if ('lower' in this._limits && 'error' in this._limits.lower) {
+                isError = value < this._limits.lower.error || isError
             }
         }
-        return false
+        return isError
     },
 
     /**
      * Check if a value is within the limit range(s) specified as a warning
      */
     valueIsInWarnRange(value) {
+        let isWarning = false;
         if ('value' in this._limits && 'warn' in this._limits.value) {
             if (typeof(this._limits.value.warn) === 'string') {
-                return value === this._limits.value.warn
+                isWarning = value === this._limits.value.warn
             } else {
-                return this._limits.value.warn.includes(value)
+                isWarning = this._limits.value.warn.includes(value)
             }
         } else {
             if ('upper' in this._limits && 'warn' in this._limits.upper) {
-                return value > this._limits.upper.warn
-            } else if ('lower' in this._limits && 'warn' in this._limits.lower) {
-                return value < this._limits.lower.warn
+                isWarning =  value > this._limits.upper.warn
+            } 
+
+            if ('lower' in this._limits && 'warn' in this._limits.lower) {
+                isWarning = value < this._limits.lower.warn || isWarning
             }
         }
-        return false
+        return isWarning
     },
 
     // Mithril lifecycle method
