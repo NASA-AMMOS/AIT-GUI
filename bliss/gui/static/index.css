@@ -148,36 +148,31 @@ codeMirrorExecGutter {
             "ctrl        telem"
             "footer      footer"
             "leftnote    rightnote";
-        grid-gap: 40px;
-
-        margin-left: 20px;
-        margin-right: 20px;
     }
 }
 
 @media (max-width: 1944px) {
     .site-container {
         display: grid;
-
         grid-template-columns: auto auto;
-        grid-template-rows: 80vh auto 10px;
+        grid-template-rows: 80vh 20px auto 10px;
         grid-template-areas:
             "telem    telem"
+            "space    space"
             "ctrl     ctrl"
             "leftnote rightnote";
-
-
-        margin-left: 20px;
-        margin-right: 20px;
     }
 }
 
 .telemcontainer {
     grid-area: telem;
+    overflow-y: auto;
+    padding: 0 20px 0 20px;
 }
 
 .ctrlcontainer {
     grid-area: ctrl;
+    padding: 0 20px 0 20px;
 }
 
 .rightnotifycontainer {
