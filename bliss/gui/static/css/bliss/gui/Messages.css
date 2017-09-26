@@ -1,4 +1,4 @@
-.bliss-messages {
+bliss-messages {
     display: block;
     overflow-y: auto;
     height: 200px;
@@ -6,7 +6,7 @@
     word-break: break-word;
 }
 
-.bliss-messages__entry {
+bliss-messages .entry {
     display: flex;
     flex-wrap: nowrap;
     flex-direction: row;
@@ -14,26 +14,26 @@
     padding-top: 5px;
 }
 
-.bliss-messages__entry--command  { background-color: #d9edf7; }
-.bliss-messages__entry--critical { background-color: #f2dede; }
-.bliss-messages__entry--error    { background-color: #f2dede; }
-.bliss-messages__entry--info     { background-color: #ffffff; }
-.bliss-messages__entry--notice   { background-color: #d9edf7; }
-.bliss-messages__entry--program  { background-color: #d9edf7; }
-.bliss-messages__entry--warning  { background-color: #fcf8e3; }
+bliss-messages .entry--command  { background-color: #d9edf7; }
+bliss-messages .entry--critical { background-color: #f2dede; }
+bliss-messages .entry--error    { background-color: #f2dede; }
+bliss-messages .entry--info     { background-color: #ffffff; }
+bliss-messages .entry--notice   { background-color: #d9edf7; }
+bliss-messages .entry--program  { background-color: #d9edf7; }
+bliss-messages .entry--warning  { background-color: #fcf8e3; }
 
-.bliss-messages__timestamp {
+bliss-messages .timestamp {
     order: 1;
     min-width: 166px;
     margin-right: 7px;
 }
 
-.bliss-messages__severity {
+bliss-messages .severity {
     order: 2;
     min-width: 73px;
     margin-right: 5px;
 }
 
-.bliss-messages__message {
+bliss-messages .message {
     order: 3;
 }

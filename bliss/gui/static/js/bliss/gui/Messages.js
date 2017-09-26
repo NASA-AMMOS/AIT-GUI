@@ -40,16 +40,15 @@ const Messages =
 
     view(vnode) {
         const rows = this._messages.map(msg =>
-            m('div', {class: 'bliss-messages__entry bliss-messages__entry--' + msg.severity.toLowerCase()}, [
-                m('div', {class: 'bliss-messages__timestamp'}, format.datetime(msg.timestamp)),
-                m('div', {class: 'bliss-messages__severity'}, msg.severity),
-                m('div', {class: 'bliss-messages__message'}, msg.message)
+            m('div', {class: 'entry entry--' + msg.severity.toLowerCase()}, [
+                m('div', {class: 'timestamp'}, format.datetime(msg.timestamp)),
+                m('div', {class: 'severity'}, msg.severity),
+                m('div', {class: 'message'}, msg.message)
             ])
         )
 
         return m('bliss-messages', vnode.attrs,
                    m('div', {
-                    class: 'bliss-messages',
                     onscroll: (e) => {
                         let msg_window = vnode.dom.children.item(0)
                         if (msg_window.scrollTop == msg_window.scrollHeight - msg_window.clientHeight) {
