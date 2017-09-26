@@ -6,13 +6,16 @@ class FieldDefinition
     constructor(args) {
         args = args === undefined ? {} : args
 
-        this.name   = args.name
-        this.mask   = args.mask
-        this.type   = dtype.get(args.type)
-        this.enum   = args.enum
-        this.shift  = 0
-        this.bytes  = args.bytes
-        this.dntoeu = args.dntoeu
+        this.name    = args.name
+        this.mask    = args.mask
+        this.type    = dtype.get(args.type)
+        this.enum    = args.enum
+        this.shift   = 0
+        this.bytes   = args.bytes
+        this.dntoeu  = args.dntoeu
+        this.desc    = args.desc
+        this.type    = args.type
+        this.aliases = args.aliases
 
         // Bytes can be either one integer or an array,
         // all we need is the head
