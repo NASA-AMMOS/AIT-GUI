@@ -2,10 +2,20 @@ import map from 'lodash/map'
 
 const Sequence = {
     _disableControls: false,
+    _filter_val: '',
     sequences: [],
 
     refreshSequenceList() {
         m.request(this._action).then((data) => {
+            data = data.sort((a, b) => {
+                if (a.indexOf('/') !== -1 && b.indexOf('/') !== -1) {
+                    return a < b ? -1 : 1
+                } else if (a.indexOf('/') !== -1) {
+                    return -1
+                } else if (b.indexOf('/') !== -1) {
+                    return 1
+                }
+            })
             this.sequences = map(data, (value) => {return m('option', {value: value}, value)})
         })
     },
@@ -50,38 +60,84 @@ const Sequence = {
             submitBtnAttrs['disabled'] = 'disabled'
         }
 
-        return m('bliss-sequence',
-                 m('form',
-                   {
-                       class: 'form-horizontal',
-                       role: 'form',
-                       method: 'POST',
-                       onsubmit: (e) => {this.handleFormSubmit(e)}
-                   }, [
-                       m('div', {class: 'form-group'}, [
-                           m('label', 'Send Sequence'),
-                           m('div', {class: 'controls'},
-                             m('button',
-                               {
-                                   type: 'button',
-                                   class: 'btn btn-default refresh',
-                                   onclick: () => {this.refreshSequenceList()}
-                               }, [
-                                   m('span', {class: 'glyphicon glyphicon-refresh'}),
-                                   'Refresh'
-                               ]
-                             )
-                           ),
-                           m('select',
-                             {
-                                 class: 'form-control',
-                                 multiple: 'true',
-                             },
-                             this.sequences)
-                       ]),
-                       m('div', {class: 'form-group'},
-                         m('button', submitBtnAttrs, 'Send'))
-                  ]))
+        let seqDisplayList = []
+        if (this._filter_val !== '') {
+            for (let i in this.sequences) {
+                if (this.sequences[i].attrs.value.indexOf(this._filter_val) !== -1) {
+                    seqDisplayList.push(this.sequences[i])
+                }
+            }
+        } else {
+            seqDisplayList = this.sequences
+        }
+
+        let sequenceSelectGroup = m('div', {
+                class: 'form-group'
+            }, [
+                m('label', 'Send Sequence'),
+                m('div', {class: 'bliss-sequence__controls'},
+                    m('button',
+                     {
+                         type: 'button',
+                         class: 'btn btn-default bliss-sequence__refresh',
+                         onclick: () => {this.refreshSequenceList()}
+                     }, [
+                         m('span', {class: 'glyphicon glyphicon-refresh'}),
+                         'Refresh'
+                     ]
+                    )
+                ),
+                m('select',
+                {
+                   class: 'form-control',
+                   multiple: 'true',
+                },
+                seqDisplayList)
+            ])
+
+        let filterInputGroup = m('div', {class: 'form-group'}, [
+            m('label', 'Filter Sequences'),
+            m('div', {
+                class: 'input-group'
+            },
+            [
+                m('input', {
+                    class: 'form-control',
+                    placeholder: 'Filter list ...',
+                    name: 'sequence-filter',
+                    oninput: (e) => {
+                        this._filter_val = e.currentTarget.value
+                    }
+                }),
+                m('div', {class: 'input-group-btn'},
+                m('button', {
+                    class: 'btn btn-default',
+                    type: 'button',
+                    onmousedown: (e) => {
+                        let cur = e.currentTarget
+                        while (cur.parentElement && ! cur.elements) {
+                            cur = cur.parentElement
+                        }
+                        cur.elements['sequence-filter'].value = ''
+                        this._filter_val = ''
+                    }
+                  },
+                  m('span', {class: 'glyphicon glyphicon-remove-circle'})))
+            ])
+        ])
+
+        return m('form',
+                 {
+                     class: 'form-horizontal',
+                     role: 'form',
+                     method: 'POST',
+                     onsubmit: (e) => {this.handleFormSubmit(e)}
+                 }, [
+                     filterInputGroup,
+                     sequenceSelectGroup,
+                     m('div', {class: 'form-group'},
+                       m('button', submitBtnAttrs, 'Send'))
+                ])
     },
 }
 
