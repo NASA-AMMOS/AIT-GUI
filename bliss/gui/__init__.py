@@ -41,6 +41,7 @@ import socket
 import struct
 import sys
 import time
+import urllib
 import webbrowser
 
 import bottle
@@ -656,7 +657,7 @@ def handle(name):
            script_text: "This is the example content of a fake script"
        }
     """
-    script_path = os.path.join(ScriptRoot, name)
+    script_path = os.path.join(ScriptRoot, urllib.unquote(name))
     if not os.path.exists(script_path):
         bottle.abort(400, "Script cannot be located")
 

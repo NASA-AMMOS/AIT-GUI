@@ -47,7 +47,7 @@ const ScriptLoadButton = {
           class: 'btn btn-success',
           onclick: (e) => {
               let scriptName = encodeURIComponent(vnode.attrs.ScriptSelectionData.selected)
-              m.request('/scripts/load/' + scriptName).then((data) => {
+              m.request('/scripts/load/' + encodeURIComponent(scriptName)).then((data) => {
                   vnode.attrs.ScriptSelectionData.scriptText = data.script_text
                   bliss.events.emit('script:loaded', null)
               })
