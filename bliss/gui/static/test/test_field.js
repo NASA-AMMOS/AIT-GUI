@@ -123,3 +123,79 @@ describe('Field component warning limit checks', () => {
         field.valueIsInWarnRange(46).should.equal(true)
     })
 })
+
+
+describe('Field component should alert on limit trips', () => {
+    let field = null
+    let emitSpy = null
+
+    before(() => {
+        emitSpy = sinon.spy(global.bliss.events, 'emit')
+    })
+
+    beforeEach(() => {
+        field = bliss.gui.Field
+        //field._pname = 'packet'
+        //field._fname = 'field'
+        emitSpy.reset()
+    })
+
+    after(() => {
+        //global.bliss = bliss
+        emitSpy.restore()
+    })
+
+    it('should emit an event on a warn trip', () => {
+        field.valueIsInWarnRange = sinon.stub().returns(true)
+        field.valueIsInErrorRange = sinon.stub().returns(false)
+        field.hasLimitCheck = sinon.stub().returns(true)
+        field.getValue = sinon.stub().returns('dummy field value')
+
+        let fieldOutput = mq(field, {name: 'field', packet: 'packet'})
+
+        emitSpy.called.should.equal(true)
+        let args = emitSpy.getCall(0).args
+        args[0].should.equal('field:limitOut')
+        args[0].should.equal('field:limitOut')
+        assert(typeof(args[1]) === 'object')
+        args[1]['type'].should.equal('warning')
+        args[1]['field'].should.equal('packet_field')
+        field._limitOut.should.equal(true)
+
+    })
+
+    it('should emit an event on an error trip', () => {
+        field.valueIsInWarnRange = sinon.stub().returns(false)
+        field.valueIsInErrorRange = sinon.stub().returns(true)
+        field.hasLimitCheck = sinon.stub().returns(true)
+        field.getValue = sinon.stub().returns('dummy field value')
+
+        let fieldOutput = mq(field, {name: 'field', packet: 'packet'})
+
+        emitSpy.called.should.equal(true)
+        let args = emitSpy.getCall(0).args
+        args[0].should.equal('field:limitOut')
+        args[0].should.equal('field:limitOut')
+        assert(typeof(args[1]) === 'object')
+        args[1]['type'].should.equal('error')
+        args[1]['field'].should.equal('packet_field')
+        field._limitOut.should.equal(true)
+    })
+
+    it('should emit an event when back in limit', () => {
+        field.valueIsInWarnRange = sinon.stub().returns(false)
+        field.valueIsInErrorRange = sinon.stub().returns(false)
+        field.hasLimitCheck = sinon.stub().returns(true)
+        field.getValue = sinon.stub().returns('dummy field value')
+        field._limitOut = true;
+
+        let fieldOutput = mq(field, {name: 'field', packet: 'packet'})
+
+        emitSpy.called.should.equal(true)
+        let args = emitSpy.getCall(0).args
+        args[0].should.equal('field:limitIn')
+        args[0].should.equal('field:limitIn')
+        args[1].should.equal('packet_field')
+        field._limitOut.should.equal(false)
+    })
+})

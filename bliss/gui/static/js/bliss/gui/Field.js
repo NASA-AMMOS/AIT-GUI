@@ -7,6 +7,8 @@ import { EVRDefinition }     from '../evr.js'
 
 const Field =
 {
+    _limitOut: false,
+
     /**
      * Caches the current packet and raw value (for use by
      * hasChanged()).
@@ -170,9 +172,22 @@ const Field =
                 }
 
                 if (this.valueIsInErrorRange(value)) {
+                    this._limitOut = true
                     vnode.attrs.class += "alert alert-danger"
+                    bliss.events.emit('field:limitOut', {
+                        field: this._pname + '_' + this._fname,
+                        type: 'error'
+                    })
                 } else if (this.valueIsInWarnRange(value)) {
+                    this._limitOut = true
                     vnode.attrs.class += "alert alert-warning"
+                    bliss.events.emit('field:limitOut', {
+                        field: this._pname + '_' + this._fname,
+                        type: 'warning'
+                    })
+                } else if (this._limitOut) {
+                    this._limitOut = false
+                    bliss.events.emit('field:limitIn', this._pname + '_' + this._fname)
                 }
             }
         }
