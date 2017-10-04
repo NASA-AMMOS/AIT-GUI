@@ -53,6 +53,7 @@ import bliss.core
 
 from bliss.core import api, cfg, cmd, evr, gds, limits, log, pcap, tlm, util
 
+_RUNNING_SCRIPT = None
 
 class HTMLRoot:
     Static = pkg_resources.resource_filename('bliss.gui', 'static/')
@@ -678,13 +679,15 @@ def handle():
 
     :statuscode 400: When the script name cannot be located
     """
+    global _RUNNING_SCRIPT
+
     script_name = bottle.request.forms.get('scriptPath')
     script_path = os.path.join(ScriptRoot, script_name)
 
     if not os.path.exists(script_path):
         bottle.abort(400, "Script cannot be located")
 
-    gevent.spawn(bgExecScript, script_path)
+    _RUNNING_SCRIPT = gevent.spawn(bgExecScript, script_path)
 
 
 @App.route('/script/run', method='PUT')
@@ -707,6 +710,17 @@ def handle():
     script_exec_lock.release()
     gevent.sleep(0)
     script_exec_lock.acquire()
+
+
+@App.route('/script/abort', method='DELETE')
+def handle():
+    """ Abort a running script """
+    if not script_exec_lock.locked():
+        script_exec_lock.acquire()
+
+    _RUNNING_SCRIPT.kill()
+    script_exec_lock.release()
+    Sessions.addEvent('script:aborted', None)
 
 
 def bgExecScript(script_path):
