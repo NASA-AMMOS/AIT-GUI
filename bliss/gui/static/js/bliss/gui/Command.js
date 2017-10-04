@@ -203,6 +203,10 @@ const CommandSearch = {
             }
 
             cmdAccordions = flatMap(displayCommands, (v, k) => {
+
+                // if there aren't any commands for this accordion, skip ...
+                if (v.length === 0) {return []}
+
                 // Generate the accordion header for the current subsystem key
                 let header = m('a',
                                 {
@@ -264,6 +268,12 @@ const CommandSearch = {
                                             e.preventDefault()
                                             e.currentTarget.parentElement.parentElement.elements['command-search'].value = ''
                                             this.commandFilter = ''
+                                            // This redraw is mandatory. We need to re-render the accordions before we
+                                            // toggle focus on the input box so that we end up with the accordions
+                                            // being properly expanded.
+                                            m.redraw()
+                                            e.currentTarget.parentElement.parentElement.elements['command-search'].blur()
+                                            e.currentTarget.parentElement.parentElement.elements['command-search'].focus()
                                         }
                                      },
                                      m('span', {
