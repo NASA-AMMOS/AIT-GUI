@@ -16,7 +16,9 @@ const Sequence = {
                     return 1
                 }
             })
-            this.sequences = map(data, (value) => {return m('option', {value: value}, value)})
+            this.sequences = map(data, (value, index) => {
+                return m('option', {value: value, key: index}, value)
+            })
         })
     },
 
@@ -60,15 +62,11 @@ const Sequence = {
             submitBtnAttrs['disabled'] = 'disabled'
         }
 
-        let seqDisplayList = []
+        let seqDisplayList = this.sequences
         if (this._filter_val !== '') {
-            for (let i in this.sequences) {
-                if (this.sequences[i].attrs.value.indexOf(this._filter_val) !== -1) {
-                    seqDisplayList.push(this.sequences[i])
-                }
-            }
-        } else {
-            seqDisplayList = this.sequences
+            seqDisplayList = this.sequences.filter((e) => {
+                return e.attrs.value.indexOf(this._filter_val) !== -1
+            })
         }
 
         let sequenceSelectGroup = m('div', {
@@ -87,12 +85,10 @@ const Sequence = {
                      ]
                     )
                 ),
-                m('select',
-                {
+                m('select', {
                    class: 'form-control',
                    multiple: 'true',
-                },
-                seqDisplayList)
+                }, seqDisplayList)
             ])
 
         let filterInputGroup = m('div', {class: 'form-group'}, [
