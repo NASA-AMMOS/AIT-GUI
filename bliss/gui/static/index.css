@@ -87,9 +87,8 @@ bliss-tabset ul.nav-stacked li.drag-over-after {
     overflow-x: hidden;
 }
 
-#cmdAccordions {
-    margin-top: 20px;
-    height: 455px;
+.cmdAccordionsList {
+    height: 430px;
     width: 100%;
     overflow: auto;
 }

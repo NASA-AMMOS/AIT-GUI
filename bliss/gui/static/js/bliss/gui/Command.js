@@ -280,7 +280,7 @@ const CommandSearch = {
                             style: 'margin-top: 20px;'},
                         [
                             commandSearchBox,
-                            cmdAccordions
+                            m('div', {class: 'cmdAccordionsList'}, cmdAccordions)
                         ])
         return cmdTree
     },
