@@ -12,3 +12,13 @@ Contributing
 ------------
 
 For information on how to contribute please see the [BLISS GUI Contributors Guides](https://github.jpl.nasa.gov/pages/bliss/bliss-gui/contribute.html)
+
+Browser Requirements
+--------------------
+
+BLISS GUI requires one of the following browsers:
+
+- Firefox version 52.0 or newer
+- Chrome version 57.0 or newer
+
+Safari v10.1 or newer will likely work as well but compatibility is not regularly checked or guaranteed.
