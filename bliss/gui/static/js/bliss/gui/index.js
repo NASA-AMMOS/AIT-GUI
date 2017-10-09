@@ -116,7 +116,7 @@ function init () {
         bliss.tlm.promise = m.request({ url: '/tlm/dict' })
         bliss.tlm.promise.then((dict) => {
             const proto = location.protocol === 'https:' ? 'wss' : 'ws'
-            const url = proto '://' + location.host + '/tlm/realtime'
+            const url = proto + '://' + location.host + '/tlm/realtime'
 
             bliss.tlm.dict   = TelemetryDictionary.parse(dict)
             bliss.tlm.stream = new TelemetryStream(url, bliss.tlm.dict)
