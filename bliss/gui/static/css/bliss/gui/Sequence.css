@@ -1,10 +1,10 @@
-.bliss-sequence__controls {
+bliss-sequence .controls {
     width: 50%;
     float: right;
     text-align: right;
 }
 
-.bliss-sequence__refresh {
+bliss-sequence .refresh {
     line-height: 75%;
     font-size:75%;
 }

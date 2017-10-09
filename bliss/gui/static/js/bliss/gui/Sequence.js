@@ -50,37 +50,38 @@ const Sequence = {
             submitBtnAttrs['disabled'] = 'disabled'
         }
 
-        return m('form',
-                 {
-                     class: 'form-horizontal',
-                     role: 'form',
-                     method: 'POST',
-                     onsubmit: (e) => {this.handleFormSubmit(e)}
-                 }, [
-                     m('div', {class: 'form-group'}, [
-                         m('label', 'Send Sequence'),
-                         m('div', {class: 'bliss-sequence__controls'},
-                           m('button',
+        return m('bliss-sequence',
+                 m('form',
+                   {
+                       class: 'form-horizontal',
+                       role: 'form',
+                       method: 'POST',
+                       onsubmit: (e) => {this.handleFormSubmit(e)}
+                   }, [
+                       m('div', {class: 'form-group'}, [
+                           m('label', 'Send Sequence'),
+                           m('div', {class: 'controls'},
+                             m('button',
+                               {
+                                   type: 'button',
+                                   class: 'btn btn-default refresh',
+                                   onclick: () => {this.refreshSequenceList()}
+                               }, [
+                                   m('span', {class: 'glyphicon glyphicon-refresh'}),
+                                   'Refresh'
+                               ]
+                             )
+                           ),
+                           m('select',
                              {
-                                 type: 'button',
-                                 class: 'btn btn-default bliss-sequence__refresh',
-                                 onclick: () => {this.refreshSequenceList()}
-                             }, [
-                                 m('span', {class: 'glyphicon glyphicon-refresh'}),
-                                 'Refresh'
-                             ]
-                           )
-                         ),
-                         m('select',
-                           {
-                               class: 'form-control',
-                               multiple: 'true',
-                           },
-                           this.sequences)
-                     ]),
-                     m('div', {class: 'form-group'},
-                       m('button', submitBtnAttrs, 'Send'))
-                ])
+                                 class: 'form-control',
+                                 multiple: 'true',
+                             },
+                             this.sequences)
+                       ]),
+                       m('div', {class: 'form-group'},
+                         m('button', submitBtnAttrs, 'Send'))
+                  ]))
     },
 }
 
