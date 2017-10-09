@@ -1,0 +1,7 @@
+#bliss-gui bliss-tabset .tab_title--out-of-limit--warning {
+    background-color: #fcf8e3;
+}
+
+#bliss-gui bliss-tabset .tab_title--out-of-limit--error {
+    background-color: #f2dede;
+}

@@ -147,9 +147,15 @@ const TabSet =
     anchor (vnode, index) {
         const attrs = {
             href       : '#',
+            class      : '',
             draggable  : this.isActive(index),
             ondragstart: (e) => this._drag.start(e, index),
             ondragend  : (e) => this._drag.end(e, index)
+        }
+
+        const tabName = vnode.attrs.title
+        if (this.tabs && this.tabs[tabName]['___limitTrip']) {
+            attrs['class'] += ' tab_title--out-of-limit--' + this.tabs[tabName]['___limitType']
         }
 
         return m('a', attrs, vnode.attrs.title)
@@ -224,6 +230,59 @@ const TabSet =
         this._pos  = range(tabs.length)
         this._uid  = range(tabs.length)
         this._drag = Object.create(DragDrop)
+    },
+
+    filterFields(children) {
+        let fields = []
+
+        if (! children) {return fields}
+
+        for (let e of children) {
+            if (e['instance'] && e['instance']['tag'] &&
+                e['instance']['tag'] === 'bliss-field') {
+                fields.push(e['attrs']['packet'] + '_' + e['attrs']['name'])
+            } else if (e.children && typeof(e.children) === 'object' &&
+                       e.children.length > 0) {
+                fields = fields.concat(this.filterFields(e.children))
+            }
+        }
+
+        return fields
+    },
+
+    oncreate (vnode) {
+        this.tabs = {}
+        for (let t of this.filterTabs(vnode.children)) {
+
+            let tabName = t['attrs']['title']
+            this.tabs[tabName] = {'___limitTrip': false, '___tripType': null}
+
+            for (let name of this.filterFields(t.children)) {
+                this.tabs[tabName][name] = null
+            }
+        }
+
+        bliss.events.on('field:limitOut', (f) => {
+            let field = f['field']
+            let type = f['type']
+            for (let t in this.tabs) {
+                if (field in this.tabs[t]) {
+                    this.tabs[t]['___limitTrip'] = true
+                    this.tabs[t]['___limitType'] = type
+                }
+            }
+            m.redraw()
+        })
+
+        bliss.events.on('field:limitIn', (f) => {
+            for (let t in this.tabs) {
+                if (f in this.tabs[t]) {
+                    this.tabs[t]['___limitTrip'] = false
+                    this.tabs[t]['___limitType'] = null
+                }
+            }
+            m.redraw()
+        })
     },
 
 
