@@ -10,24 +10,85 @@ import merge from 'lodash/merge'
  */
 const ScriptSelect = {
     scripts: [],
+    _filter_val: '',
 
     oninit(vnode) {
         m.request('/scripts').then((data) => {
-            this.scripts = map(data, (value) => {return m('option', {value: value}, value)})
+            data = data.sort((a, b) => {
+                if (a.indexOf('/') !== -1 && b.indexOf('/') !== -1) {
+                    return a < b ? -1 : 1
+                } else if (a.indexOf('/') !== -1) {
+                    return -1
+                } else if (b.indexOf('/') !== -1) {
+                    return 1
+                }
+            })
+
+            this.scripts = map(data, (value, index) => {
+                return m('option', {value: value, key: index}, value)
+            })
+        })
+    },
+
+    oncreate(vnode) {
+        bliss.events.on('script:loaded', () => {
+            this._filter_val = ''
+            vnode.dom.elements['script-filter'].value = ''
+            vnode.dom.elements['script-select'].value = ''
         })
     },
 
     view(vnode) {
-        return m('bliss-scriptselect',
-                 m('select', {
+        let scriptDisplayList = this.scripts
+        if (this._filter_val !== '') {
+            scriptDisplayList = this.scripts.filter((e) => {
+                return e.attrs.value.indexOf(this._filter_val) !== -1
+            })
+        }
+
+        let filterInputGroup = m('div', {class: 'form-group'}, [
+            m('label', 'Filter Scripts'),
+            m('div', {
+                class: 'input-group'
+            },
+            [
+                m('input', {
+                    class: 'form-control',
+                    placeholder: 'Filter list ...',
+                    name: 'script-filter',
+                    oninput: (e) => {
+                        this._filter_val = e.currentTarget.value
+                    }
+                }, this._filter_val),
+                m('div', {class: 'input-group-btn'},
+                m('button', {
+                    class: 'btn btn-default',
+                    type: 'button',
+                    onmousedown: (e) => {
+                        let cur = e.currentTarget
+                        while (cur.parentElement && ! cur.elements) {
+                            cur = cur.parentElement
+                        }
+                        cur.elements['script-filter'].value = ''
+                        this._filter_val = ''
+                    }
+                  },
+                  m('span', {class: 'glyphicon glyphicon-remove-circle'})))
+            ])
+        ])
+
+        let select = m('select', {
                    class: 'form-control',
+                   name: 'script-select',
                    multiple: 'true',
                    onchange: (e) => {
                        vnode.attrs.ScriptSelectionData.selected = e.currentTarget.value
                        document.activeElement.blur()
                    }
                  },
-                 this.scripts))
+                 scriptDisplayList)
+
+         return m('form', [filterInputGroup, select])
     },
 }
 
