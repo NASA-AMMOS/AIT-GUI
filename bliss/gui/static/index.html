@@ -45,7 +45,11 @@
   <div class='telemcontainer'>
     <bliss-tabset class="nav-tabs">
       <bliss-tab title="Foo">
-          Counter: <bliss-field name="Counter"></bliss-field>
+        Voltage_D: <bliss-field packet="1553_HS_Packet" name="Voltage_D"></bliss-field>
+        <br />
+        Product Type: <bliss-field packet="Ethernet_HS_Packet" name="product_type"></bliss-field>
+        <br />
+        Current_A: <bliss-field packet="1553_HS_Packet" name="Current_A"></bliss-field>
       </bliss-tab>
       <bliss-tab title="Bar"> Bar </bliss-tab>
       <bliss-tab title="Baz"> Baz </bliss-tab>

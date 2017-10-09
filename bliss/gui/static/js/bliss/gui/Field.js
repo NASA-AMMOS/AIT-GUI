@@ -122,14 +122,81 @@ const Field =
         this._raw    = vnode.attrs.raw === true
         this._cached = { packet: null, rawval: null }
         this._limits = null
+        this._field_defn = null
+
     },
 
+    oncreate(vnode) {
+        bliss.tlm.promise.then(() => {
+            if (bliss.tlm.dict[this._pname] &&
+                bliss.tlm.dict[this._pname].fields[this._fname]) {
+                this._field_defn = bliss.tlm.dict[this._pname].fields[this._fname]
+            }
+
+            if (this._field_defn) {
+                let popover_content = ""
+                let desc = this._field_defn.desc ? this._field_defn.desc : "None"
+                popover_content += "<b>Description:</b> " + desc + "<br />"
+
+                let type = this._field_defn.type ? this._field_defn.type : "Unknown"
+                popover_content += "<b>Data Type:</b> " + type + "<br />"
+
+                let bytes = typeof(this._field_defn.bytes) == "object" ? (
+                    this._field_defn.bytes[0] + " - " + this._field_defn.bytes[1]) : (
+                    this._field_defn.bytes)
+                popover_content += "<b>Byte(s) in Packet:</b> " + bytes + "<br />"
+
+                let mask = this._field_defn.mask ? this._field_defn.mask : 'None'
+                popover_content += "<b>Bit Mask:</b> " + mask + "<br />"
+
+                if (this._field_defn.enum) {
+                    let enums = "<b>Enumerated Values:</b><br />"
+                    let _enum = this._field_defn.enum
+                    for (let k in _enum) {
+                        enums += "&emsp;<b>" + _enum[k] + ':</b> ' + k + "<br />"
+                    }
+                    popover_content += enums
+                }
+
+                if (this._field_defn.dntoeu) {
+                    let dntoeu = "<b>DN-to-EU:</b><br />"
+                    let _dntoeu = this._field_defn.dntoeu
+                    for (let k in _dntoeu) {
+                        dntoeu += "&emsp;<b>" + k + ':</b> ' + _dntoeu[k] + "<br />"
+                    }
+                    popover_content += dntoeu
+                }
+
+                if (this._field_defn.aliases) {
+                    let aliases = "<b>Aliases:</b><br />"
+                    let _aliases = this._field_defn.aliases
+                    for (let k in _aliases) {
+                        aliases += "&emsp;<b>" + k + ':</b> ' + _aliases[k] + "<br />"
+                    }
+                    popover_content += aliases
+                }
+
+                $(vnode.dom).popover({
+                    content : popover_content,
+                    title : this._field_defn.name,
+                    html: true
+                }).tooltip({
+                    placement : 'right',
+                    title : this._field_defn.desc
+                }).on('show.bs.popover', () => {
+                    $(vnode.dom).tooltip('hide')
+                }).on('mouseout', () => {
+                    $(vnode.dom).tooltip('hide')
+                    $(vnode.dom).popover('hide')
+                })
+            }
+        })
+    },
 
     // Mithril lifecycle method
     onbeforeupdate (vnode, old) {
         return this.hasChanged()
     },
-
 
     // Mithril view() method
     view (vnode) {
