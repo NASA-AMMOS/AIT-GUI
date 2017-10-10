@@ -14,7 +14,6 @@ class FieldDefinition
         this.bytes   = args.bytes
         this.dntoeu  = args.dntoeu
         this.desc    = args.desc
-        this.type    = args.type
         this.aliases = args.aliases
 
         // Bytes can be either one integer or an array,
