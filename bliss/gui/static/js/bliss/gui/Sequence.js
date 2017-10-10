@@ -73,11 +73,11 @@ const Sequence = {
                 class: 'form-group'
             }, [
                 m('label', 'Send Sequence'),
-                m('div', {class: 'bliss-sequence__controls'},
+                m('div', {class: 'controls'},
                     m('button',
                      {
                          type: 'button',
-                         class: 'btn btn-default bliss-sequence__refresh',
+                         class: 'btn btn-default refresh',
                          onclick: () => {this.refreshSequenceList()}
                      }, [
                          m('span', {class: 'glyphicon glyphicon-refresh'}),
@@ -122,7 +122,7 @@ const Sequence = {
             ])
         ])
 
-        return m('form',
+        return m('bliss-sequence', m('form',
                  {
                      class: 'form-horizontal',
                      role: 'form',
@@ -133,7 +133,7 @@ const Sequence = {
                      sequenceSelectGroup,
                      m('div', {class: 'form-group'},
                        m('button', submitBtnAttrs, 'Send'))
-                ])
+                 ]))
     },
 }
 
