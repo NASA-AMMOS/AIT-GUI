@@ -218,19 +218,22 @@ const CommandSearch = {
                                 },
                                 m('h4', {class: 'panel-title'}, k))
                 let commandList = map(v, (v) => {
-                                       return m('li',
-                                                m('a',
-                                                {
-                                                    class: 'btn',
-                                                    role: 'button',
-                                                    'data-toggle': 'popover',
-                                                    'data-trigger': 'hover',
-                                                    'data-content': v.desc,
-                                                    onmousedown: () => {
-                                                        CommandSelectionData.activeCommand = v
-                                                    }
-                                                },
-                                                v.name))})
+                    return m('li',
+                            m('a',
+                            {
+                                class: 'btn',
+                                role: 'button',
+                                'data-toggle': 'popover',
+                                'data-trigger': 'hover',
+                                'data-content': v.desc,
+                                onmousedown: () => {
+                                    CommandSelectionData.activeCommand = v
+                                    //$('.panel-collapse').collapse('hide')
+                                }
+                            },
+                            v.name))
+                })
+
                 // Generate the accordion body containing each of the commands
                 let body = m('div',
                              {
@@ -283,15 +286,29 @@ const CommandSearch = {
                                      commandSearchInput,
                                      commandSearchReset
                                  ])
-        let cmdTree = m('div', {
+        let cmdTree = m('bliss-commandsearch', {
+                            onmouseleave: () => {
+                                if (CommandSelectionData.activeCommand !== null) {
+                                    $('.panel-collapse').collapse('hide')
+                                }
+                            },
+                            onmouseenter: () => {
+                                if (CommandSelectionData.activeCommand === null) {
+                                    $('.panel-collapse').collapse('show')
+                                }
+                            }
+                        },
+                        m('div', {
                             class: 'panel-group',
                             role: 'tablist',
                             id: 'cmdTree',
-                            style: 'margin-top: 20px;'},
-                        [
+                            style: 'margin-top: 20px;'
+                        }, [
                             commandSearchBox,
-                            m('div', {class: 'cmdAccordionsList'}, cmdAccordions)
-                        ])
+                            m('div', {
+                                class: 'cmdAccordionsList',
+                            }, cmdAccordions)
+                        ]))
         return cmdTree
     },
 }
@@ -322,14 +339,14 @@ const CommandConfigure = {
         if (CommandSelectionData.activeCommand !== null) {
             commandSelection = m('div', {id: 'commandCustomizer'}, [
                                  m('div', {class: 'row'},
-                                   m('div', {class: 'col-lg-12'},
+                                   m('div', {class: 'col-lg-10'},
                                      m('h3', CommandSelectionData.activeCommand.name))),
                                  m('div', {class: 'row'},
                                    m('div', {class: 'col-lg-10 col-lg-offset-1'},
                                      m('div', CommandSelectionData.activeCommand.desc.replace(/(\r\n|\n|\r)/gm," ")))),
                                  m('div', {class: 'row'},
                                    m('div', {class: 'col-lg-10 col-lg-offset-1'},
-                                     this.generateCommandArgumentsForm(CommandSelectionData.activeCommand))),
+                                       m('div', this.generateCommandArgumentsForm(CommandSelectionData.activeCommand)))),
                                ])
         // If no command has been selected, render some help info
         } else {
@@ -387,7 +404,7 @@ const CommandConfigure = {
 
         var cmdArgs = map(argdefns, (arg) => {
             return m('div', {class: 'form-group'}, flatten([
-              m('label', {class: 'col-lg-2 control-label'}, this.prettifyName(arg.name)),
+              m('label', {class: 'control-label'}, this.prettifyName(arg.name)),
               this.generateArgumentInput(arg)
             ]))
         })
@@ -398,7 +415,6 @@ const CommandConfigure = {
         return m('form',
                  {
                      id: 'command-args-form',
-                     class: 'form-horizontal',
                      onsubmit: this.handleCommandFormSubmission,
                      method: 'POST',
                      action: '/cmd'
@@ -441,14 +457,12 @@ const CommandConfigure = {
         }
 
         if ('units' in argument && argument.units !== 'none') {
-            return m('div', {class: 'input-group col-lg-8'}, [
+            return m('div', {class: 'input-group'}, [
                 argInput,
                 m('div', {class: 'input-group-addon'}, argument.units)
             ])
         } else {
-            return m('div', {class: 'input-group col-lg-8'}, [
-                argInput
-            ])
+            return argInput
         }
     },
 
