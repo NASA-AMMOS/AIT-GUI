@@ -181,10 +181,12 @@ const Field =
                 $(vnode.dom).popover({
                     content : popover_content,
                     title : this._field_defn.name,
-                    html: true
+                    html: true,
+                    container: 'body'
                 }).tooltip({
                     placement : 'right',
-                    title : this._field_defn.desc
+                    title : this._field_defn.desc,
+                    container: 'body'
                 }).on('show.bs.popover', () => {
                     $(vnode.dom).tooltip('hide')
                 }).on('mouseout', () => {
