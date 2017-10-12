@@ -85,12 +85,11 @@ bliss-tabset ul.nav-stacked li.drag-over-after {
 
 #command-args-form {
     margin-top: 20px;
-    overflow-x: hidden;
+    overflow: hidden;
 }
 
 .cmdAccordionsList {
     height: 430px;
-    width: 100%;
     overflow: auto;
 }
 
@@ -105,12 +104,6 @@ bliss-tabset ul.nav-stacked li.drag-over-after {
     box-shadow: none;
 }
 
-#command-args-form {
-    width: 100%;
-    height: 435px;
-    overflow-y: auto;
-}
-
 .panel-heading {
     display: block;
     cursor: pointer;
@@ -118,6 +111,7 @@ bliss-tabset ul.nav-stacked li.drag-over-after {
 
 .command-list {
     list-style-type: none;
+    padding-left: 0;
 }
 
 p.navbar-text.bliss-status-indicators {
@@ -197,8 +191,12 @@ codeMirrorExecGutter {
     grid-area: cmdsearch;
 }
 
-.cmd-browser-container {
+.cmd-config-container {
     grid-area: cmdbrowser;
+}
+
+.cmd-config-container div.row {
+    margin: 0;
 }
 
 .cmd-config-container {
