@@ -8,3 +8,11 @@ bliss-sequence .refresh {
     line-height: 75%;
     font-size:75%;
 }
+
+/**
+ * We need to use the body-level `bliss-gui` id here so we have
+ * sufficient specificity to overwrite the bootstrap values.
+ */
+#bliss-gui bliss-sequence .form-group {
+    margin: 0;
+}

@@ -38,6 +38,10 @@ bliss-tabset li {
     transition: .15s ease-in-out;
 }
 
+bliss-tabset .tab-content {
+    padding-top: 15px;
+}
+
 /**
  * Make room to indicate where a tab would be positioned when dropped.
  * Note this changes (left/top or right/bottom) depending upon whether
