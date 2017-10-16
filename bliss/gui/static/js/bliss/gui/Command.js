@@ -88,7 +88,7 @@ const CommandInput = {
                 prefetch: {url: '/cmd/hist.json', cache: false}
             });
 
-            $('#command-typeahead').typeahead({
+            $('input[name="command"]', vnode.dom).typeahead({
                 highlight: true,
             },
             {
@@ -117,14 +117,13 @@ const CommandInput = {
                        role: 'form',
                        method: 'POST',
                        action: '/cmd',
-                       id:'command-submit-form',
                        onsubmit: (e) => {
                            e.preventDefault()
                            let url = e.currentTarget.getAttribute('action')
                            let data = new FormData()
                            data.append('command', e.currentTarget.elements['command'].value)
                            m.request({method: 'POST', url: url, data: data})
-                           $('#command-typeahead').typeahead('val', '').focus()
+                           $(e.currentTarget.elements['command']).typeahead('val', '').focus()
                        }
                    },
                    [
@@ -133,7 +132,6 @@ const CommandInput = {
                            m('input',
                              {
                                  class: 'typeahead form-control',
-                                 id: 'command-typeahead',
                                  type: 'text',
                                  name: 'command',
                                  placeholder: 'Select Command ...',
@@ -162,7 +160,7 @@ const CommandInput = {
                                m('button', submitBtnAttrs, 'Send')
                            ),
                        ]),
-                       m('span', {id: 'commandHelpBlock', class: 'help-block'}, 'Ctrl + Enter to send command')
+                       m('span', {class: 'help-block'}, 'Ctrl + Enter to send command')
                    ])
                )
     }
@@ -228,7 +226,6 @@ const CommandSearch = {
                                 'data-content': v.desc,
                                 onmousedown: () => {
                                     CommandSelectionData.activeCommand = v
-                                    //$('.panel-collapse').collapse('hide')
                                 }
                             },
                             v.name))
@@ -242,7 +239,7 @@ const CommandSearch = {
                                  id: 'collapse' + k,
                              },
                              m('div', {class: 'panel-body'},
-                               m('ul', {class: 'command-list'}, commandList)))
+                               m('ul', {class: 'command_list'}, commandList)))
                 return m('div', {
                             class: 'panel panel-default',
                          },
@@ -252,7 +249,6 @@ const CommandSearch = {
 
         let commandSearchInput = m('input', {
                                        class: 'form-control',
-                                       id: 'command-search',
                                        name: 'command-search',
                                        placeholder: 'Search ...',
                                        type: 'search',
@@ -266,7 +262,6 @@ const CommandSearch = {
         let commandSearchReset = m('div', {class: 'input-group-btn'},
                                    m('button', {
                                         class: 'btn btn-default',
-                                        id: 'command-search-clear',
                                         onmousedown: (e) => {
                                             e.preventDefault()
                                             e.currentTarget.parentElement.parentElement.elements['command-search'].value = ''
@@ -293,20 +288,19 @@ const CommandSearch = {
                                 }
                             },
                             onmouseenter: () => {
-                                if (CommandSelectionData.activeCommand === null) {
+                                if (CommandSelectionData.activeCommand === null ||
+                                    this.commandFilter !== '') {
                                     $('.panel-collapse').collapse('show')
                                 }
                             }
                         },
                         m('div', {
-                            class: 'panel-group',
+                            class: 'panel-group command_tree',
                             role: 'tablist',
-                            id: 'cmdTree',
-                            style: 'margin-top: 20px;'
                         }, [
                             commandSearchBox,
                             m('div', {
-                                class: 'cmdAccordionsList',
+                                class: 'command_accordions_list',
                             }, cmdAccordions)
                         ]))
         return cmdTree
@@ -337,7 +331,7 @@ const CommandConfigure = {
         let commandSelection = null
         // If a command has been selected, render the command customization screen
         if (CommandSelectionData.activeCommand !== null) {
-            commandSelection = m('div', {id: 'commandCustomizer'}, [
+            commandSelection = m('div', [
                                  m('div', {class: 'row'},
                                    m('div', {class: 'col-lg-10'},
                                      m('h3', CommandSelectionData.activeCommand.name))),
@@ -346,22 +340,21 @@ const CommandConfigure = {
                                      m('div', CommandSelectionData.activeCommand.desc.replace(/(\r\n|\n|\r)/gm," ")))),
                                  m('div', {class: 'row'},
                                    m('div', {class: 'col-lg-10 col-lg-offset-1'},
-                                       m('div', this.generateCommandArgumentsForm(CommandSelectionData.activeCommand)))),
+                                     m('div', this.generateCommandArgumentsForm(CommandSelectionData.activeCommand)))),
                                ])
         // If no command has been selected, render some help info
         } else {
-            commandSelection = m('div',
+            commandSelection = m('div', {class: 'row'}, m('div',
                                  {
-                                     class: 'col-lg-6 col-lg-offset-3 alert alert-info',
+                                     class: 'col-lg-6 col-lg-offset-3 alert alert-info command_selection_help',
                                      role: 'alert',
-                                     style: 'margin-top: 20px;'
                                  },
                                  [
                                      m('span', {class: 'glyphicon glyphicon-info-sign'}),
                                      ' Please select a command to configure'
-                                 ])
+                                ]))
         }
-        return commandSelection
+        return m('bliss-commandconfigure', commandSelection)
     },
 
     /**
@@ -414,7 +407,7 @@ const CommandConfigure = {
 
         return m('form',
                  {
-                     id: 'command-args-form',
+                     class: 'command_customization_form',
                      onsubmit: this.handleCommandFormSubmission,
                      method: 'POST',
                      action: '/cmd'
@@ -422,7 +415,7 @@ const CommandConfigure = {
                  [
                      m('input',
                        {
-                           id: 'command-arg-name',
+                           name: 'command-arg-name',
                            type: 'hidden',
                            value: CommandSelectionData.activeCommand.name
                        }),
@@ -472,11 +465,10 @@ const CommandConfigure = {
     handleCommandFormSubmission(e) {
         e.preventDefault()
 
-        let url = $('#command-args-form').attr('action')
+        let url = e.currentTarget.action
+        let command = e.currentTarget.elements['command-arg-name'].value
 
-        // Generate command from name + configured arguments
-        let command = $('#command-args-form > input#command-arg-name').val()
-        $('#command-args-form :input').each((index, input) => {
+        $(':input', e.currentTarget).each((index, input) => {
             if (! $(input).hasClass('form-control')) return
             command += ' ' + $(input).val()
         })

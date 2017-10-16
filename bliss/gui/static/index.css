@@ -9,8 +9,9 @@
 /**
  * BLISS GUI Component CSS
  */
-@import "./css/bliss/gui/Script.css";
+@import "./css/bliss/gui/Command.css";
 @import "./css/bliss/gui/Messages.css";
+@import "./css/bliss/gui/Script.css";
 @import "./css/bliss/gui/Sequence.css";
 @import "./css/bliss/gui/TabSet.css";
 
@@ -36,7 +37,6 @@ bliss-plot {
 bliss-tabset li {
     transition: .15s ease-in-out;
 }
-
 
 /**
  * Make room to indicate where a tab would be positioned when dropped.
@@ -89,37 +89,6 @@ bliss-tabset ul.nav-stacked li.drag-over-after {
     min-width: 200px;
     max-width: 400px;
     overflow: auto;
-}
-
-#command-args-form {
-    margin-top: 20px;
-    overflow: hidden;
-}
-
-.cmdAccordionsList {
-    height: 430px;
-    overflow: auto;
-}
-
-#cmdAccordions ul {
-    padding: 0;
-    list-style-type: none;
-}
-
-#cmdAccordions .panel-body{
-    padding: 0;
-    border: none;
-    box-shadow: none;
-}
-
-.panel-heading {
-    display: block;
-    cursor: pointer;
-}
-
-.command-list {
-    list-style-type: none;
-    padding-left: 0;
 }
 
 p.navbar-text.bliss-status-indicators {
@@ -199,14 +168,14 @@ codeMirrorExecGutter {
     grid-area: cmdsearch;
 }
 
-.cmd-config-container {
+.cmd-browser-container {
     grid-area: cmdbrowser;
-}
-
-.cmd-config-container div.row {
-    margin: 0;
 }
 
 .cmd-config-container {
     grid-area: cmdconfig
+}
+
+.cmd-config-container div.row {
+    margin: 0;
 }

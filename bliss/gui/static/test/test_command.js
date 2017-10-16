@@ -61,9 +61,9 @@ describe('CommandInput object', function () {
 
     it('should require ctrl+enter to submit commands', function() {
         ci._cntrl_toggled.should.equal(false)
-        ciOut.keydown('input#command-typeahead', 17)
+        ciOut.keydown('input[name="command"]', 17)
         ci._cntrl_toggled.should.equal(true)
-        ciOut.keyup('input#command-typeahead', 17)
+        ciOut.keyup('input[name="command"]', 17)
         ci._cntrl_toggled.should.equal(false)
 
         let e = {
@@ -73,7 +73,7 @@ describe('CommandInput object', function () {
 
         // If the user pressed Enter w/o Ctrl, we should see
         // preventDefault called as part of the submission rejection.
-        ciOut.trigger('input#command-typeahead','onkeydown', e)
+        ciOut.trigger('input[name="command"]','onkeydown', e)
         assert(e.preventDefault.called)
 
         e = {
@@ -81,8 +81,8 @@ describe('CommandInput object', function () {
             preventDefault: sinon.spy()
         }
 
-        ciOut.keydown('input#command-typeahead', 17)
-        ciOut.trigger('input#command-typeahead','onkeydown', e)
+        ciOut.keydown('input[name="command"]', 17)
+        ciOut.trigger('input[name="command"]','onkeydown', e)
         assert(e.preventDefault.notCalled)
     })
 })
