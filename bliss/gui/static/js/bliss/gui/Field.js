@@ -140,7 +140,7 @@ const Field =
                 let desc = this._field_defn.desc ? this._field_defn.desc : "None"
                 popover_content += "<b>Description:</b> " + desc + "<br />"
 
-                let type = this._field_defn.type ? this._field_defn.type : "Unknown"
+                let type = this._field_defn.type ? this._field_defn.type._name : "Unknown"
                 popover_content += "<b>Data Type:</b> " + type + "<br />"
 
                 let bytes = typeof(this._field_defn.bytes) == "object" ? (
