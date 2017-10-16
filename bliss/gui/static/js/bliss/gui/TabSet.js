@@ -154,8 +154,11 @@ const TabSet =
         }
 
         const tabName = vnode.attrs.title
-        if (this.tabs && this.tabs[tabName]['___limitTrip']) {
-            attrs['class'] += ' tab_title--out-of-limit--' + this.tabs[tabName]['___limitType']
+        if (this.tabs && Object.keys(this.tabs[tabName]['___limit_error']).length > 0) {
+            attrs['class'] += ' tab_title--out-of-limit--error'
+        }
+        else if (this.tabs && Object.keys(this.tabs[tabName]['___limit_warning']).length > 0) {
+            attrs['class'] += ' tab_title--out-of-limit--warning'
         }
 
         return m('a', attrs, vnode.attrs.title)
@@ -255,7 +258,10 @@ const TabSet =
         for (let t of this.filterTabs(vnode.children)) {
 
             let tabName = t['attrs']['title']
-            this.tabs[tabName] = {'___limitTrip': false, '___tripType': null}
+            this.tabs[tabName] = {
+                '___limit_warning': {},
+                '___limit_error': {},
+            }
 
             for (let name of this.filterFields(t.children)) {
                 this.tabs[tabName][name] = null
@@ -264,11 +270,10 @@ const TabSet =
 
         bliss.events.on('field:limitOut', (f) => {
             let field = f['field']
-            let type = f['type']
+            let type = '___limit_' + f['type']
             for (let t in this.tabs) {
                 if (field in this.tabs[t]) {
-                    this.tabs[t]['___limitTrip'] = true
-                    this.tabs[t]['___limitType'] = type
+                    this.tabs[t][type][field] = null
                 }
             }
             m.redraw()
@@ -277,8 +282,8 @@ const TabSet =
         bliss.events.on('field:limitIn', (f) => {
             for (let t in this.tabs) {
                 if (f in this.tabs[t]) {
-                    this.tabs[t]['___limitTrip'] = false
-                    this.tabs[t]['___limitType'] = null
+                    delete this.tabs[t]['___limit_warning'][f]
+                    delete this.tabs[t]['___limit_error'][f]
                 }
             }
             m.redraw()
