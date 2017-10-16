@@ -31,7 +31,7 @@ const CommandHistory = {
             m('thead',
                 m('tr', [
                     m('th', 'Timestamp'),
-                    m('th', 'Executed Command')
+                    m('th', 'Command Sent')
                 ])
             ),
             m('tbody',
