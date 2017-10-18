@@ -595,8 +595,9 @@ def handle():
 
     :formparam seqfile: The sequence filename located in SEQRoot to execute
     """
-    bn_seqfile = bottle.request.forms.get('seqfile')
-    gevent.spawn(bgExecSeq, bn_seqfile)
+    with Sessions.current() as session:
+        bn_seqfile = bottle.request.forms.get('seqfile')
+        gevent.spawn(bgExecSeq, bn_seqfile)
 
 
 def bgExecSeq(bn_seqfile):
@@ -630,13 +631,13 @@ def handle():
 
     Scripts are located via the script.directory configuration parameter.
     """
+    with Sessions.current() as session:
+        if ScriptRoot is None:
+            files = []
+        else:
+            files = util.listAllFiles(ScriptRoot, '.py')
 
-    if ScriptRoot is None:
-        files = []
-    else:
-        files = util.listAllFiles(ScriptRoot, '.py')
-
-    return json.dumps(sorted(files))
+        return json.dumps(sorted(files))
 
 
 @App.route('/scripts/load/<name>', method='GET')
@@ -658,14 +659,15 @@ def handle(name):
            script_text: "This is the example content of a fake script"
        }
     """
-    script_path = os.path.join(ScriptRoot, urllib.unquote(name))
-    if not os.path.exists(script_path):
-        bottle.abort(400, "Script cannot be located")
+    with Sessions.current() as session:
+        script_path = os.path.join(ScriptRoot, urllib.unquote(name))
+        if not os.path.exists(script_path):
+            bottle.abort(400, "Script cannot be located")
 
-    with open(script_path) as infile:
-        script_text = infile.read()
+        with open(script_path) as infile:
+            script_text = infile.read()
 
-    return json.dumps({"script_text": script_text})
+        return json.dumps({"script_text": script_text})
 
 
 @App.route('/script/run', method='POST')
@@ -680,36 +682,39 @@ def handle():
     :statuscode 400: When the script name cannot be located
     """
     global _RUNNING_SCRIPT
+    with Sessions.current() as session:
+        script_name = bottle.request.forms.get('scriptPath')
+        script_path = os.path.join(ScriptRoot, script_name)
 
-    script_name = bottle.request.forms.get('scriptPath')
-    script_path = os.path.join(ScriptRoot, script_name)
+        if not os.path.exists(script_path):
+            bottle.abort(400, "Script cannot be located")
 
-    if not os.path.exists(script_path):
-        bottle.abort(400, "Script cannot be located")
-
-    _RUNNING_SCRIPT = gevent.spawn(bgExecScript, script_path)
+        _RUNNING_SCRIPT = gevent.spawn(bgExecScript, script_path)
 
 
 @App.route('/script/run', method='PUT')
 def handle():
     """ Resume a paused script """
-    script_exec_lock.release()
-    Sessions.addEvent('script:resume', None)
+    with Sessions.current() as session:
+        script_exec_lock.release()
+        Sessions.addEvent('script:resume', None)
 
 
 @App.route('/script/pause', method='PUT')
 def handle():
     """ Pause a running script """
-    script_exec_lock.acquire()
-    Sessions.addEvent('script:pause', None)
+    with Sessions.current() as session:
+        script_exec_lock.acquire()
+        Sessions.addEvent('script:pause', None)
 
 
 @App.route('/script/step', method='PUT')
 def handle():
     """ Step a paused script """
-    script_exec_lock.release()
-    gevent.sleep(0)
-    script_exec_lock.acquire()
+    with Sessions.current() as session:
+        script_exec_lock.release()
+        gevent.sleep(0)
+        script_exec_lock.acquire()
 
 
 @App.route('/script/abort', method='DELETE')
