@@ -184,9 +184,6 @@ const ScriptLoadModal = {
  * attribute. The function that the load button should perform when clicked is
  * expected to be provided as the attribute `loadButtonAction`.
  *
- * Functionality for the following buttons is not currently implemented:
- *      Step back
- *      Reset script
  */
 const ScriptExecCtrl = {
     oninit(vnode) {
@@ -240,13 +237,6 @@ const ScriptExecCtrl = {
 
         let runButton = m('div', runBtnAttrs)
 
-        // NOTE: The Reset, and Step Back buttons are not
-        // currently implemented. They are marked as disabled for the interim.
-        let resetButton = m('div', {
-            class: 'btn glyphicon glyphicon-refresh',
-            disabled: 'disabled',
-        })
-
         let stepForwardAttrs = {
             class: 'btn glyphicon glyphicon-step-forward',
             onclick: (e) => {
@@ -271,10 +261,30 @@ const ScriptExecCtrl = {
             onclick: vnode.attrs.loadButtonAction
         })
 
+        let abortAttrs = {
+            class: 'btn glyphicon glyphicon-ban-circle',
+            onclick: (e) => {
+                e.target.setAttribute('disabled', 'disabled')
+                m.request({
+                        method: 'DELETE',
+                        url: '/script/abort'
+                }).then(() => {
+                    e.target.removeAttribute('disabled')
+                })
+            }
+        }
+
+        if (vnode.attrs.scriptState === 'init' ||
+            vnode.attrs.scriptState === 'stopped') {
+            abortAttrs['disabled'] = 'disabled'
+        }
+
+        let abortButton = m('div', abortAttrs)
+
         let buttonDashboard = m('div', [
                                  runButton,
-                                 resetButton,
                                  stepForwardButton,
+                                 abortButton,
                                  loadButton
                               ])
 
@@ -406,6 +416,11 @@ const Scripts = {
         })
 
         bliss.events.on('script:done', () => {
+            ScriptsState.currentLine = 0
+        })
+
+        bliss.events.on('script:aborted', () => {
+            ScriptsState.execState = 'stopped'
             ScriptsState.currentLine = 0
         })
     },
