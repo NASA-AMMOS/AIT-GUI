@@ -32,10 +32,10 @@ const Messages =
 
     onupdate(vnode) {
         if (this._updateScroll) {
-            this._scrollTop = vnode.dom.children.item(0).scrollHeight
+            this._scrollTop = vnode.dom.scrollHeight
         }
 
-        vnode.dom.children.item(0).scrollTop = this._scrollTop
+        vnode.dom.scrollTop = this._scrollTop
     },
 
     view(vnode) {
@@ -47,18 +47,15 @@ const Messages =
             ])
         )
 
-        return m('bliss-messages', vnode.attrs,
-                   m('div', {
+        return m('bliss-messages', Object.assign(vnode.attrs, {
                     onscroll: (e) => {
-                        let msg_window = vnode.dom.children.item(0)
-                        if (msg_window.scrollTop == msg_window.scrollHeight - msg_window.clientHeight) {
+                        if (vnode.dom.scrollTop == vnode.dom.scrollHeight - vnode.dom.clientHeight) {
                             this._updateScroll = true;
                         } else {
                             this._updateScroll = false;
-                            this._scrollTop = vnode.dom.children.item(0).scrollTop
+                            this._scrollTop = vnode.dom.scrollTop
                         }
-                    }
-                   }, rows))
+                    }}) , rows)
     }
 }
 

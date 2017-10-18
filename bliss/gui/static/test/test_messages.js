@@ -58,11 +58,10 @@ describe('Messages component', () => {
         let msgsOutput = mq(msgs)
 
         // Check bliss-messages primary container structure
-        msgsOutput.should.have('bliss-messages > div')
+        msgsOutput.should.have('bliss-messages')
         // We should have a single Warning message in our container
         msgsOutput.should.have(
-            'bliss-messages > div > ' +
-                'div.entry.entry--warning'
+            'bliss-messages > div.entry.entry--warning'
         )
         // Our warning message should contain the relevant log info
         msgsOutput.should.have(
