@@ -83,7 +83,10 @@ const Plot =
      * appropriate `processTagXXX()` method.
      */
     processTag (vnode) {
-        if (vnode.tag === 'bliss-plot-series') {
+        if (vnode.tag === 'bliss-plot-config') {
+            Object.assign(this._options, JSON.parse(vnode.text))
+        }
+        else if (vnode.tag === 'bliss-plot-series') {
             this.processTagSeries(vnode)
         }
         else if (vnode.tag === 'bliss-plot-time') {
