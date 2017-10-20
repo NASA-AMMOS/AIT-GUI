@@ -1,5 +1,6 @@
 import m from 'mithril'
 import Highcharts from 'highcharts/highstock';
+require('highcharts/modules/boost')(Highcharts)
 
 // See https://github.com/highcharts/highcharts/issues/4994
 window.Highcharts = Highcharts
@@ -13,6 +14,10 @@ function createOptions (attrs) {
 
         legend: {
             enabled: true
+        },
+
+        boost: {
+            seriesThreshold: 1,
         },
 
         rangeSelector: {
