@@ -320,9 +320,12 @@ def handle ():
         yield 'event: connected\ndata:\n\n'
 
         while True:
-            event = session.events.popleft()
-            __setResponseToEventStream()
-            yield 'data: %s\n\n' % json.dumps(event)
+            try:
+                event = session.events.popleft(timeout=30)
+                __setResponseToEventStream()
+                yield 'data: %s\n\n' % json.dumps(event)
+            except IndexError as e:
+                yield 'event: probe\ndata:\n\n'
 
 
 @App.route('/events', method='POST')
@@ -352,9 +355,12 @@ def handle():
         yield 'event: connected\ndata:\n\n'
 
         while True:
-            msg = session.messages.popleft()
-            __setResponseToEventStream()
-            yield 'data: %s\n\n' % json.dumps(msg)
+            try:
+                msg = session.messages.popleft(timeout=30)
+                __setResponseToEventStream()
+                yield 'data: %s\n\n' % json.dumps(msg)
+            except IndexError:
+                yield 'event: probe\ndata:\n\n'
 
 
 @App.route('/tlm/dict', method='GET')
@@ -563,9 +569,25 @@ def handle():
         if not wsock:
             bottle.abort(400, 'Expected WebSocket request.')
 
-        while True:
-            defn, data = session.telemetry.popleft()
-            wsock.send(pad + struct.pack('>I', defn.uid) + data)
+        try:
+            while not wsock.closed:
+                try:
+                    defn, data = session.telemetry.popleft(timeout=30)
+                    wsock.send(pad + struct.pack('>I', defn.uid) + data)
+                except IndexError:
+                    # If no telemetry has been received by the GUI
+                    # server after timeout seconds, "probe" the client
+                    # websocket connection to make sure it's still
+                    # active and if so, keep it alive.  This is
+                    # accomplished by sending a packet with an ID of
+                    # zero and no packet data.  Packet ID zero is
+                    # ignored by BLISS GUI client-side Javascript
+                    # code.
+
+                    if not wsock.closed:
+                        wsock.send(pad + struct.pack('>I', 0))
+        except geventwebsocket.WebSocketError:
+            pass
 
 
 @App.route('/seq', method='GET')
