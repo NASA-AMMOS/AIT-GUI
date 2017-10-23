@@ -378,6 +378,61 @@ let ScriptsState = {
     currentLine: 0
 }
 
+
+const ScriptNotification = {
+    oninit(vnode) {
+        this._state = 'none',
+        this._script = '',
+
+        bliss.events.on('script:loaded', () => {
+            this._state = 'loaded'
+            this._script = vnode.attrs.ScriptSelectionData.selected
+            m.redraw()
+        })
+
+        bliss.events.on('script:done', () => {
+            this._state = 'done'
+            m.redraw()
+        })
+
+        bliss.events.on('script:error', () => {
+            this._state = 'error'
+            m.redraw()
+        })
+
+        bliss.events.on('script:aborted', () => {
+            this._state = 'aborted'
+            m.redraw()
+        })
+    },
+
+    view(vnode) {
+        let msg = ''
+        let attrs = {role: 'alert'}
+
+        if (this._state === 'loaded') {
+            msg = ' loaded'
+        } else if (this._state === 'done') {
+            attrs['class'] = 'alert alert-success'
+            msg = ' finished execution'
+        } else if (this._state === 'error') {
+            attrs['class'] = 'alert alert-danger'
+            msg = ' encountered an error'
+        } else if (this._state === 'aborted') {
+            attrs['class'] = 'alert alert-warning'
+            msg = ' execution aborted'
+        }
+
+        if (msg !== '' && this._script) {
+            return m('bliss-scriptnotification', attrs, [
+                m('strong', 'Status: '),
+                this._script + msg,
+            ])
+        }
+    }
+}
+
+
 /**
  * Manages global script states and component layout
  */
@@ -388,10 +443,6 @@ const Scripts = {
 
         bliss.events.on('script:start', () => {
             ScriptsState.execState = 'running'
-        })
-
-        bliss.events.on('script:done', () => {
-            ScriptsState.execState = 'stopped'
         })
 
         bliss.events.on('script:error', (e) => {
@@ -416,6 +467,7 @@ const Scripts = {
         })
 
         bliss.events.on('script:done', () => {
+            ScriptsState.execState = 'stopped'
             ScriptsState.currentLine = 0
         })
 
@@ -427,12 +479,18 @@ const Scripts = {
 
     view(vnode) {
         let scriptLoad = m(ScriptSelect, {ScriptSelectionData: ScriptsState.scriptSelectData})
-        let scriptCtrl = m('div', {class: 'col-lg-12'}, m(ScriptExecCtrl, {
+
+        let scriptCtrl = m('div', {class: 'col-lg-12'},
+          m(ScriptExecCtrl, {
             ScriptSelectionData: ScriptsState.scriptSelectData,
             scriptState: ScriptsState.execState,
             loadButtonAction: () => {
                 this._script_load_toggle = !this._script_load_toggle
             }
+        }))
+        let notifications = m('div', {class: 'col-lg-12'},
+          m(ScriptNotification, {
+            ScriptSelectionData: ScriptsState.scriptSelectData,
         }))
 
         let scriptEditor = m('div', {class: 'col-lg-12'},
@@ -447,9 +505,11 @@ const Scripts = {
             loadBlockAttrs['class'] = 'load_dialog--hidden'
         }
 
-        //return m('div', [
         return m('bliss-script', m('div', [
                   m('div', {class: 'row'}, scriptCtrl),
+                  m('br'),
+                  m('div', {class: 'row'}, notifications),
+                  m('br'),
                   m('div', loadBlockAttrs, [
                     m('div', {class: 'row'}, m('br')),
                     m('div', {class: 'row'},
@@ -468,5 +528,5 @@ const Scripts = {
     }
 }
 
-export default {Scripts, ScriptEditor, ScriptExecCtrl, ScriptLoadModal, ScriptLoadButton, ScriptSelect}
-export {Scripts, ScriptEditor, ScriptExecCtrl, ScriptLoadModal, ScriptLoadButton, ScriptSelect}
+export default {Scripts, ScriptEditor, ScriptExecCtrl, ScriptLoadModal, ScriptLoadButton, ScriptSelect, ScriptNotification}
+export {Scripts, ScriptEditor, ScriptExecCtrl, ScriptLoadModal, ScriptLoadButton, ScriptSelect, ScriptNotification}
