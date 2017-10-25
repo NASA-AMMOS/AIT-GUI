@@ -27,6 +27,10 @@ const Sequence = {
         let data = new FormData()
         data.append('seqfile', event.currentTarget.querySelector('select').value)
 
+        if (data['seqfile'] === undefined) {
+            return false
+        }
+
         this._disableControls = true
         m.request({method: 'POST', url: this._action, data: data})
         return false
@@ -55,7 +59,7 @@ const Sequence = {
     view(vnode) {
         let submitBtnAttrs = {
             type: 'submit',
-            class: 'btn btn-success'
+            class: 'btn btn-success pull-right'
         }
 
         if (this._disableControls) {

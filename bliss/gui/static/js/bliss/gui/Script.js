@@ -88,7 +88,13 @@ const ScriptSelect = {
                  },
                  scriptDisplayList)
 
-         return m('form', [filterInputGroup, select])
+             return m('form', {
+                        onsubmit: (e) => {
+                            e.preventDefault()
+                            return false
+                        }
+                    },
+                    [filterInputGroup, select])
     },
 }
 
