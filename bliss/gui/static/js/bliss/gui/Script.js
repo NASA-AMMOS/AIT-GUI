@@ -396,6 +396,11 @@ const ScriptNotification = {
             m.redraw()
         })
 
+        bliss.events.on('script:start', () => {
+            this._state = 'loaded'
+            m.redraw()
+        })
+
         bliss.events.on('script:done', () => {
             this._state = 'done'
             m.redraw()
@@ -430,9 +435,11 @@ const ScriptNotification = {
         }
 
         if (msg !== '' && this._script) {
-            return m('bliss-scriptnotification', attrs, [
-                m('strong', 'Status: '),
-                this._script + msg,
+            return m('bliss-scriptnotification', [
+                m('div', attrs, [
+                  m('strong', 'Status: '),
+                  this._script + msg,
+                ]),
             ])
         }
     }
@@ -514,9 +521,7 @@ const Scripts = {
 
         return m('bliss-script', m('div', [
                   m('div', {class: 'row'}, scriptCtrl),
-                  m('br'),
                   m('div', {class: 'row'}, notifications),
-                  m('br'),
                   m('div', loadBlockAttrs, [
                     m('div', {class: 'row'}, m('br')),
                     m('div', {class: 'row'},
