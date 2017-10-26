@@ -69,9 +69,13 @@ function createMithrilNode (elem) {
     let node = null
 
     if (elem.nodeType == Node.ELEMENT_NODE) {
-        const name     = elem.nodeName.toLowerCase()
+        let name     = elem.nodeName.toLowerCase()
         const attrs    = attrs2obj(elem.attributes)
         const children = createMithrilNodes(elem.childNodes)
+
+        if (name.substring(0, 6) === 'bliss-') {
+            name = 'bliss-' + name.substring(6).replace('-', '')
+        }
 
         node = m(Registry[name] || name, attrs, children)
     }
