@@ -27,6 +27,7 @@ bliss-clock {
 bliss-field {
     font-weight: normal;
     text-align:  left;
+    cursor: pointer;
 }
 
 bliss-plot {
