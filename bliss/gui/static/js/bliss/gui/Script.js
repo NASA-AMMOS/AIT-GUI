@@ -409,6 +409,7 @@ const Scripts = {
         bliss.events.on('script:loaded', (e) => {
             ScriptsState.execState = 'stopped'
             this._script_load_toggle = !this._script_load_toggle
+            ScriptsState.currentLine = 0
         })
 
         bliss.events.on('script:step', (lineNum) => {
