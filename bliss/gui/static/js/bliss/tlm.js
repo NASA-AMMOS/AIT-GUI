@@ -301,17 +301,28 @@ class TelemetryStream
         let data = new DataView(event.data, 5)
         let defn = this._dict[uid]
 
-        if (defn) {
-            // FIXME: packet.__clone__(data)?
-            let packet = new Packet(defn, data)
+        // Since WebSockets can stay open indefinitely, the BLISS GUI
+        // server will occasionally probe for dropped client
+        // connections by sending empty packets (data.byteLength == 0)
+        // with a packet UID of zero.  These can should be safely
+        // ignored.
+        //
+        // A UID of zero can indicate a valid packet, so it's
+        // important to also check the data length that follows.
+        //
+        // It's also possible that the packet UID is not in the client
+        // telemetry dictionary (defn === undefined).  Without a
+        // packet definition, the packet cannot be processed further.
+        if ((uid == 0 && data.byteLength == 0) || !defn) return
 
-            clearInterval(this._interval)
-            this._stale    = 0
-            this._interval = setInterval(this.onStale.bind(this), 1500)
+        let packet = new Packet(defn, data)
 
-            bliss.packets.insert(defn.name, packet)
-            this._emit('packet', packet)
-        }
+        clearInterval(this._interval)
+        this._stale    = 0
+        this._interval = setInterval(this.onStale.bind(this), 1500)
+
+        bliss.packets.insert(defn.name, packet)
+        this._emit('packet', packet)
     }
 
 
