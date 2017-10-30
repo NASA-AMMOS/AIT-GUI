@@ -51,7 +51,9 @@ import requests
 import bliss
 import bliss.core
 
-from bliss.core import api, cfg, cmd, evr, gds, limits, log, pcap, tlm, util
+from bliss.core import api, ccsds, cfg, cmd, evr, gds, limits, log, pcap, tlm
+from bliss.core import util
+
 
 _RUNNING_SCRIPT = None
 
@@ -153,9 +155,9 @@ class SessionStore (dict):
         """Creates a new SessionStore."""
         dict.__init__(self, *args, **kwargs)
 
-    def addTelemetry (self, defn, packet):
+    def addTelemetry (self, uid, packet):
         """Adds a telemetry packet to all Sessions in the store."""
-        item = (defn, packet)
+        item = (uid, packet)
         SessionStore.History.telemetry.append(item)
         for session in self.values():
             session.telemetry.append(item)
@@ -210,25 +212,50 @@ class UdpSysLogServer (gevent.server.DatagramServer):
         Sessions.addMessage(msg)
 
 
-class UdpTelemetryServer (gevent.server.DatagramServer):
+class UdpCcsdsTelemetryServer(gevent.server.DatagramServer):
+    """A UdpCcsdsTelemetryServer listens for CCSDS telemetry packets on
+    the given (hostname, port) and forwards those packets to the GUI
+    client with minimal sanity checking.
+    """
+
+    def __init__ (self, listener):
+        super(UdpCcsdsTelemetryServer, self).__init__(listener)
+
+    def start (self):
+        values = self.server_host, self.server_port
+        log.info('Listening for CCSDS telemetry on %s:%d (UDP)' % values)
+        super(UdpCcsdsTelemetryServer, self).start()
+
+    def handle (self, data, address):
+        if len(data) > ccsds.CcsdsHeader.Definition.nbytes:
+            header = ccsds.CcsdsHeader(data)
+            Sessions.addTelemetry(header.apid, data)
+        else:
+            values = len(data), self.server_host, self.server_port
+            msg    = 'Ignoring %d byte packet fragment on %s:%d (UDP)'
+            log.warn(msg % values)
+
+
+
+class UdpRawTelemetryServer(gevent.server.DatagramServer):
     def __init__ (self, listener, defn):
-        super(UdpTelemetryServer, self).__init__(listener)
+        super(UdpRawTelemetryServer, self).__init__(listener)
         self._defn = defn
 
     def start (self):
         values = self._defn.name, self.server_host, self.server_port
         log.info('Listening for %s telemetry on %s:%d (UDP)' % values)
-        super(UdpTelemetryServer, self).start()
+        super(UdpRawTelemetryServer, self).start()
 
     def handle (self, packet, address):
-        Sessions.addTelemetry(self._defn, packet)
+        Sessions.addTelemetry(self._defn.uid, packet)
 
 
 def getBrowserName(browser):
     return getattr(browser, 'name', getattr(browser, '_name', '(none)'))
 
 
-def init(host=None, port=8000):
+def init(host=None, port=8080):
     global Servers
 
     @App.route('/bliss/gui/static/<pathname:path>')
@@ -242,13 +269,57 @@ def init(host=None, port=8000):
     if host is None:
         host = 'localhost'
 
-    for t in bliss.config.gui.telemetry:
-        stream = cfg.BlissConfig(config=t).stream
-        defn   = tlm.getDefaultDict().get(stream.name, None)
-        if defn:
-            Servers.append( UdpTelemetryServer(stream.port, defn) )
+    streams = bliss.config.get('gui.telemetry')
 
-    Servers.append( UdpSysLogServer(':%d' % 2514)     )
+    if streams is None:
+        msg  = cfg.BlissConfigMissing('gui.telemetry').args[0]
+        msg += '  No telemetry will be received (or displayed).'
+        log.error(msg)
+    else:
+        nstreams = 0
+
+        for index, s in enumerate(streams):
+            param  = 'gui.telemetry[%d].stream' % index
+            stream = cfg.BlissConfig(config=s).get('stream')
+
+            if stream is None:
+                msg = cfg.BlissConfigMissing(param).args[0]
+                log.warn(msg + '  Skipping stream.')
+                continue
+
+            name  = stream.get('name', '<unnamed>')
+            type  = stream.get('type', 'raw').lower()
+            tport = stream.get('port', None)
+
+            if tport is None:
+                msg = cfg.BlissConfigMissing(param + '.port').args[0]
+                log.warn(msg + '  Skipping stream.')
+                continue
+
+            if type == 'ccsds':
+                Servers.append( UdpCcsdsTelemetryServer(tport) )
+                nstreams += 1
+            else:
+                defn = tlm.getDefaultDict().get(name, None)
+
+                if defn is None:
+                    values = (name, param)
+                    msg    = 'Packet name "%s" not found (%s.name).' % values
+                    log.warn(msg + '  Skipping stream.')
+                    continue
+
+                Servers.append( UdpRawTelemetryServer(tport, defn) )
+                nstreams += 1
+
+    if streams and nstreams == 0:
+        msg  = 'No valid telemetry stream configurations found.'
+        msg += '  No telemetry will be received (or displayed).'
+        log.error(msg)
+
+    Servers.append(
+        UdpSysLogServer(':%d' % bliss.config.get('logging.port', 2514))
+    )
+
     Servers.append( gevent.pywsgi.WSGIServer(
         ('0.0.0.0', port),
         App,
@@ -572,17 +643,17 @@ def handle():
         try:
             while not wsock.closed:
                 try:
-                    defn, data = session.telemetry.popleft(timeout=30)
-                    wsock.send(pad + struct.pack('>I', defn.uid) + data)
+                    uid, data = session.telemetry.popleft(timeout=30)
+                    wsock.send(pad + struct.pack('>I', uid) + data)
                 except IndexError:
                     # If no telemetry has been received by the GUI
                     # server after timeout seconds, "probe" the client
                     # websocket connection to make sure it's still
                     # active and if so, keep it alive.  This is
                     # accomplished by sending a packet with an ID of
-                    # zero and no packet data.  Packet ID zero is
-                    # ignored by BLISS GUI client-side Javascript
-                    # code.
+                    # zero and no packet data.  Packet ID zero with no
+                    # data is ignored by BLISS GUI client-side
+                    # Javascript code.
 
                     if not wsock.closed:
                         wsock.send(pad + struct.pack('>I', 0))
