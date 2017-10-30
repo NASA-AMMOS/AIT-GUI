@@ -182,9 +182,10 @@ const Field =
                     content : popover_content,
                     title : this._field_defn.name,
                     html: true,
+                    placement: 'auto right',
                     container: 'body'
                 }).tooltip({
-                    placement : 'right',
+                    placement : 'auto right',
                     title : this._field_defn.desc,
                     container: 'body'
                 }).on('show.bs.popover', () => {
