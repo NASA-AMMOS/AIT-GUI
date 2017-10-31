@@ -205,10 +205,9 @@ codeMirrorExecGutter {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 200px;
+    height: 220px;
     z-index: 999;
     padding: 10px;
-    margin-bottom: 10px;
     border-top: 2px solid black;
     border-radius: 10px;
     background-color: white;
