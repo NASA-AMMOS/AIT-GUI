@@ -1,20 +1,20 @@
 Contributor Guides
 ==================
 
-These guides provide information on BLISS GUI specific development practices. You should also review the `BLISS Contributor Guides <https://github.jpl.nasa.gov/pages/bliss/bliss-core/contribute.html>`_ for additional information.
+These guides provide information on AIT GUI specific development practices. You should also review the `AIT Contributor Guides <https://github.jpl.nasa.gov/pages/bliss/bliss-core/contribute.html>`_ for additional information.
 
 Installation
 ------------
 
-You should follow the developer installation instructions for BLISS Core in the `BLISS Contributor Guides <https://github.jpl.nasa.gov/pages/bliss/bliss-core/contribute.html>`_ before installing BLISS GUI.
+You should follow the developer installation instructions for AIT Core in the `AIT Contributor Guides <https://github.jpl.nasa.gov/pages/bliss/bliss-core/contribute.html>`_ before installing AIT GUI.
 
-To install BLISS GUI as a develop-mode package and install all relevant UI packages run:
+To install AIT GUI as a develop-mode package and install all relevant UI packages run:
 
 .. code-block:: bash
 
    > pip install -e . --install-option="--with-ui-deps=True"
 
-We recommend that you add the following line to your **postactivate** script for your BLISS virtual environment so that GUI-related developer binaries are easily accessible.
+We recommend that you add the following line to your **postactivate** script for your AIT virtual environment so that GUI-related developer binaries are easily accessible.
 
 .. code-block:: bash
 

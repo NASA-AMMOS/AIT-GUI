@@ -49,9 +49,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'bliss-gui'
+project = u'ait-gui'
 copyright = u'2017, Jet Propulsion Laboratory'
-author = u'BLISS Development Team'
+author = u'AIT Development Team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
