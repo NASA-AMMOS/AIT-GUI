@@ -1,7 +1,7 @@
 New Project Setup
 =================
 
-The following documentation will teach you how to get started using BLISS GUI to build a MOS website for your project. The guide assumes that you've created a repository in which your project's GUI code will reside and that it is a Python based project. It also assumes that you've run through the `BLISS Core New Project Setup <https://github.jpl.nasa.gov/pages/bliss/bliss-core/project_setup.html>`_ guide as well.
+The following documentation will teach you how to get started using AIT GUI to build a MOS website for your project. The guide assumes that you've created a repository in which your project's GUI code will reside and that it is a Python based project. It also assumes that you've run through the `AIT Core New Project Setup <https://github.jpl.nasa.gov/pages/bliss/bliss-core/project_setup.html>`_ guide as well.
 
 Note, we're using the following directory layout in this example. You can use it as a reference to understand why we have paths specified the way we do:
 
@@ -12,10 +12,10 @@ Note, we're using the following directory layout in this example. You can use it
    │   └── index.html
    └── setup.py
 
-Add BLISS GUI to Project Dependencies
--------------------------------------
+Add AIT GUI to Project Dependencies
+-----------------------------------
 
-You'll need to add BLISS GUI to either your **requirements.txt** file or your **setup.py** file.
+You'll need to add AIT GUI to either your **requirements.txt** file or your **setup.py** file.
 
 If you use a requirements file for specifying dependencies:
 
@@ -38,7 +38,7 @@ If you use **setup.py** for specifying dependencies:
 Creating a Simple Index File
 ----------------------------
 
-Now that we are depending on BLISS GUI let's get a simple index page up and running. The following simple page will give us something to look at once we get the GUI started:
+Now that we are depending on AIT GUI let's get a simple index page up and running. The following simple page will give us something to look at once we get the GUI started:
 
 .. code-block:: html
 
@@ -60,7 +60,7 @@ Now that we are depending on BLISS GUI let's get a simple index page up and runn
    <div class="container">
      <bliss-tabset class="nav-tabs">
        <bliss-tab title="Welcome">
-         <h1>Welcome to BLISS GUI</h1>
+         <h1>Welcome to AIT GUI</h1>
        </bliss-tab>
        <bliss-tab title="Clock">
          <h1>The current time</h1>
@@ -99,4 +99,4 @@ This should automatically open up a browser and point it to **localhost:8080**. 
 
 .. image:: _static/example_gui.png
 
-Congratulations! You've successfully gotten your project setup and ready for development with BLISS GUI.
+Congratulations! You've successfully gotten your project setup and ready for development with AIT GUI.

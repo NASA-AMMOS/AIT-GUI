@@ -1,7 +1,7 @@
-BLISS GUI Installation
-======================
+AIT GUI Installation
+====================
 
-This guide will show you how to install BLISS GUI. It assumes that you have followed the `BLISS Core Installation and Configuration Guide <https://github.jpl.nasa.gov/pages/bliss/bliss-core/installation.html>`_ and ended up with a working BLISS Core install. You can install BLISS GUI from a checkout of the code or from the BLISS PyPi server. Having a checkout of the code can be handy if you want to view the source or make changes. Installing from PyPi keeps your system clutter free since you don't have a copy of the code base around. Either choice will work fine!
+This guide will show you how to install AIT GUI. It assumes that you have followed the `AIT Core Installation and Configuration Guide <https://github.jpl.nasa.gov/pages/bliss/bliss-core/installation.html>`_ and ended up with a working AIT Core install. You can install AIT GUI from a checkout of the code or from the BLISS PyPi server. Having a checkout of the code can be handy if you want to view the source or make changes. Installing from PyPi keeps your system clutter free since you don't have a copy of the code base around. Either choice will work fine!
 
 From Code Checkout
 ------------------
@@ -20,7 +20,7 @@ Find the latest tagged version of the code and check it out
    > git tag
    > git checkout <Most recent version number output by the previous command>
 
-Run the following to install BLISS GUI:
+Run the following to install AIT GUI:
 
 .. code-block:: bash
 
@@ -29,7 +29,7 @@ Run the following to install BLISS GUI:
 From BLISS PyPi
 ---------------
 
-If you have access to the JPL network you can install BLISS GUI directly from the BLISS PyPi server.
+If you have access to the JPL network you can install AIT GUI directly from the BLISS PyPi server.
 
 .. code-block:: bash
 
@@ -57,7 +57,7 @@ If the last command **doesn't** generate any errors your installation is all set
 Upgrading an Installation
 -------------------------
 
-When a new version of BLISS GUI is released you'll most likely want to upgrade your environment. You'll need to upgrade differently depending on how you installed the system.
+When a new version of AIT GUI is released you'll most likely want to upgrade your environment. You'll need to upgrade differently depending on how you installed the system.
 
 Installed from Code Checkout
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -75,7 +75,7 @@ Navigate back to the directory where you checked out the code and run the follow
 Installed from PyPi
 ^^^^^^^^^^^^^^^^^^^
 
-Run the following to upgrade to the latest BLISS GUI (and BLISS Core) versions.
+Run the following to upgrade to the latest AIT GUI (and AIT Core) versions.
 
 .. code-block:: bash
 

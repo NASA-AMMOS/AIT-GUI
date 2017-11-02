@@ -1,7 +1,7 @@
-BLISS GUI
-=========
+AIT GUI
+=======
 
-The BLISS GUI provides an easily customizable and extendible interface for monitoring and displaying telemetry data, controlling EGSE simulators, as well as commanding and sequencing controls. You can view the BLISS GUI by running the **bliss-gui** bin script and pointing your browser to **http://localhost:8080**.
+The AIT GUI provides an easily customizable and extendible interface for monitoring and displaying telemetry data, controlling EGSE simulators, as well as commanding and sequencing controls. You can view the AIT GUI by running the **bliss-gui** bin script and pointing your browser to **http://localhost:8080**.
 
 .. code-block:: bash
 
@@ -10,7 +10,7 @@ The BLISS GUI provides an easily customizable and extendible interface for monit
 GUI Customization
 -----------------
 
-BLISS makes monitoring telemetry values in the MOS UI easy to customize and extend. Linking your telemetry definitions to the UI requires only a small amount of HTML and no frontend/backend code changes.
+AIT makes monitoring telemetry values in the MOS UI easy to customize and extend. Linking your telemetry definitions to the UI requires only a small amount of HTML and no frontend/backend code changes.
 
 Consider the two following telemetry fields defined as being part of the **bliss_example_packet**.
 
