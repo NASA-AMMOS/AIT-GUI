@@ -239,9 +239,6 @@ const CommandSearch = {
                             {
                                 class: 'btn',
                                 role: 'button',
-                                'data-toggle': 'popover',
-                                'data-trigger': 'hover',
-                                'data-content': v.desc,
                                 onmousedown: () => {
                                     CommandSelectionData.activeCommand = v
                                 }
@@ -355,7 +352,7 @@ const CommandConfigure = {
                                      m('h3', CommandSelectionData.activeCommand.name))),
                                  m('div', {class: 'row'},
                                    m('div', {class: 'col-lg-10 col-lg-offset-1'},
-                                     m('div', CommandSelectionData.activeCommand.desc.replace(/(\r\n|\n|\r)/gm," ")))),
+                                     m('div', m.trust(CommandSelectionData.activeCommand.desc.replace(/(\r\n|\n|\r)/gm,"<br>"))))),
                                  m('div', {class: 'row'},
                                    m('div', {class: 'col-lg-10 col-lg-offset-1'},
                                      m('div', this.generateCommandArgumentsForm(CommandSelectionData.activeCommand)))),
