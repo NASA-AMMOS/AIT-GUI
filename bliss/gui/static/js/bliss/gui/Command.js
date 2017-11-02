@@ -216,7 +216,9 @@ const CommandSearch = {
                 displayCommands = filteredCommands
             }
 
-            cmdAccordions = flatMap(displayCommands, (v, k) => {
+            let sortedKeys = Object.keys(displayCommands).sort()
+            cmdAccordions = map(sortedKeys, (k) => {
+                let v = displayCommands[k]
 
                 // if there aren't any commands for this accordion, skip ...
                 if (v.length === 0) {return []}
