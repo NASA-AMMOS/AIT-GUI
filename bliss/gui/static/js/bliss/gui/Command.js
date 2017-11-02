@@ -223,6 +223,16 @@ const CommandSearch = {
                 // if there aren't any commands for this accordion, skip ...
                 if (v.length === 0) {return []}
 
+                v = v.sort((a, b) => {
+                    if (a.name < b.name) {
+                        return -1
+                    } else if (b.name < a.name) {
+                        return 1
+                    } else {
+                        return 0
+                    }
+                })
+
                 // Generate the accordion header for the current subsystem key
                 let header = m('a',
                                 {
