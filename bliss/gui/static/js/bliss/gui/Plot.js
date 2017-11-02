@@ -15,53 +15,149 @@
  */
 
 import m from 'mithril'
-import Highcharts from 'highcharts/highstock';
-require('highcharts/modules/boost')(Highcharts)
+import Dygraph from 'dygraphs';
 
-// See https://github.com/highcharts/highcharts/issues/4994
-window.Highcharts = Highcharts
+/*
+ * FIXME: The two Backend classes (Dygraphs and Highcharts) are not cleanly
+ * separated from the Plot class and need to be refactored.  There's far
+ * too much coupling.  This is because all functionality used to exist in
+ * Plot, but was *quickly* refactored to support multiple plot backends.
+ */
 
+class DygraphsBackend
+{
+    constructor (plot) {
+        this._plot = plot
+    }
 
-function createOptions (attrs) {
-    return {
-        credits: {
-            enabled: false
-        },
+    addSeries (id, attrs) {
+        this._plot._options.labels.push(attrs.caption || attrs.name)
+    }
 
-        legend: {
-            enabled: true
-        },
+    createChart (vnode, options) {
+        return new Dygraph(vnode.dom, [ [0, 0] ], options)
+    }
 
-        boost: {
-            seriesThreshold: 1,
-        },
-
-        rangeSelector: {
-            buttons: [
-                { count: 1 , text: '1m' , type: 'minute' },
-                { count: 10, text: '10m', type: 'minute' },
-                { count: 30, text: '30m', type: 'minute' },
-                { count:  1, text: '1h' , type: 'hour'   },
-                { count:  6, text: '6h' , type: 'hour'   },
-                { count: 12, text: '12h', type: 'hour'   },
-                { count:  1, text: '1d' , type: 'day'    },
-            ],
-            inputEnabled: false,
-        },
-
-        series: [ ],
-
-        title: {
-            text: attrs.title
-        },
-
-        xAxis: {
-            title: { text: 'Time (UTC)' }
-        },
-
-        yAxis: {
-            title: { text: attrs['y-title'] }
+    createOptions (attrs) {
+        return {
+            drawPoints: true,
+            title:      attrs.title,
+            xlabel:     'Time (UTC)',
+            ylabel:     attrs['y-title'],
+            labels:     ['Time']
         }
+    }
+
+    plot (packet) {
+        const pname = packet._defn.name
+        const names = this._plot._packets[pname]
+
+        if (!names) return
+
+        let row = [ this._plot._time.get(packet) ]
+
+        names.forEach( (name) => {
+            row.push( packet.__get__(name) )
+        })
+
+        this._plot._data.push(row)
+        this._plot._chart.updateOptions( { 'file': this._plot._data } )
+    }
+}
+
+
+class HighchartsBackend
+{
+    constructor (plot) {
+        this._plot = plot
+    }
+
+    addSeries (id, attrs) {
+        this._plot._options.series.push({
+            id:      id,
+            name:    attrs.caption || id,
+            color:   attrs.color,
+            data:    [ ],
+            tooltip: { valueDecimals: 2 },
+            type:    attrs.type,
+            showInNavigator: true
+        })
+
+    }
+
+    createChart (vnode, options) {
+        return new Highcharts.StockChart(vnode.dom, options)
+    }
+
+    createOptions (attrs) {
+        return {
+            credits: {
+                enabled: false
+            },
+
+            legend: {
+                enabled: true
+            },
+
+            boost: {
+                seriesThreshold: 1,
+            },
+
+            rangeSelector: {
+                buttons: [
+                    { count: 1 , text: '1m' , type: 'minute' },
+                    { count: 10, text: '10m', type: 'minute' },
+                    { count: 30, text: '30m', type: 'minute' },
+                    { count:  1, text: '1h' , type: 'hour'   },
+                    { count:  6, text: '6h' , type: 'hour'   },
+                    { count: 12, text: '12h', type: 'hour'   },
+                    { count:  1, text: '1d' , type: 'day'    },
+                ],
+                inputEnabled: false,
+            },
+
+            series: [ ],
+
+            title: {
+                text: attrs.title
+            },
+
+            xAxis: {
+                title: { text: 'Time (UTC)' }
+            },
+
+            yAxis: {
+                title: { text: attrs['y-title'] }
+            }
+        }
+    }
+
+    plot(packet) {
+        const pname = packet._defn.name
+        const names = this._plot._packets[pname]
+        if (!names) return
+
+        names.forEach( (name) => {
+            const series = this._plot._chart.get(pname + '.' + name)
+
+            if (series) {
+                const x = this._plot._time.get(packet).getTime()
+                console.log(x)
+                const y = packet.__get__(name)
+                series.addPoint([x, y])
+
+                // Zoom axis once after data spans 60 seconds
+                if (this._plot._initZoom === false) {
+                    const extremes = this._plot._chart.axes[0].getExtremes()
+                    const duration = (extremes.max - extremes.min) / 1e3
+
+                    if (duration >= 60) {
+                        this._plot._chart.rangeSelector.clickButton(0, true)
+                        this._plot._initZoom = true
+                    }
+                }
+            }
+        })
     }
 }
 
@@ -72,30 +168,7 @@ const Plot =
      * Plots data from the given packet.
      */
     plot (packet) {
-        const pname = packet._defn.name
-        const names = this._packets[pname]
-        if (!names) return
-
-        names.forEach( (name) => {
-            const series = this._chart.get(pname + '.' + name)
-
-            if (series) {
-                const x = this._time.get(packet)
-                const y = packet.__get__(name)
-                series.addPoint([x, y])
-
-                // Zoom axis once after data spans 60 seconds
-                if (this._initZoom === false) {
-                    const extremes = this._chart.axes[0].getExtremes()
-                    const duration = (extremes.max - extremes.min) / 1e3
-
-                    if (duration >= 60) {
-                        this._chart.rangeSelector.clickButton(0, true)
-                        this._initZoom = true
-                    }
-                }
-            }
-        })
+        this._backend.plot(packet)
     },
 
 
@@ -104,13 +177,13 @@ const Plot =
      * appropriate `processTagXXX()` method.
      */
     processTag (vnode) {
-        if (vnode.tag === 'bliss-plot-config') {
+        if (vnode.tag === 'bliss-plotconfig') {
             Object.assign(this._options, JSON.parse(vnode.text))
         }
-        else if (vnode.tag === 'bliss-plot-series') {
+        else if (vnode.tag === 'bliss-plotseries') {
             this.processTagSeries(vnode)
         }
-        else if (vnode.tag === 'bliss-plot-time') {
+        else if (vnode.tag === 'bliss-plottime') {
             this.processTagTime(vnode)
         }
     },
@@ -125,15 +198,7 @@ const Plot =
         const type   = vnode.attrs.type
         const id     = packet + '.' + name
 
-        this._options.series.push({
-            id:      id,
-            name:    vnode.attrs.caption || name,
-            color:   vnode.attrs.color,
-            data:    [ ],
-            tooltip: { valueDecimals: 2 },
-            type:    type,
-            showInNavigator: true
-        })
+        this._backend.addSeries(id, vnode.attrs)
 
         // For each packet, maintain a list of fields to plot
         this._packets[packet] = this._packets[packet] || [ ]
@@ -151,7 +216,11 @@ const Plot =
 
     // Mithril lifecycle method
     oninit (vnode) {
-        this._options  = createOptions(vnode.attrs)
+        this._backend = (window.Highcharts) ?
+            new HighchartsBackend(this) : new DygraphsBackend(this)
+
+        this._data     = [ ]
+        this._options  = this._backend.createOptions(vnode.attrs)
         this._packets  = { }
         this._time     = null
         this._initZoom = false
@@ -168,7 +237,7 @@ const Plot =
 
     // Mithril lifecycle method
     oncreate (vnode) {
-        this._chart = new Highcharts.StockChart(vnode.dom, this._options)
+        this._chart = this._backend.createChart(vnode, this._options)
     },
 
 
@@ -188,11 +257,11 @@ const Plot =
  * (e.g. not a number or Javascript :class:`Date`), the current time
  * will be used.
  *
- * An empty :class:`PlotTimeField` will always return `Date.now()`, i.e.:
+ * An empty :class:`PlotTimeField` will always return `Date()`, i.e.:
  *
  * .. code-block:: javascript
  *
- *     new PlotTimeField().get(packet) === Date.now()
+ *     new PlotTimeField().get(packet) === new Date()
  */
 class PlotTimeField
 {
@@ -206,16 +275,18 @@ class PlotTimeField
     }
 
     /**
-     * @returns the plot time for the current BLISS packet or Date.now().
+     * @returns the plot time for the current BLISS packet or new Date().
      */
     get (packet) {
         let time = this.hasTime(packet) ? packet.__get__(this._fname) : null
 
-        if (time instanceof Date) {
-            time = time.getTime()
-        }
-        else if (typeof time !== 'number') {
-            time = Date.now()
+        if ( !(time instanceof Date) ) {
+            if (typeof time !== 'number') {
+                time = new Date()
+            }
+            else {
+                time = new Date(time)
+            }
         }
 
         return time
