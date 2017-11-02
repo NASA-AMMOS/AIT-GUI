@@ -335,7 +335,7 @@ class TelemetryStream
 
         clearInterval(this._interval)
         this._stale    = 0
-        this._interval = setInterval(this.onStale.bind(this), 1500)
+        this._interval = setInterval(this.onStale.bind(this), 5000)
 
         bliss.packets.insert(defn.name, packet)
         this._emit('packet', packet)
@@ -343,7 +343,7 @@ class TelemetryStream
 
 
     onOpen (event) {
-        this._interval = setInterval(this.onStale.bind(this), 1500)
+        this._interval = setInterval(this.onStale.bind(this), 5000)
         this._stale    = 0
 
         //bliss.packets.create(this._defn.name)
