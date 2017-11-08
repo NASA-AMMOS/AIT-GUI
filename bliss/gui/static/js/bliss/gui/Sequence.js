@@ -43,7 +43,7 @@ const Sequence = {
         let data = new FormData()
         data.append('seqfile', event.currentTarget.querySelector('select').value)
 
-        if (data['seqfile'] === undefined) {
+        if (data.get('seqfile') === '') {
             return false
         }
 
@@ -147,6 +147,7 @@ const Sequence = {
                      class: 'form-horizontal',
                      role: 'form',
                      method: 'POST',
+                     onkeypress: (e) => {return e.keyCode !== 13},
                      onsubmit: (e) => {this.handleFormSubmit(e)}
                  }, [
                      filterInputGroup,
