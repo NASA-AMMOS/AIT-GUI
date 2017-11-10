@@ -14,37 +14,28 @@
  * information to foreign countries or providing access to foreign persons.
  */
 
-bliss-script .pause {color: red}
-bliss-script .paused {color: red}
-bliss-script .play {color: green}
-bliss-script .stopped {color: black}
-bliss-script .running {color: green}
-bliss-script .error {color: red}
+.bliss-led-on {color: green}
+.bliss-led-start {color: green}
+.bliss-led-pending {color: yellow}
+.bliss-led-error {color: red}
+.bliss-led-off {color: red}
+.bliss-led-stop {color: red}
 
-bliss-script .load_dialog--hidden {
-    display: none;
+.glyphicon.glyphicon-dot:before {
+    margin: 0px;
+    padding: 0px;
+    content: "\25cf";
+    font-size: 1.5em;
 }
 
-bliss-scriptnotification {
-    margin: 20px 0 20px 0;
-    display: inline-block;
+p.navbar-text.bliss-status-indicators {
+    margin-top: 10px;
 }
 
-codeMirrorExecGutter {
-    width: 20px;
+span.sim-monitor.glyphicon-play {
+    margin-top: 7px;
 }
 
-@media (min-width: 1945px) {
-    .CodeMirror {
-        /* Use this with the fixed footer */
-        height: calc(100vh - 525px);
-        /* Use this with no fixed footer */
-        /*height: calc(100vh - 320px);*/
-    }
-}
-
-@media (max-width: 1944px) {
-    .CodeMirror {
-        height: 500px;
-    }
+span.sim-monitor.glyphicon-stop {
+    margin-top: 7px;
 }

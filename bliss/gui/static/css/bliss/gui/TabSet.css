@@ -21,3 +21,37 @@
 #bliss-gui bliss-tabset .tab_title--out-of-limit--error {
     background-color: #f2dede;
 }
+
+/* Animate bliss-tab moves */
+bliss-tabset li {
+    transition: .15s ease-in-out;
+}
+
+bliss-tabset .tab-content {
+    padding-top: 15px;
+}
+
+/**
+ * Make room to indicate where a tab would be positioned when dropped.
+ * Note this changes (left/top or right/bottom) depending upon whether
+ * the tab being dragged comes `before` or `after` the tab that its
+ * currently being dragged over.
+ */
+bliss-tabset li.drag-over-before {
+    padding-left: 4em;
+}
+
+bliss-tabset li.drag-over-after {
+    padding-right: 4em;
+}
+
+bliss-tabset ul.nav-stacked li.drag-over-before {
+    padding-left: 0;
+    padding-top:  4em;
+}
+
+bliss-tabset ul.nav-stacked li.drag-over-after {
+    padding-right:  0;
+    padding-bottom: 4em;
+}
+

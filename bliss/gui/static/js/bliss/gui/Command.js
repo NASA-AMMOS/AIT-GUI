@@ -43,7 +43,8 @@ const CommandHistory = {
     },
 
     view(vnode) {
-        return m('table', {class: 'table table-striped'}, [
+        return m('bliss-commandhistory',
+          m('table', {class: 'table table-striped'}, [
             m('thead',
                 m('tr', [
                     m('th', 'Timestamp'),
@@ -58,7 +59,7 @@ const CommandHistory = {
                     ])
                 })
             )
-        ])
+        ]))
     }
 }
 
