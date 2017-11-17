@@ -147,5 +147,99 @@ const SimStatus = Object.assign(Object.create(LED), {
 })
 
 
-export default {LED, SimStatus}
-export {LED, SimStatus}
+const Prompt = {
+    _display_prompt: false,
+    _type: null,
+    _options: null,
+
+    oncreate(vnode) {
+        bliss.events.on('prompt:init', (data) => {
+            this._display_prompt = true
+            this._type = data['type']
+            this._options = data['options']
+            m.redraw()
+        })
+
+        bliss.events.on('prompt:timeout', () => {
+            this._reset_prompt()
+            m.redraw()
+        })
+
+        bliss.events.on('prompt:done', () => {
+            this._reset_prompt()
+            m.redraw()
+        })
+    },
+
+    _reset_prompt() {
+        this._display_prompt = false
+        this._type = null
+        this._options = null
+    },
+
+    view(vnode) {
+        let title = m('h4', {class: 'modal-title'}, 'Title')
+        let body = m('div', 'Prompt')
+        let footer = m('div', 'Footer')
+
+        if (this._type === 'confirm') {
+            title = m('h4', {class: 'modal-title'}, 'Please Confirm')
+            body = m('div', this._options['msg'])
+            footer = m('div', [
+                m('div', {
+                    type: 'button',
+                    class: 'btn btn-success',
+                    'data-dismiss': 'modal',
+                    onclick: () => {
+                        m.request({
+                            'method': 'POST',
+                            'url': '/prompt/response',
+                            'data': {response: 'confirm'}
+                        }).then(() => {
+                            this._reset_prompt()
+                        })
+                    }
+                }, 'Confirm'),
+                m('div', {
+                    type: 'button',
+                    class: 'btn btn-danger',
+                    'data-dismiss': 'modal',
+                    onclick: () => {
+                        m.request({
+                            'method': 'POST',
+                            'url': '/prompt/response',
+                            'data': {response: 'deny'}
+                        }).then(() => {
+                            this._reset_prompt()
+                        })
+                    }
+                }, 'Deny')
+            ])
+        }
+
+        let modal = m('div', {class: 'modal show', tabindex: '-1', role: 'dialog'},
+            m('div', {class: 'modal-dialog', 'role': 'document'},
+                m('div', {class: 'modal-content'}, [
+                    m('div', {class: 'modal-header'}, [
+                        title
+                    ]),
+                    m('div', {class: 'modal-body'}, [
+                        body
+                    ]),
+                    m('div', {class: 'modal-footer'}, [
+                        footer
+                    ])
+                ])
+            )
+        )
+
+        if (this._display_prompt) {
+            return m('bliss-prompt', modal)
+        } else {
+            return m('bliss-prompt')
+        }
+    }
+}
+
+export default {LED, SimStatus, Prompt}
+export {LED, SimStatus, Prompt}

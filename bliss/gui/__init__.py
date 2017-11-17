@@ -869,3 +869,48 @@ class BlissDB(bdb.Bdb):
 @App.route('/limits/dict')
 def handle():
     return json.dumps(limits.getDefaultDict().toJSON())
+
+
+PromptResponse = None
+
+@App.route('/prompt', method='POST')
+def handle():
+    global PromptResponse
+
+    prompt_type = bottle.request.json.get('type')
+    options = bottle.request.json.get('options')
+    timeout = int(bottle.request.json.get('timeout'))
+
+    delay = 0.25
+    elapsed = 0
+    status = None
+
+    prompt_data = {
+        'type': prompt_type,
+        'options': options,
+    }
+
+    Sessions.addEvent('prompt:init', prompt_data)
+    while True:
+        if PromptResponse:
+            status = PromptResponse
+            break
+
+        if elapsed >= timeout:
+            status = {u'response': u'timeout'}
+            Sessions.addEvent('prompt:timeout', None)
+            break
+        else:
+            time.sleep(delay)
+            elapsed += delay
+
+    PromptResponse = None
+    return json.dumps(status)
+
+
+@App.route('/prompt/response', method='POST')
+def handle():
+    global PromptResponse
+    with Sessions.current() as session:
+        Sessions.addEvent('prompt:done', None)
+        PromptResponse = json.loads(bottle.request.body.read())
