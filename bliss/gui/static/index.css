@@ -72,11 +72,9 @@ body {
  * Use the following settings if you do not want a fixed footer on the page.
  *
  */
-/*
 body {
     margin-bottom: 0;
 }
-*/
 /* End No Footer Section */
 
 .popover {
@@ -111,10 +109,12 @@ body {
     .site-container {
         display: grid;
         grid-template-columns: auto auto;
-         /*Use this when we have a fixed footer */
-        grid-template-rows: minmax(calc(100vh - 370px), auto) 20px auto 10px;
+
+        /* Use this when we have a fixed footer */
+        /* grid-template-rows: minmax(calc(100vh - 370px), auto) 20px auto 10px; */
         /* Use this when we don't have a fixed footer */
-        /*grid-template-rows: minmax(calc(100vh - 140px), auto) 20px auto 10px;*/
+        grid-template-rows: minmax(calc(100vh - 140px), auto) 20px auto 10px;
+
         grid-template-areas:
             "telem    telem"
             "space    space"

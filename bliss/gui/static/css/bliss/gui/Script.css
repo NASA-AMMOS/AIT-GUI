@@ -37,9 +37,9 @@ codeMirrorExecGutter {
 @media (min-width: 1945px) {
     .CodeMirror {
         /* Use this with the fixed footer */
-        height: calc(100vh - 525px);
+        /* height: calc(100vh - 525px); */
         /* Use this with no fixed footer */
-        /*height: calc(100vh - 320px);*/
+        height: calc(100vh - 320px);
     }
 }
 

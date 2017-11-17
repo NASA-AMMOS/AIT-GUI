@@ -21,26 +21,26 @@
 
     bliss-commandconfigure > div {
         /* Use this with the fixed footer */
-        height: calc(100vh - 510px);
+        /* height: calc(100vh - 510px); */
         /* Use this without the fixed footer */
-        /*height: calc(100vh - 290px);*/
+        height: calc(100vh - 290px);
         overflow: auto;
     }
 
     bliss-commandsearch .command_accordions_list {
         /* Use this with the fixed footer*/
-        height: calc(100vh - 570px);
+        /* height: calc(100vh - 570px); */
         /* Use this without the fixed footer */
-        /*height: calc(100vh - 350px);*/
+        height: calc(100vh - 350px);
         overflow: auto;
     }
 
     bliss-commandhistory {
         display: block;
         /* Use this with the fixed footer */
-        height: calc(100vh - 380px);
+        /* height: calc(100vh - 380px); */
         /* Use this without the fixed footer */
-        /*height: calc(100vh - 150px);*/
+        height: calc(100vh - 150px);
         overflow: auto;
     }
 }
