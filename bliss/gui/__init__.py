@@ -896,7 +896,7 @@ def handle():
             status = PromptResponse
             break
 
-        if elapsed >= timeout:
+        if timeout > 0 and elapsed >= timeout:
             status = {u'response': u'timeout'}
             Sessions.addEvent('prompt:timeout', None)
             break
