@@ -102,7 +102,6 @@ body {
             "leftnote    rightnote";
         padding: 5px;
     }
-
 }
 
 @media (max-width: 1944px) {
@@ -126,7 +125,6 @@ body {
 
 .telemcontainer {
     grid-area: telem;
-    overflow-y: auto;
     padding: 0 20px 0 20px;
 }
 
