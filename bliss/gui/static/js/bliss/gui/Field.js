@@ -200,15 +200,6 @@ const Field =
                     html: true,
                     placement: 'auto right',
                     container: 'body'
-                }).tooltip({
-                    placement : 'auto right',
-                    title : this._field_defn.desc,
-                    container: 'body'
-                }).on('show.bs.popover', () => {
-                    $(vnode.dom).tooltip('hide')
-                }).on('mouseout', () => {
-                    $(vnode.dom).tooltip('hide')
-                    $(vnode.dom).popover('hide')
                 })
             }
         })
