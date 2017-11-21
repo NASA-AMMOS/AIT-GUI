@@ -844,7 +844,7 @@ def bgExecScript(script_path):
         debugger.run(script)
         Sessions.addEvent('script:done', None)
     except Exception as e:
-        bliss.core.log.error('Script execution error: {} - {}'.format(
+        bliss.core.log.error('Script execution error: {}: {}'.format(
             sys.exc_info()[0].__name__,
             e
         ))
