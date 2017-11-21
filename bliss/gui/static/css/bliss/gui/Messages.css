@@ -54,12 +54,16 @@ bliss-messages .timestamp {
     order: 1;
     min-width: 166px;
     margin-right: 7px;
+    text-align: center;
 }
 
 bliss-messages .severity {
     order: 2;
-    min-width: 73px;
+    min-width: 95px;
     margin-right: 5px;
+    text-align: center;
+    border-left: 1px solid black;
+    border-right: 1px solid black;
 }
 
 bliss-messages .message {
