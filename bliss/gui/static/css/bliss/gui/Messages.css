@@ -14,12 +14,24 @@
  * information to foreign countries or providing access to foreign persons.
  */
 
-bliss-messages {
-    display: block;
-    overflow-y: auto;
-    height: 200px;
-    width: 100%;
-    word-break: break-word;
+@media (min-width: 1945px) {
+    bliss-messages {
+        display: block;
+        overflow-y: auto;
+        height: calc(100vh - 150px);
+        width: 100%;
+        word-break: break-word;
+    }
+}
+
+@media (max-width: 1944px) {
+    bliss-messages {
+        display: block;
+        overflow-y: auto;
+        height: 500px;
+        width: 100%;
+        word-break: break-word;
+    }
 }
 
 bliss-messages .entry {

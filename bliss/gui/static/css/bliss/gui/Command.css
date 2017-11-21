@@ -20,12 +20,27 @@
     }
 
     bliss-commandconfigure > div {
-        height: 75vh;
+        /* Use this with the fixed footer */
+        /* height: calc(100vh - 510px); */
+        /* Use this without the fixed footer */
+        height: calc(100vh - 290px);
         overflow: auto;
     }
 
     bliss-commandsearch .command_accordions_list {
-        height: 75vh;
+        /* Use this with the fixed footer*/
+        /* height: calc(100vh - 570px); */
+        /* Use this without the fixed footer */
+        height: calc(100vh - 350px);
+        overflow: auto;
+    }
+
+    bliss-commandhistory {
+        display: block;
+        /* Use this with the fixed footer */
+        /* height: calc(100vh - 380px); */
+        /* Use this without the fixed footer */
+        height: calc(100vh - 150px);
         overflow: auto;
     }
 }
@@ -42,6 +57,12 @@
 
     bliss-commandsearch .command_accordions_list {
         height: 430px;
+        overflow: auto;
+    }
+
+    bliss-commandhistory {
+        display: block;
+        height: 500px;
         overflow: auto;
     }
 }

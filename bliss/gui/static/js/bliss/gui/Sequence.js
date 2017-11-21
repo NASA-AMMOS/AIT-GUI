@@ -108,6 +108,7 @@ const Sequence = {
                 m('select', {
                    class: 'form-control',
                    multiple: 'true',
+                   size: 10,
                 }, seqDisplayList)
             ])
 

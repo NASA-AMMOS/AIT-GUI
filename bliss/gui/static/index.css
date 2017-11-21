@@ -25,79 +25,57 @@
 /**
  * BLISS GUI Component CSS
  */
+@import "./css/bliss/gui/Clock.css";
 @import "./css/bliss/gui/Command.css";
+@import "./css/bliss/gui/Field.css";
 @import "./css/bliss/gui/Messages.css";
+@import "./css/bliss/gui/Plot.css";
 @import "./css/bliss/gui/Script.css";
 @import "./css/bliss/gui/Sequence.css";
+@import "./css/bliss/gui/Status.css";
 @import "./css/bliss/gui/TabSet.css";
 
+/**
+ *
+ * Fixed Footer
+ *
+ * Use the following settings if you want to have a footer fixed to the
+ * bottom of the viewport. This is useful when you want a piece of content
+ * to be visible on the page at all times (E.g., logs via bliss-messages)
+ *
+ * If you don't want a fixed footer you should comment out these settings
+ * and use the settings described in the "No Footer" section below.
+ */
 body {
     padding-top: 70px;
     margin-bottom: 230px
 }
 
-bliss-clock {
-    cursor: pointer;
-    display: block;
+.fixed-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 220px;
+    z-index: 999;
+    padding: 10px;
+    border-top: 2px solid black;
+    border-radius: 10px;
+    background-color: white;
 }
-
-bliss-field {
-    font-weight: normal;
-    text-align:  left;
-    cursor: pointer;
-}
-
-bliss-plot {
-    display: block;
-}
-
-/* Animate bliss-tab moves */
-bliss-tabset li {
-    transition: .15s ease-in-out;
-}
-
-bliss-tabset .tab-content {
-    padding-top: 15px;
-}
+/* End Fixed Footer Section */
 
 /**
- * Make room to indicate where a tab would be positioned when dropped.
- * Note this changes (left/top or right/bottom) depending upon whether
- * the tab being dragged comes `before` or `after` the tab that its
- * currently being dragged over.
+ *
+ * No Footer
+ *
+ * Use the following settings if you do not want a fixed footer on the page.
+ *
  */
-bliss-tabset li.drag-over-before {
-    padding-left: 4em;
+body {
+    margin-bottom: 0;
 }
-
-bliss-tabset li.drag-over-after {
-    padding-right: 4em;
-}
-
-bliss-tabset ul.nav-stacked li.drag-over-before {
-    padding-left: 0;
-    padding-top:  4em;
-}
-
-bliss-tabset ul.nav-stacked li.drag-over-after {
-    padding-right:  0;
-    padding-bottom: 4em;
-}
-
-
-.bliss-led-on {color: green}
-.bliss-led-start {color: green}
-.bliss-led-pending {color: yellow}
-.bliss-led-error {color: red}
-.bliss-led-off {color: red}
-.bliss-led-stop {color: red}
-
-.glyphicon.glyphicon-dot:before {
-    margin: 0px;
-    padding: 0px;
-    content: "\25cf";
-    font-size: 1.5em;
-}
+/* End No Footer Section */
 
 .popover {
     width: 400px;
@@ -111,22 +89,6 @@ bliss-tabset ul.nav-stacked li.drag-over-after {
     max-width: 400px;
 }
 
-p.navbar-text.bliss-status-indicators {
-    margin-top: 10px;
-}
-
-span.sim-monitor.glyphicon-play {
-    margin-top: 7px;
-}
-
-span.sim-monitor.glyphicon-stop {
-    margin-top: 7px;
-}
-
-codeMirrorExecGutter {
-    width: 20px;
-}
-
 /**
  * Main Site Layout
  */
@@ -134,11 +96,11 @@ codeMirrorExecGutter {
     .site-container {
         display: grid;
         grid-template-columns: 2fr 4fr;
-        grid-template-rows: auto 1fr 10px;
+        grid-template-rows: minmax(calc(100vh - 750px), auto) 10px;
         grid-template-areas:
             "ctrl        telem"
-            "footer      footer"
             "leftnote    rightnote";
+        padding: 5px;
     }
 }
 
@@ -146,18 +108,23 @@ codeMirrorExecGutter {
     .site-container {
         display: grid;
         grid-template-columns: auto auto;
-        grid-template-rows: 80vh 20px auto 10px;
+
+        /* Use this when we have a fixed footer */
+        /* grid-template-rows: minmax(calc(100vh - 370px), auto) 20px auto 10px; */
+        /* Use this when we don't have a fixed footer */
+        grid-template-rows: minmax(calc(100vh - 140px), auto) 20px auto 10px;
+
         grid-template-areas:
             "telem    telem"
             "space    space"
             "ctrl     ctrl"
             "leftnote rightnote";
+        padding: 5px;
     }
 }
 
 .telemcontainer {
     grid-area: telem;
-    overflow-y: auto;
     padding: 0 20px 0 20px;
 }
 
@@ -198,17 +165,4 @@ codeMirrorExecGutter {
 
 .cmd-config-container div.row {
     margin: 0;
-}
-
-.fixed-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 220px;
-    z-index: 999;
-    padding: 10px;
-    border-top: 2px solid black;
-    border-radius: 10px;
-    background-color: white;
 }
