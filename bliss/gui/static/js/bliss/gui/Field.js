@@ -194,12 +194,24 @@ const Field =
                     popover_content += aliases
                 }
 
+                let title = '<div>' + this._field_defn.name +
+                            '<span class="pull-right" style="cursor:pointer">' +
+                              '\u00D7' +
+                            '</span></div>'
+
                 $(vnode.dom).popover({
                     content : popover_content,
-                    title : this._field_defn.name,
+                    title: title,
                     html: true,
                     placement: 'auto right',
                     container: 'body'
+                }).on('shown.bs.popover', (e) => {
+                    let popover_id = e.currentTarget.attributes['aria-describedby'].value
+                    let popover_title = document.getElementById(popover_id).getElementsByClassName('popover-title')[0]
+                    let span = popover_title.getElementsByTagName('span')[0]
+                    span.addEventListener('click', () => {
+                        $(vnode.dom).popover('hide')
+                    })
                 })
             }
         })
