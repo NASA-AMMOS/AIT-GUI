@@ -47,11 +47,12 @@ const Messages =
     },
 
     onupdate(vnode) {
+        let msgs = vnode.dom.getElementsByClassName('entry_container')[0]
         if (this._updateScroll) {
-            this._scrollTop = vnode.dom.scrollHeight
+            this._scrollTop = msgs.scrollHeight
         }
 
-        vnode.dom.scrollTop = this._scrollTop
+        msgs.scrollTop = this._scrollTop
     },
 
     view(vnode) {
@@ -63,15 +64,27 @@ const Messages =
             ])
         )
 
-        return m('bliss-messages', Object.assign(vnode.attrs, {
-                    onscroll: (e) => {
-                        if (vnode.dom.scrollTop == vnode.dom.scrollHeight - vnode.dom.clientHeight) {
-                            this._updateScroll = true;
-                        } else {
-                            this._updateScroll = false;
-                            this._scrollTop = vnode.dom.scrollTop
-                        }
-                    }}) , rows)
+        let header = m('div', {class: 'entry entry--header'}, [
+                m('div', {class: 'timestamp'}, 'Timestamp'),
+                m('div', {class: 'severity'}, 'Severity'),
+                m('div', {class: 'message'}, 'Message')
+            ])
+
+        return m('bliss-messages', [
+                 header,
+                 m('div', {
+                   class: 'entry_container',
+                   onscroll: (e) => {
+                       let msgs = vnode.dom.getElementsByClassName('entry_container')[0]
+                       if (msgs.scrollTop == msgs.scrollHeight - msgs.clientHeight) {
+                           this._updateScroll = true;
+                       } else {
+                           this._updateScroll = false;
+                           this._scrollTop = msgs.scrollTop
+                       }
+                   }
+                 }, rows)
+               ])
     }
 }
 

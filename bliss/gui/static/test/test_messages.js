@@ -77,7 +77,7 @@ describe('Messages component', () => {
         msgsOutput.should.have('bliss-messages')
         // We should have a single Warning message in our container
         msgsOutput.should.have(
-            'bliss-messages > div.entry.entry--warning'
+            'bliss-messages > div.entry_container > div.entry.entry--warning'
         )
         // Our warning message should contain the relevant log info
         msgsOutput.should.have(

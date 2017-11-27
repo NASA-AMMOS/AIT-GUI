@@ -17,7 +17,6 @@
 @media (min-width: 1945px) {
     bliss-messages {
         display: block;
-        overflow-y: auto;
         height: calc(100vh - 150px);
         width: 100%;
         word-break: break-word;
@@ -27,11 +26,15 @@
 @media (max-width: 1944px) {
     bliss-messages {
         display: block;
-        overflow-y: auto;
         height: 500px;
         width: 100%;
         word-break: break-word;
     }
+}
+
+bliss-messages .entry_container {
+    overflow-y: auto;
+    max-height: 95%;
 }
 
 bliss-messages .entry {
@@ -46,6 +49,12 @@ bliss-messages .entry--command  { background-color: #d9edf7; }
 bliss-messages .entry--critical { background-color: #f2dede; }
 bliss-messages .entry--error    { background-color: #f2dede; }
 bliss-messages .entry--info     { background-color: #ffffff; }
+bliss-messages .entry--header   {
+    background-color: #ffffff;
+    border-bottom: 1px solid black;
+    font-weight: bold;
+    text-align: center;
+}
 bliss-messages .entry--notice   { background-color: #d9edf7; }
 bliss-messages .entry--program  { background-color: #d9edf7; }
 bliss-messages .entry--warning  { background-color: #fcf8e3; }
@@ -68,4 +77,5 @@ bliss-messages .severity {
 
 bliss-messages .message {
     order: 3;
+    width: 100%
 }
