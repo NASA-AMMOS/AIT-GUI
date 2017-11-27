@@ -905,7 +905,7 @@ def handle():
             elapsed += delay
 
     PromptResponse = None
-    return json.dumps(status)
+    return bottle.HTTPResponse(status=200, body=json.dumps(status))
 
 
 @App.route('/prompt/response', method='POST')
