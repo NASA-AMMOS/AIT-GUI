@@ -42,9 +42,9 @@ import cloneDeep from 'lodash/cloneDeep'
 describe('Messages component', () => {
     let msgs = bliss.gui.Messages
     let msg = {
-        'asctime': '2017-09-06T15:29:45.915448Z',
-        'levelname': 'WARNING',
-        'message': 'This is a test msg'
+        'timestamp': '2017-09-06T15:29:45.915448Z',
+        'msgid': 'WARNING',
+        'msg': 'This is a test msg'
     }
 
     beforeEach(() => {
@@ -58,9 +58,9 @@ describe('Messages component', () => {
         assert.property(retMsg, 'severity')
         assert.property(retMsg, 'message')
 
-        retMsg.timestamp.should.equal(Date.parse(msg.asctime))
-        retMsg.severity.should.equal(msg.levelname)
-        retMsg.message.should.equal(msg.message)
+        retMsg.timestamp.should.equal(Date.parse(msg.timestamp))
+        retMsg.severity.should.equal(msg.msgid)
+        retMsg.message.should.equal(msg.msg)
     })
 
     it('should display messages with proper formatting', ()=> {
