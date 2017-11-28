@@ -212,7 +212,6 @@ class SessionStore (dict):
 class UdpSysLogServer (gevent.server.DatagramServer):
     def __init__ (self, *args, **kwargs):
         gevent.server.DatagramServer.__init__(self, *args, **kwargs)
-        self._parser = log.SysLogParser()
 
     def start (self):
         values = self.server_host, self.server_port
@@ -220,7 +219,7 @@ class UdpSysLogServer (gevent.server.DatagramServer):
         super(UdpSysLogServer, self).start()
 
     def handle (self, data, address):
-        msg = self._parser.parse(data)
+        msg = log.parseSyslog(data)
         Sessions.addMessage(msg)
 
 

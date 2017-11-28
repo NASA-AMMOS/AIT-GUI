@@ -33,9 +33,9 @@ const Messages =
 
     normalizeMessage(msg) {
         return {
-            timestamp: Date.parse(msg.asctime),
-            severity : msg.levelname,
-            message  : msg.message
+            timestamp: Date.parse(msg.timestamp),
+            severity : msg.msgid,
+            message  : msg.msg
         }
     },
 
