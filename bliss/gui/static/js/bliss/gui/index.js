@@ -119,6 +119,7 @@ function createMithrilNodes (elems) {
 function init () {
     ready(() => {
         const root   = document.body
+        root.appendChild(document.createElement('bliss-prompt'))
         const cloned = root.cloneNode(true)
         const elems  = map(cloned.childNodes, c => c)
 
