@@ -76,6 +76,7 @@ describe('CommandInput object', function () {
     })
 
     it('should require ctrl+enter to submit commands', function() {
+        ci._cmd_valid = true
         ci._cntrl_toggled.should.equal(false)
         ciOut.keydown('input[name="command"]', 17)
         ci._cntrl_toggled.should.equal(true)

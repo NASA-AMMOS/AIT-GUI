@@ -586,46 +586,85 @@ def handle():
     """
     with Sessions.current() as session:
         command = bottle.request.forms.get('command').strip()
+        cmd_valid, cmdobj = _create_and_verify_command(command)
 
-        if len(command) > 0:
-            cmddict = cmd.getDefaultCmdDict()
+        if cmd_valid and cmdobj:
+            verbose = False
             host = '127.0.0.1'
             port = 3075
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            verbose = False
+            encoded = cmdobj.encode()
 
-            if cmddict is not None:
-                args = command.split()
-                name = args[0]
-                args = [util.toNumber(t, t) for t in args[1:]]
-                cmdobj = cmddict.create(name, *args)
-                messages = []
+            if verbose:
+                size = len(cmdobj.name)
+                pad = (size - len(cmdobj.name) + 1) * ' '
+                gds.hexdump(encoded, preamble=cmdobj.name + ':' + pad)
 
-            if cmdobj is None:
-                log.error('unrecognized command: %s' % name)
-            elif not cmdobj.validate(messages):
+            try:
+                log.info('Sending to %s:%d: %s', host, port, cmdobj.name)
+                sock.sendto(encoded, (host, port))
+
+                with pcap.open(CmdHistFile, 'a') as output:
+                    output.write(command)
+
+                Sessions.addEvent('cmd:hist', command)
+                bottle.response.status = 200
+            except socket.error, err:
+                log.error(str(err))
+                bottle.response.status = 400
+            except IOError, err:
+                log.error(str(err))
+                bottle.response.status = 400
+        else:
+            bottle.response.status = 400
+
+
+@App.route('/cmd/verify', method='POST')
+def handle():
+    ''''''
+    command = bottle.request.forms.get('command').strip()
+
+    cmd_valid, cmd = _create_and_verify_command(command)
+    if cmd_valid:
+        bottle.response.status = 200
+        validation_status = '{} Passed Ground Verification'.format(command)
+        log.info(validation_status)
+    else:
+        bottle.response.status = 400
+        validation_status = '{} Command Failed Ground Verification'.format(command)
+        log.error(validation_status)
+
+    return validation_status
+
+
+def _create_and_verify_command(command):
+    valid = False
+    cmdobj = None
+
+    if len(command) > 0:
+        cmddict = cmd.getDefaultCmdDict()
+
+        if cmddict:
+            args = command.split()
+            name = args[0].upper()
+            args = [util.toNumber(t, t) for t in args[1:]]
+        
+        try:
+            print name, args
+            cmdobj = cmddict.create(name, *args)
+            print cmdobj
+        except TypeError:
+            log.error('Unrecognized command: %s' % name)
+        else:
+            messages = []
+            if not cmdobj.validate(messages):
                 for msg in messages:
                     log.error(msg)
             else:
-                encoded = cmdobj.encode()
+                valid = True
 
-                if verbose:
-                    size = len(cmdobj.name)
-                    pad = (size - len(cmdobj.name) + 1) * ' '
-                    gds.hexdump(encoded, preamble=cmdobj.name + ':' + pad)
+    return valid, cmdobj
 
-                try:
-                    log.info('Sending to %s:%d: %s', host, port, cmdobj.name)
-                    sock.sendto(encoded, (host, port))
-
-                    with pcap.open(CmdHistFile, 'a') as output:
-                        output.write(command)
-
-                    Sessions.addEvent('cmd:hist', command)
-                except socket.error, err:
-                    log.error(str(err))
-                except IOError, err:
-                    log.error(str(err))
 
 @App.route('/log', method='GET')
 def handle():
