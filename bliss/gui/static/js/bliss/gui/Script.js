@@ -257,7 +257,7 @@ const ScriptExecCtrl = {
             runBtnAttrs.class += ' .' + btnDisplayState
         }
 
-        let runButton = m('div', runBtnAttrs)
+        let runButton = m('button', runBtnAttrs)
 
         let stepForwardAttrs = {
             class: 'btn glyphicon glyphicon-step-forward',
@@ -276,9 +276,9 @@ const ScriptExecCtrl = {
             stepForwardAttrs['disabled'] = 'disabled'
         }
 
-        let stepForwardButton = m('div', stepForwardAttrs)
+        let stepForwardButton = m('button', stepForwardAttrs)
 
-        let loadButton = m('div', {
+        let loadButton = m('button', {
             class: 'btn glyphicon glyphicon-download-alt',
             onclick: vnode.attrs.loadButtonAction
         })
@@ -301,7 +301,7 @@ const ScriptExecCtrl = {
             abortAttrs['disabled'] = 'disabled'
         }
 
-        let abortButton = m('div', abortAttrs)
+        let abortButton = m('button', abortAttrs)
 
         let buttonDashboard = m('div', [
                                  runButton,

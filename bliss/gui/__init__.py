@@ -828,7 +828,8 @@ def handle():
         if not script_exec_lock.locked():
             script_exec_lock.acquire()
 
-        _RUNNING_SCRIPT.kill()
+        if _RUNNING_SCRIPT:
+            _RUNNING_SCRIPT.kill()
         script_exec_lock.release()
         Sessions.addEvent('script:aborted', None)
 
