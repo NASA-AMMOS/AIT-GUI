@@ -171,7 +171,7 @@ const Field =
                     let enums = "<b>Enumerated Values:</b><br />"
                     let _enum = this._field_defn.enum
                     for (let k in _enum) {
-                        enums += "&emsp;<b>" + _enum[k] + ':</b> ' + k + "<br />"
+                        enums += "&emsp;<b>" + k + ':</b> ' + _enum[k] + "<br />"
                     }
                     popover_content += enums
                 }
