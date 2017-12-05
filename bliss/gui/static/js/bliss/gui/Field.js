@@ -159,12 +159,19 @@ const Field =
                 let type = this._field_defn.type ? this._field_defn.type._name : "Unknown"
                 popover_content += "<b>Data Type:</b> " + type + "<br />"
 
-                let bytes = typeof(this._field_defn.bytes) == "object" ? (
+                let bytes = typeof(this._field_defn.bytes) === "object" ? (
                     this._field_defn.bytes[0] + " - " + this._field_defn.bytes[1]) : (
                     this._field_defn.bytes)
                 popover_content += "<b>Byte(s) in Packet:</b> " + bytes + "<br />"
 
-                let mask = this._field_defn.mask ? this._field_defn.mask : 'None'
+                let hex_padding = 2
+                if (typeof(this._field_defn.bytes) === "object") {
+                    hex_padding = (this._field_defn.bytes[1] - this._field_defn.bytes[0] + 1) * 2
+                }
+
+                let mask = this._field_defn.mask ? (
+                    `0x${sprintf(`%0${hex_padding}X`, this._field_defn.mask)}`) : (
+                    "None")
                 popover_content += "<b>Bit Mask:</b> " + mask + "<br />"
 
                 if (this._field_defn.enum) {
