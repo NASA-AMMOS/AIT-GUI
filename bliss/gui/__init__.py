@@ -68,7 +68,7 @@ from bliss.core import util
 
 
 _RUNNING_SCRIPT = None
-instrument = bliss.core.api.Instrument()
+CMD_API = bliss.core.api.CmdAPI(3075)
 
 class HTMLRoot:
     Static = pkg_resources.resource_filename('bliss.gui', 'static/')
@@ -592,7 +592,7 @@ def handle():
         name = args[0].upper()
         args = [util.toNumber(t, t) for t in args[1:]]
 
-        if instrument.cmd.send(name, *args):
+        if CMD_API.send(name, *args):
             with pcap.open(CmdHistFile, 'a') as output:
                 output.write(command)
 
@@ -610,8 +610,9 @@ def handle():
     args = command.split()
     name = args[0].upper()
     args = [util.toNumber(t, t) for t in args[1:]]
+    valid, msgs = CMD_API.validate(name, *args)
 
-    if instrument.cmd.validate(name, *args):
+    if valid:
         bottle.response.status = 200
         validation_status = '{} Passed Ground Verification'.format(command)
         log.info(validation_status)
