@@ -68,6 +68,7 @@ from bliss.core import util
 
 
 _RUNNING_SCRIPT = None
+instrument = bliss.core.api.Instrument()
 
 class HTMLRoot:
     Static = pkg_resources.resource_filename('bliss.gui', 'static/')
@@ -586,46 +587,31 @@ def handle():
     """
     with Sessions.current() as session:
         command = bottle.request.forms.get('command').strip()
-        cmd_valid, cmdobj = _create_and_verify_command(command)
 
-        if cmd_valid and cmdobj:
-            verbose = False
-            host = '127.0.0.1'
-            port = 3075
-            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            encoded = cmdobj.encode()
+        args = command.split()
+        name = args[0].upper()
+        args = [util.toNumber(t, t) for t in args[1:]]
 
-            if verbose:
-                size = len(cmdobj.name)
-                pad = (size - len(cmdobj.name) + 1) * ' '
-                gds.hexdump(encoded, preamble=cmdobj.name + ':' + pad)
+        if instrument.cmd.send(name, *args):
+            with pcap.open(CmdHistFile, 'a') as output:
+                output.write(command)
 
-            try:
-                log.info('Sending to %s:%d: %s', host, port, cmdobj.name)
-                sock.sendto(encoded, (host, port))
-
-                with pcap.open(CmdHistFile, 'a') as output:
-                    output.write(command)
-
-                Sessions.addEvent('cmd:hist', command)
-                bottle.response.status = 200
-            except socket.error, err:
-                log.error(str(err))
-                bottle.response.status = 400
-            except IOError, err:
-                log.error(str(err))
-                bottle.response.status = 400
+            Sessions.addEvent('cmd:hist', command)
+            bottle.response.status = 200
         else:
             bottle.response.status = 400
 
 
-@App.route('/cmd/verify', method='POST')
+@App.route('/cmd/validate', method='POST')
 def handle():
     ''''''
     command = bottle.request.forms.get('command').strip()
 
-    cmd_valid, cmd = _create_and_verify_command(command)
-    if cmd_valid:
+    args = command.split()
+    name = args[0].upper()
+    args = [util.toNumber(t, t) for t in args[1:]]
+
+    if instrument.cmd.validate(name, *args):
         bottle.response.status = 200
         validation_status = '{} Passed Ground Verification'.format(command)
         log.info(validation_status)
@@ -635,35 +621,6 @@ def handle():
         log.error(validation_status)
 
     return validation_status
-
-
-def _create_and_verify_command(command):
-    valid = False
-    cmdobj = None
-
-    if len(command) > 0:
-        cmddict = cmd.getDefaultCmdDict()
-
-        if cmddict:
-            args = command.split()
-            name = args[0].upper()
-            args = [util.toNumber(t, t) for t in args[1:]]
-        
-        try:
-            print name, args
-            cmdobj = cmddict.create(name, *args)
-            print cmdobj
-        except TypeError:
-            log.error('Unrecognized command: %s' % name)
-        else:
-            messages = []
-            if not cmdobj.validate(messages):
-                for msg in messages:
-                    log.error(msg)
-            else:
-                valid = True
-
-    return valid, cmdobj
 
 
 @App.route('/log', method='GET')

@@ -224,6 +224,12 @@ const CommandInput = {
     },
 
     _typeaheadEventHandler(ev, suggestion) {
+        // We can end up with empty / undefined suggestions depending on the
+        // input value when the input field is blurred. For instance, clicking
+        // in the input box and then outside of it will trigger a typeahead:close
+        // event even though the suggestion box isn't displayed for empty input.
+        if (suggestion === '' || suggestion === undefined) return
+
         let form = ev.target.closest('form')
         this._cmd_valid = false
         this._validating = true
@@ -243,7 +249,7 @@ const CommandInput = {
 
         m.request({
             method: 'POST',
-            url: '/cmd/verify',
+            url: '/cmd/validate',
             data: data,
             extract: (xhr) => {}
         }).then(() => {
