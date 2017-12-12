@@ -16,6 +16,7 @@ Prepare Repo for Release
 * `doc/source/conf.py <https://github.jpl.nasa.gov/bliss/bliss-gui/blob/master/doc/source/conf.py>`_ - contains a **version** and **release** option. Both of these should be updated to point to the version number for this release.
 
 .. code-block:: python
+
     # The short X.Y version.
     version = u'0.16.0'
     # The full version, including alpha/beta/rc tags.
@@ -24,6 +25,7 @@ Prepare Repo for Release
 * `setup.py <https://github.jpl.nasa.gov/bliss/bliss-gui/blob/master/setup.py>` - The setup object and bottom of script also contains the **version**.
 
 .. code-block:: python
+
    setup(
        name = 'bliss-gui',
        version = '0.16.0'
@@ -34,6 +36,7 @@ Prepare Repo for Release
 * `package.json <https://github.jpl.nasa.gov/bliss/bliss-gui/blob/master/bliss/gui/static/package.json>`
 
 .. code-block:: javascript
+
    {
      "name": "bliss-gui",
      "version": "0.16.0",
@@ -44,6 +47,7 @@ Prepare Repo for Release
 3. Generate the latest bundled static files for release.
 
 .. code-block:: bash
+
    # Navigate to directory
    cd bliss/gui/static
    
@@ -53,6 +57,7 @@ Prepare Repo for Release
 4. Commit and push these changes.
 
 .. code-block:: bash
+
    git add doc/source/conf.py setup.py bliss/gui/static/package.json
    git commit -m "Prep for <version> release"
    git push origin master
@@ -67,6 +72,7 @@ You will need a list of included tickets to put the in tag annotation when taggi
 
    cd build
    ./generate_changelog.py --start-time YYYY-MM-DDTHH:MM:SSZ
+
 
 Tag the Release
 ^^^^^^^^^^^^^^^
@@ -86,6 +92,7 @@ You will need to push the latest documentation to Github pages for the release. 
    git commit -m "Update docs for <version>"
    git push origin gh-pages
    git checkout master
+
 
 Notify Relevant Parties of Release
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -118,7 +125,9 @@ Push Release Artifacts to OCO3-TB PyPi
 1. SSH into OCO3-TB:
 
 2. Run **make-pypi.sh**
+
 .. code-block:: bash
+
    # Navigate to pypi repo
    cd /usr/local/vhosts/oco3-tb/htdocs/pypi
    
