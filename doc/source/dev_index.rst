@@ -12,7 +12,8 @@ Prepare Repo for Release
 * Minor bumps are for backwards compatible changes
 * Patch bumps are for incremental bug fixes, small releases, and end-of-sprint releases.
 
-2. *Update the project documentation to use the correct version names.* The following files needs to be updated with the correct version names: 
+2. *Update the project documentation to use the correct version names.* The following files needs to be updated with the correct version names:
+
 * `doc/source/conf.py <https://github.jpl.nasa.gov/bliss/bliss-gui/blob/master/doc/source/conf.py>`_ - contains a **version** and **release** option. Both of these should be updated to point to the version number for this release.
 
 .. code-block:: python
@@ -22,7 +23,7 @@ Prepare Repo for Release
     # The full version, including alpha/beta/rc tags.
     release = u'0.16.0
 
-* `setup.py <https://github.jpl.nasa.gov/bliss/bliss-gui/blob/master/setup.py>` - The setup object and bottom of script also contains the **version**.
+* `setup.py <https://github.jpl.nasa.gov/bliss/bliss-gui/blob/master/setup.py>`_ - The setup object and bottom of script also contains the **version**.
 
 .. code-block:: python
 
