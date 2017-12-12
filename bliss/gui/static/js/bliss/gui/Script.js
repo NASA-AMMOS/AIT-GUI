@@ -342,6 +342,7 @@ const ScriptEditor = {
             vnode.dom.children[0].elements['scriptview'],
             {
                 lineNumbers: true,
+                lineWrapping: true,
                 readOnly: true,
                 gutters: ['codeMirrorExecGutter', 'CodeMirror-linenumbers']
             }
