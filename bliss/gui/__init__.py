@@ -857,8 +857,10 @@ class BlissDB(bdb.Bdb):
         # denoted as "<string>" since we're passing the script
         # to the debugger as such. If we don't check for this we'll
         # end up with a bunch of execution noise (specifically gevent
-        # function calls).
-        if fn == "<string>":
+        # function calls). We also only want to report line changes
+        # in the current script. A check that the `co_name` is
+        # '<module>' ensures this.
+        if fn == "<string>" and frame.f_code.co_name == '<module>':
             Sessions.addEvent('script:step', frame.f_lineno)
             gevent.sleep(0)
             script_exec_lock.acquire()
