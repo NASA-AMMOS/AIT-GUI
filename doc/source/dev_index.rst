@@ -7,11 +7,56 @@ Release Process
 Prepare Repo for Release
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-First you need to determine the version number for the release. **bliss-gui** uses standard semantic versioning (Major.Minor.Patch). Major bumps are for large, non-backwards compatible changes; Minor bumps are for backwards compatible changes; Patch bumps are for incremental bug fixes, small releases, and end-of-sprint releases.
+1. *Determine the version number for the release.* **bliss-gui** uses standard semantic versioning (Major.Minor.Patch).
+* Major bumps are for large, non-backwards compatible changes
+* Minor bumps are for backwards compatible changes
+* Patch bumps are for incremental bug fixes, small releases, and end-of-sprint releases.
 
-Update the project documentation to use the correct version names. The `conf.py <https://github.jpl.nasa.gov/bliss/bliss-gui/blob/master/doc/source/conf.py>`_ file contains a **version** and **release** option. Both of these should be updated to point to the version number for this release. The appropriate version number must also be set in the project's **setup.py** file and the `package.json <https://github.jpl.nasa.gov/bliss/bliss-gui/blob/master/bliss/gui/static/package.json>`_ file. Commit and push these changes to master.
+2. *Update the project documentation to use the correct version names.* The following files needs to be updated with the correct version names: 
+* `doc/source/conf.py <https://github.jpl.nasa.gov/bliss/bliss-gui/blob/master/doc/source/conf.py>`_ - contains a **version** and **release** option. Both of these should be updated to point to the version number for this release.
 
-You will need to generate the latest bundled static files for release. From the **bliss/gui/static** folder you can run a build with **npm run build**. Be sure to commit and push these changes as well.
+.. code-block:: python
+    # The short X.Y version.
+    version = u'0.16.0'
+    # The full version, including alpha/beta/rc tags.
+    release = u'0.16.0
+
+* `setup.py <https://github.jpl.nasa.gov/bliss/bliss-gui/blob/master/setup.py>` - The setup object and bottom of script also contains the **version**.
+
+.. code-block:: python
+   setup(
+       name = 'bliss-gui',
+       version = '0.16.0'
+       .
+       .
+   )
+
+* `package.json <https://github.jpl.nasa.gov/bliss/bliss-gui/blob/master/bliss/gui/static/package.json>`
+
+.. code-block:: javascript
+   {
+     "name": "bliss-gui",
+     "version": "0.16.0",
+     .
+     .
+   }
+
+3. Generate the latest bundled static files for release.
+
+.. code-block:: bash
+   # Navigate to directory
+   cd bliss/gui/static
+   
+   # Run build
+   npm run build
+   
+4. Commit and push these changes.
+
+.. code-block:: bash
+   git add doc/source/conf.py setup.py bliss/gui/static/package.json
+   git commit -m "Prep for <version> release"
+   git push origin master
+
 
 Generate Release Notes
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -70,6 +115,17 @@ If deemed appropriate, prepare an email to all projects / parties known to be us
 Push Release Artifacts to OCO3-TB PyPi
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-SSH into OCO3-TB and navigate to **/usr/local/vhosts/oco3-tb/htdocs/pypi**. Open **make-pypi.sh** and update with the new version number and comment out the previous number. Run **make-pypi.sh** and check https://bliss.jpl.nasa.gov/pypi/simple/ to ensure that the release has been added.
+1. SSH into OCO3-TB:
+
+2. Run **make-pypi.sh**
+.. code-block:: bash
+   # Navigate to pypi repo
+   cd /usr/local/vhosts/oco3-tb/htdocs/pypi
+   
+   # Run make-pypi.sh.
+   # NOTE: sometimes it takes a few minutes for recent bliss-core release to take effect
+   ./make-pypi.sh -g 0.16.0
+
+3. Check https://bliss.jpl.nasa.gov/pypi/simple/ to ensure that the release has been added.
 
 NOTE: Currently requires pip 9.0.1 in order to utilize `pip download`.
