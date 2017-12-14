@@ -151,13 +151,10 @@ describe('Field component should alert on limit trips', () => {
 
     beforeEach(() => {
         field = bliss.gui.Field
-        //field._pname = 'packet'
-        //field._fname = 'field'
         emitSpy.reset()
     })
 
     after(() => {
-        //global.bliss = bliss
         emitSpy.restore()
     })
 
