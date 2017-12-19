@@ -55,7 +55,7 @@ bliss-messages .entry--header   {
     font-weight: bold;
     text-align: center;
 }
-bliss-messages .entry--notice   { background-color: #d9edf7; }
+bliss-messages .entry--notice   { background-color: #dff0d8; }
 bliss-messages .entry--program  { background-color: #d9edf7; }
 bliss-messages .entry--warning  { background-color: #fcf8e3; }
 
