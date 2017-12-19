@@ -68,6 +68,7 @@ from bliss.core import util
 
 
 _RUNNING_SCRIPT = None
+CMD_API = bliss.core.api.CmdAPI(3075)
 
 class HTMLRoot:
     Static = pkg_resources.resource_filename('bliss.gui', 'static/')
@@ -587,45 +588,41 @@ def handle():
     with Sessions.current() as session:
         command = bottle.request.forms.get('command').strip()
 
-        if len(command) > 0:
-            cmddict = cmd.getDefaultCmdDict()
-            host = '127.0.0.1'
-            port = 3075
-            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            verbose = False
+        args = command.split()
+        name = args[0].upper()
+        args = [util.toNumber(t, t) for t in args[1:]]
 
-            if cmddict is not None:
-                args = command.split()
-                name = args[0]
-                args = [util.toNumber(t, t) for t in args[1:]]
-                cmdobj = cmddict.create(name, *args)
-                messages = []
+        if CMD_API.send(name, *args):
+            with pcap.open(CmdHistFile, 'a') as output:
+                output.write(command)
 
-            if cmdobj is None:
-                log.error('unrecognized command: %s' % name)
-            elif not cmdobj.validate(messages):
-                for msg in messages:
-                    log.error(msg)
-            else:
-                encoded = cmdobj.encode()
+            Sessions.addEvent('cmd:hist', command)
+            bottle.response.status = 200
+        else:
+            bottle.response.status = 400
 
-                if verbose:
-                    size = len(cmdobj.name)
-                    pad = (size - len(cmdobj.name) + 1) * ' '
-                    gds.hexdump(encoded, preamble=cmdobj.name + ':' + pad)
 
-                try:
-                    log.info('Sending to %s:%d: %s', host, port, cmdobj.name)
-                    sock.sendto(encoded, (host, port))
+@App.route('/cmd/validate', method='POST')
+def handle():
+    ''''''
+    command = bottle.request.forms.get('command').strip()
 
-                    with pcap.open(CmdHistFile, 'a') as output:
-                        output.write(command)
+    args = command.split()
+    name = args[0].upper()
+    args = [util.toNumber(t, t) for t in args[1:]]
+    valid, msgs = CMD_API.validate(name, *args)
 
-                    Sessions.addEvent('cmd:hist', command)
-                except socket.error, err:
-                    log.error(str(err))
-                except IOError, err:
-                    log.error(str(err))
+    if valid:
+        bottle.response.status = 200
+        validation_status = '{} Passed Ground Verification'.format(command)
+        log.info(validation_status)
+    else:
+        bottle.response.status = 400
+        validation_status = '{} Command Failed Ground Verification'.format(command)
+        log.error(validation_status)
+
+    return validation_status
+
 
 @App.route('/log', method='GET')
 def handle():

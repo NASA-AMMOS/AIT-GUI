@@ -66,6 +66,9 @@ const CommandHistory = {
 const CommandInput = {
     _cntrl_toggled: false,
     _cmding_disabled: false,
+    _user_input_timer: null,
+    _cmd_valid: false,
+    _validating: false,
 
     oninit(vnode) {
         bliss.cmd.typeahead = {dict: {}, hist:{}}
@@ -119,15 +122,36 @@ const CommandInput = {
                 limit:     10,
                 source:    bliss.cmd.typeahead.dict,
                 templates: {header: '<h4 class="typeahead-heading">Dictionary</h4>'},
+            }).bind('typeahead:select', (ev, suggestion) => {
+                this._typeaheadEventHandler(ev, suggestion)
+            }).bind('typeahead:autocomplete', (ev, suggestion) => {
+                this._typeaheadEventHandler(ev, suggestion)
+            }).bind('typeahead:close', (ev, suggestion) => {
+                this._typeaheadEventHandler(ev, suggestion)
+            }).bind('typeahead:cursorchange', (ev, suggestion) => {
+                clearTimeout(this._user_input_timer)
+                this._validating = false
+                this._cmd_valid = false
             })
         })
     },
 
     view(vnode) {
+        let btnText = 'Send'
         let submitBtnAttrs = {class: 'btn btn-success', type: 'submit'}
+
         if (this._cmding_disabled) {submitBtnAttrs['disabled'] = 'disabled'}
 
-        return m('div', {id: 'bliss-command-input'},
+        if (this._validating || (! this._cmd_valid)) {
+            submitBtnAttrs['class'] = 'btn btn-danger'
+            submitBtnAttrs['disabled'] = 'disabled'
+
+            if (this._validating) {
+                btnText = m('span', {class: 'glyphicon glyphicon-refresh right-spin'})
+            }
+        }
+
+        return m('bliss-commandinput',
                  m('form',
                    {
                        class: 'form-horizontal',
@@ -152,6 +176,20 @@ const CommandInput = {
                                  type: 'text',
                                  name: 'command',
                                  placeholder: 'Select Command ...',
+                                 oninput: (e) => {
+                                     this._cmd_valid = false
+                                     this._validating = true
+                                     clearTimeout(this._user_input_timer)
+                                     let form = e.target.closest('form')
+
+                                     if (form.elements['command'].value !== '') {
+                                         this._user_input_timer = setTimeout(() => {
+                                             this._validateCommand(form)
+                                         }, 1000)
+                                     } else {
+                                         this._validating = false
+                                     }
+                                 },
                                  onkeyup: (e) => {
                                      if (e.keyCode == 17) {
                                          this._cntrl_toggled = false
@@ -161,11 +199,14 @@ const CommandInput = {
                                      if (e.keyCode == 17) {
                                          this._cntrl_toggled = true
                                      }
-
-                                     // If the user presses Enter without pressing Ctrl or
-                                     // if commanding is currently disabled we cancel
-                                     // the submission.
-                                     if ((e.keyCode == 13 && ! this._cntrl_toggled) || this.cmding_disabled) {
+                                     
+                                     // Cancel submission if
+                                     //  - Enter was pressed without pressing Ctrl
+                                     //  - Enter + Ctrl was pressed but the command isn't valid
+                                     //  - Commanding is currently disabled
+                                     if ((e.keyCode == 13 && ! this._cntrl_toggled) ||
+                                         (e.keyCode == 13 && ! this._cmd_valid) ||
+                                         this.cmding_disabled) {
                                          e.preventDefault()
                                          return false
                                      }
@@ -174,12 +215,50 @@ const CommandInput = {
                                  }
                              }),
                            m('span', {class: 'input-group-btn'},
-                               m('button', submitBtnAttrs, 'Send')
+                               m('button', submitBtnAttrs, btnText)
                            ),
                        ]),
                        m('span', {class: 'help-block'}, 'Ctrl + Enter to send command')
                    ])
                )
+    },
+
+    _typeaheadEventHandler(ev, suggestion) {
+        // We can end up with empty / undefined suggestions depending on the
+        // input value when the input field is blurred. For instance, clicking
+        // in the input box and then outside of it will trigger a typeahead:close
+        // event even though the suggestion box isn't displayed for empty input.
+        if (suggestion === '' || suggestion === undefined) return
+
+        let form = ev.target.closest('form')
+        this._cmd_valid = false
+        this._validating = true
+
+        clearTimeout(this._user_input_timer)
+        this._user_input_timer = setTimeout(() => {
+            this._validateCommand(form)
+        }, 1000)
+
+        m.redraw()
+    },
+
+    _validateCommand(form) {
+        let cmd = form.elements['command'].value
+        let data = new FormData()
+        data.append('command', cmd)
+
+        m.request({
+            method: 'POST',
+            url: '/cmd/validate',
+            data: data,
+            extract: (xhr) => {}
+        }).then(() => {
+            this._cmd_valid = true
+            this._validating = false
+        }).catch(() => {
+            this._cmd_valid = false
+            this._validating = false
+        })
     }
 }
 
