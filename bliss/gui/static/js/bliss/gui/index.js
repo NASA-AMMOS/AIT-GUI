@@ -20,9 +20,11 @@ export * from './Field.js'
 export * from './Messages.js'
 export * from './Plot.js'
 export * from './Script.js'
+export * from './Search.js'
 export * from './Sequence.js'
 export * from './Status.js'
 export * from './TabSet.js'
+export * from './Util.js'
 
 import filter from 'lodash/filter'
 import map    from 'lodash/map'
@@ -102,6 +104,44 @@ function createMithrilNode (elem) {
     return node
 }
 
+            
+function makeMithrilNode(e) {
+    //console.log(e)
+    //console.log(e.tag)
+    if (e === undefined || e.tag === undefined) {
+        return e
+    }
+
+    if (e.children && typeof(e.children) === 'object') {
+        e.children = filterNodes(e.children)
+    }
+
+    //console.log(e.attrs)
+    //console.log(e.attrs.className)
+    if (e.attrs && e.attrs.className && e.attrs.className.indexOf('make-mithril-node') !== -1) {
+        let template = document.createElement('template')
+        template.innerHTML = e.text
+        let name = template.content.firstChild.nodeName.toLowerCase()
+        let attrs = {}
+        for (let i = 0; i < template.content.firstChild.attributes.length; i++) {
+            let a = template.content.firstChild.attributes.item(i)
+            attrs[a.name] = a.value
+        }
+        return m(Registry[name] || name, attrs)
+    } else {
+        return e
+    }
+
+}
+
+function filterNodes(n) {
+    let nodes =  map(n, makeMithrilNode)
+    console.log(nodes)
+    return nodes
+}
+
+
+
 
 /**
  * Creates a Mithril vnode for each DOM element in `elems`.
@@ -120,6 +160,7 @@ function init () {
     ready(() => {
         const root   = document.body
         root.appendChild(document.createElement('bliss-prompt'))
+        root.appendChild(document.createElement('bliss-modal'))
         const cloned = root.cloneNode(true)
         const elems  = map(cloned.childNodes, c => c)
 
@@ -175,4 +216,4 @@ function ready (fn) {
     }
 }
 
-export { init }
+export { init, filterNodes }

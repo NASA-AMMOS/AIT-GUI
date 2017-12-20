@@ -1,0 +1,68 @@
+/*
+ * Advanced Multi-Mission Operations System (AMMOS) Instrument Toolkit (AIT)
+ * Bespoke Link to Instruments and Small Satellites (BLISS)
+ *
+ * Copyright 2017, by the California Institute of Technology. ALL RIGHTS
+ * RESERVED. United States Government Sponsorship acknowledged. Any
+ * commercial use must be negotiated with the Office of Technology Transfer
+ * at the California Institute of Technology.
+ *
+ * This software may be subject to U.S. export control laws. By accepting
+ * this software, the user agrees to comply with all applicable U.S. export
+ * laws and regulations. User has the responsibility to obtain export licenses,
+ * or other export authority as may be required before exporting such
+ * information to foreign countries or providing access to foreign persons.
+ */
+
+bliss-mnemonicsearch * {
+    max-width: 300px;
+}
+
+bliss-mnemonicsearch.no_borders .form-control {
+    border-color: transparent;
+    outline-color: transparent;
+    border: 0;
+    box-shadow: none;
+}
+
+bliss-mnemonicsearch.inverse_colors input[name="tlmsearch"]:focus {
+    /* We need to use !important here to deal with typeahead ... */
+    background-color: white !important;
+}
+
+bliss-mnemonicsearch.inverse_colors .glyphicon {
+    color: #9d9d9d;
+}
+
+bliss-mnemonicsearch.inverse_colors:focus-within .search-icon-group .glyphicon {
+    color: black;
+}
+
+bliss-mnemonicsearch .search-icon-group {
+    position: relative;
+}
+
+bliss-mnemonicsearch .search-icon-group .glyphicon {
+  position: absolute;
+  padding: 8px 0 8px 8px;
+  pointer-events: none;
+  left: 0px;
+  z-index: 100;
+}
+
+bliss-mnemonicsearch .search-icon-group input.tt-hint {
+    height: 30px;
+    padding-left:35px
+}
+
+bliss-mnemonicsearch .search-icon-group input[name="tlmsearch"] {
+    transition: width 0.7s, background-color 0.7s;
+    width: 30px;
+    height: 30px;
+    background-color: transparent;
+}
+
+bliss-mnemonicsearch .search-icon-group input[name="tlmsearch"]:focus {
+    width: 300px;
+    padding-left: 35px;
+}
