@@ -35,7 +35,19 @@ Prepare Repo for Release
        .
    )
 
-* `package.json <https://github.jpl.nasa.gov/bliss/bliss-gui/blob/master/bliss/gui/static/package.json>`
+Update the BLISS Core release to the most recent version as well
+
+.. code-block:: python
+
+   setup(
+       name = 'bliss-gui',
+       install_requires = ['bliss-core>=<bliss core version here>'],
+       .
+       .
+   )
+
+
+* `package.json <https://github.jpl.nasa.gov/bliss/bliss-gui/blob/master/bliss/gui/static/package.json>`_
 
 .. code-block:: javascript
 
@@ -55,12 +67,14 @@ Prepare Repo for Release
    
    # Run build
    npm run build
+
+   cd ../../../
    
 4. Commit and push these changes.
 
 .. code-block:: bash
 
-   git add doc/source/conf.py setup.py bliss/gui/static/package.json
+   git add doc/source/conf.py setup.py bliss/gui/static/package.json bliss/gui/static/build
    git commit -m "Prep for <version> release"
    git push origin master
 
