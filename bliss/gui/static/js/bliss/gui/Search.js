@@ -97,7 +97,7 @@ const MnemonicSearch = {
 
         if (this._selection in tlm) {
             let tlm_point = tlm[this._selection]
-            data.header = m('h4', tlm_point['name'])
+            data.header = tlm_point['name']
             data.body = []
 
             let desc = tlm_point.desc ? tlm_point.desc : "None"

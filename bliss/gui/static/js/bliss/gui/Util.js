@@ -14,6 +14,8 @@
  * information to foreign countries or providing access to foreign persons.
  */
 
+import defaults from 'lodash/defaults'
+
 const Modal = {
     _display_modal: false,
     _data: null,
@@ -27,7 +29,11 @@ const Modal = {
         bliss.events.on('modal:show', (data) => {
             this._display_modal = true
             this._data = data
-            console.log(this._data)
+            defaults(this._data, {
+                displayBackground: true,
+                insertHeaderCloseBtn: true,
+                insertFooterCloseBtn: true
+            })
             m.redraw()
         })
 
@@ -38,42 +44,51 @@ const Modal = {
     },
 
     view(vnode) {
-        console.log('rendering modal')
-        let header = ''
-        let body = ''
-        let footer = ''
+        if (! this._display_modal) {return m('bliss-modal')}
+
+        let header = m('h4', {class: 'modal-title'})
+        let body = m('span')
+        let footer = m('span')
 
         if (this._data !== null) {
             if ('header' in this._data) {
-                header = this._data.header
-            } else {
-                header = m('button', {
-                    type: 'button',
-                    class: 'close',
-                    'data-dimiss': modal,
-                    onclick: () => {
-                        this._reset_modal()
-                    }
-                }, m('span', "\u00D7"))
+                header = m('h4', {class: 'modal-title'}, this._data.header)
+            }
+
+            if (this._data.insertHeaderCloseBtn) {
+                header = [
+                    m('button', {
+                        type: 'button',
+                        class: 'close',
+                        'data-dimiss': modal,
+                        onclick: () => {
+                            this._reset_modal()
+                        }
+                    }, m('span', "\u00D7")),
+                    header
+                ]
             }
 
             if ('body' in this._data) {
                 body = this._data.body
-            } else {
-                body = ''
             }
 
             if ('footer' in this._data){
                 footer = this._data.footer
-            } else {
-                footer = m('div', {
-                    type: 'button',
-                    class: 'btn btn-default',
-                    'data-dismiss': 'modal',
-                    onclick: () => {
-                        this._reset_modal()
-                    }
-                }, 'Close')
+            }
+
+            if (this._data.insertFooterCloseBtn) {
+                footer = [
+                    footer,
+                    m('div', {
+                        type: 'button',
+                        class: 'btn btn-default',
+                        'data-dismiss': 'modal',
+                        onclick: () => {
+                            this._reset_modal()
+                        }
+                    }, 'Close')
+                ]
             }
         }
 
@@ -87,11 +102,14 @@ const Modal = {
             )
         )
 
-        if (this._display_modal) {
-            return m('bliss-modal', modal)
-        } else {
-            return m('bliss-modal')
+        if (this._data.displayBackground) {
+            modal = [
+                modal,
+                m('div', {class: 'modal-backdrop fade in'})
+            ]
         }
+
+        return m('bliss-modal', modal)
     }
 }
 
