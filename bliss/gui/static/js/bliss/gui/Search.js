@@ -18,6 +18,7 @@ var typeahead = require('typeahead.js/dist/typeahead.jquery');
 var Bloodhound = require('typeahead.js/dist/bloodhound');
 
 import map from 'lodash/map'
+import defaults from 'lodash/defaults'
 
 import Field from './Field'
 import Clock from './Clock'
@@ -33,6 +34,8 @@ const MnemonicSearch = {
 
     oncreate(vnode) {
         bliss.tlm.promise.then((dict) => {
+            defaults(vnode.attrs, {'result-count': 20})
+
             let tokenize = function (str) {
                 return str ? str.split('_') : [];
             }
@@ -48,7 +51,7 @@ const MnemonicSearch = {
             },
             {
                 name:      'tlm-mnemonics',
-                limit:     10,
+                limit:     vnode.attrs['result-count'],
                 source:    bliss.tlm.search.dict,
             }).bind('typeahead:select', (ev, suggestion) => {
                 this._selection = suggestion
@@ -214,7 +217,21 @@ const MnemonicSearch = {
            m('span', {class: 'glyphicon glyphicon-search'})
         ])
 
-        return m('bliss-mnemonicsearch', {class: 'no_borders inverse_colors'}, form)
+        let componentClasses = ''
+        defaults(vnode.attrs, {
+            'display-border': false,
+            'invert-colors': true
+        })
+
+        if (! vnode.attrs['display-border']) {
+            componentClasses += 'no_borders '
+        }
+
+        if (vnode.attrs['invert-colors']) {
+            componentClasses += 'inverse_colors '
+        }
+
+        return m('bliss-mnemonicsearch', {class: componentClasses}, form)
     }
 }
 
