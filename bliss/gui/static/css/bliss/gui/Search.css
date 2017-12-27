@@ -66,3 +66,7 @@ bliss-mnemonicsearch .search-icon-group input[name="tlmsearch"]:focus {
     width: 300px;
     padding-left: 35px;
 }
+
+bliss-mnemonicsearch-modalbody .btn {
+    padding: 0;
+}

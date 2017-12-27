@@ -182,20 +182,27 @@ const MnemonicSearch = {
             })
 
             data.body.push(m('div', [
-                m('b', m('span', 'Value Snapshot:')),
-                log_tlm_btn,
-                m('span', [
-                    m('br'),
-                    m('b', `\u2003Time: `),
-                    m(Clock, {style: 'display:inline;'}),
-                    m('br'),
-                    m('b', `\u2003Value: `),
-                    m(Field, {packet: this._packet, name: this._selection}),
-                    m('br'),
-                    m('b', `\u2003Raw Value: `),
-                    m(Field, {packet: this._packet, name: this._selection, raw: true}),
+                m('div', [
+                    m('b', 'Value Snapshot:'),
+                    log_tlm_btn
+                ]),
+                m('table', {class: 'table table-condensed'}, [
+                    m('tr', [
+                        m('td', m('b', `\u2003Time: `)),
+                        m('td', m(Clock, {style: 'display:inline;'})),
+                    ]),
+                    m('tr', [
+                        m('td', m('b', `\u2003Value: `)),
+                        m('td', m(Field, {packet: this._packet, name: this._selection})),
+                    ]),
+                    m('tr', [
+                        m('td', m('b', `\u2003Raw Value: `)),
+                        m('td', m(Field, {packet: this._packet, name: this._selection, raw: true})),
+                    ])
                 ])
             ]))
+
+            data.body = m('bliss-mnemonicsearch-modalbody', data.body)
         }
         return data
     },
