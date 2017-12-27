@@ -206,6 +206,11 @@ const Field =
                               '\u00D7' +
                             '</span></div>'
 
+                let popover_id
+                let bodyClickClosePopoverHandler = () => {
+                    $(vnode.dom).popover('hide')
+                }
+
                 $(vnode.dom).popover({
                     content : popover_content,
                     title: title,
@@ -216,9 +221,32 @@ const Field =
                     let popover_id = e.currentTarget.attributes['aria-describedby'].value
                     let popover_title = document.getElementById(popover_id).getElementsByClassName('popover-title')[0]
                     let span = popover_title.getElementsByTagName('span')[0]
+
+                    // Add handler to the close icon span in the popover title
+                    // so it can be used to close the popover.
                     span.addEventListener('click', () => {
                         $(vnode.dom).popover('hide')
                     })
+
+                    // Add handler to body so that clicks outside of the popover
+                    // cause it to close.
+                    document.body.addEventListener('click', bodyClickClosePopoverHandler)
+
+                    // Capture click events on the popover so they don't
+                    // propagate up to the body and close the popover.
+                    document.getElementById(popover_id).addEventListener('click', (e) => {
+                        e.stopPropagation()
+                    })
+                }).on('hide.bs.popover', (e) => {
+                    // Clean up our popover click handler from body when we're done.
+                    document.body.removeEventListener('click', bodyClickClosePopoverHandler)
+                }).on('hidden.bs.popover', (e) => {
+                    // Resets the popover click state that gets out of sync when
+                    // the popover is open/closed programmatically. Without this
+                    // the Field can end up in a state where you need to click
+                    // it twice to toggle the popover if the close icon or body
+                    // click handler caused it to close previously.
+                    $(e.target).data("bs.popover").inState.click = false;
                 })
             }
         })
