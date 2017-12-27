@@ -40,7 +40,7 @@ const MnemonicSearch = {
             bliss.tlm.search.dict = new Bloodhound({
                 datumTokenizer: tokenize,
                 queryTokenizer: tokenize,
-                local: map(dict[this._packet].fields, function (value, key) {return value.name}),
+                local: map(dict[this._packet].fields, (value, key) => {return value.name}).sort(),
             });
 
             $('input[name="tlmsearch"]', vnode.dom).typeahead({
