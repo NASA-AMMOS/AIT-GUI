@@ -208,7 +208,7 @@ const MnemonicSearch = {
     },
 
     view(vnode) {
-        let form = m('div', {class: 'search search-icon-group right-icon'}, [
+        let form = m('div', {class: 'search'}, [
            m('input',
              {
                  class: 'form-control typeahead',
@@ -221,7 +221,7 @@ const MnemonicSearch = {
                      e.target.value = ''
                  }
              }),
-           m('span', {class: 'glyphicon glyphicon-search'})
+           m('span', {class: 'search_icon glyphicon glyphicon-search'})
         ])
 
         let componentClasses = ''
@@ -231,11 +231,11 @@ const MnemonicSearch = {
         })
 
         if (! vnode.attrs['display-border']) {
-            componentClasses += 'no_borders '
+            componentClasses += 'no-borders '
         }
 
         if (vnode.attrs['invert-colors']) {
-            componentClasses += 'inverse_colors '
+            componentClasses += 'inverse-colors '
         }
 
         return m('bliss-mnemonicsearch', {class: componentClasses}, form)
