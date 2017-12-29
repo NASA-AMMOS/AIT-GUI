@@ -284,26 +284,24 @@ const TabSet =
             }
         }
 
-        //bliss.events.on('field:limitOut', (f) => {
-            //let field = f['field']
-            //let type = '___limit_' + f['type']
-            //for (let t in this.tabs) {
-                //if (field in this.tabs[t]) {
-                    //this.tabs[t][type][field] = null
-                //}
-            //}
-            //m.redraw()
-        //})
+        bliss.events.on('field:limitOut', (f) => {
+            let field = f['field']
+            let type = '___limit_' + f['type']
+            for (let t in this.tabs) {
+                if (field in this.tabs[t]) {
+                    this.tabs[t][type][field] = null
+                }
+            }
+        })
 
-        //bliss.events.on('field:limitIn', (f) => {
-            //for (let t in this.tabs) {
-                //if (f in this.tabs[t]) {
-                    //delete this.tabs[t]['___limit_warning'][f]
-                    //delete this.tabs[t]['___limit_error'][f]
-                //}
-            //}
-            //m.redraw()
-        //})
+        bliss.events.on('field:limitIn', (f) => {
+            for (let t in this.tabs) {
+                if (f in this.tabs[t]) {
+                    delete this.tabs[t]['___limit_warning'][f]
+                    delete this.tabs[t]['___limit_error'][f]
+                }
+            }
+        })
     },
 
 
