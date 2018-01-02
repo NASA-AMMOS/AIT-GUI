@@ -53,7 +53,7 @@ class FieldDefinition
     }
 
 
-    decode (view) {
+    decode (view, skipEnumeration=false) {
         let value = null
 
         if (this.type) {
@@ -68,7 +68,7 @@ class FieldDefinition
             }
 
             // If enumeration exists, display that value
-            if (this.enum !== undefined) {
+            if (!skipEnumeration && this.enum !== undefined) {
                 value = this.enum[value]
             }
         }
@@ -106,7 +106,7 @@ class Packet
 
             if (defn) {
                 if (raw || this._raw || !defn.dntoeu) {
-                    value = defn.decode(this._data)
+                    value = defn.decode(this._data, raw)
                 }
                 else if (defn.dntoeu && defn.dntoeu.equation) {
                     value = this._defn.scope.eval(this, defn.dntoeu.equation)
