@@ -20,6 +20,7 @@ var Bloodhound = require('typeahead.js/dist/bloodhound');
 import map from 'lodash/map'
 import defaults from 'lodash/defaults'
 
+import * as format from 'bliss/format'
 import Field from './Field'
 import Clock from './Clock'
 
@@ -60,7 +61,7 @@ const MnemonicSearch = {
                 // This is necessary to reset the typeahead query suggestions.
                 // If we don't do this the user will see a list containing
                 // their previous choice when they next focus the text field
-                // event though they haven't entered anything.
+                // even though they haven't entered anything.
                 $('input[name="tlmsearch"]', vnode.dom).typeahead('val', '')
 
                 bliss.events.emit('modal:show', this._generateModalContent())
@@ -90,10 +91,18 @@ const MnemonicSearch = {
         // object to use a timestamp when logging a value so there's consistency
         // between the displayed value snapshot and what is logged.
 
-        let cur_packet = (bliss.packets[this._packet] ?
-            bliss.packets[this._packet]._buffer[0] :
+        let val = 'N/A'
+        let raw = 'N/A'
+        let curTime = format.datetime(new Date())
+        let curPacket = (bliss.packets[this._packet] ?
+            bliss.packets[this._packet].get(0) :
             null
         )
+
+        if (curPacket !== null) {
+            val = curPacket.__get__(this._selection)
+            raw = curPacket.__get__(this._selection, true)
+        }
 
         let data = {}
         let tlm = bliss.tlm.dict[this._packet]._fields
@@ -173,31 +182,41 @@ const MnemonicSearch = {
             }
 
             data.body.push(m('hr'))
-            let log_tlm_btn = m('button', {
+            let logTlmBtnAttrs = {
                 class: 'btn glyphicon glyphicon glyphicon-save pull-right',
-                disabled: 'disabled',
                 onclick: () => {
-                    // TODO: Implement snapshot logging
+                    let msg = `Telemetry field: ${this._selection} -- value: ${val} -- raw: ${raw} -- time: ${curTime}`
+                    m.request({
+                        method: 'POST',
+                        url: '/messages',
+                        data: {
+                            severity: 'info',
+                            message: msg
+                        }
+                    })
                 }
-            })
+            }
+            if (curPacket === null) {logTlmBtnAttrs['disabled'] = 'disabled'}
+
+            let logTlmBtn = m('button', logTlmBtnAttrs)
 
             data.body.push(m('div', [
                 m('div', [
                     m('b', 'Value Snapshot:'),
-                    log_tlm_btn
+                    logTlmBtn
                 ]),
                 m('table', {class: 'table table-condensed'}, [
                     m('tr', [
                         m('td', m('b', `\u2003Time: `)),
-                        m('td', m(Clock, {style: 'display:inline;'})),
+                        m('td', curTime),
                     ]),
                     m('tr', [
                         m('td', m('b', `\u2003Value: `)),
-                        m('td', m(Field, {packet: this._packet, name: this._selection})),
+                        m('td', val),
                     ]),
                     m('tr', [
                         m('td', m('b', `\u2003Raw Value: `)),
-                        m('td', m(Field, {packet: this._packet, name: this._selection, raw: true})),
+                        m('td', raw),
                     ])
                 ])
             ]))

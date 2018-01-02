@@ -430,6 +430,20 @@ def handle():
     return json.dumps(evr.getDefaultDict().toJSON())
 
 
+@App.route('/messages', method='POST')
+def handle():
+    """ Log a message via core library logging utilities
+
+    :jsonparam severity: The log message severity
+    :jsonparam message: The message to be sent
+    """
+    severity = bottle.request.json.get('severity')
+    message = bottle.request.json.get('message')
+
+    logger = getattr(log, severity, log.info)
+    logger(message)
+    
+
 @App.route('/messages', method='GET')
 def handle():
     """Endpoint that pushes syslog output to client"""
