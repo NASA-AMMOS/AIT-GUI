@@ -441,6 +441,14 @@ const CommandSearch = {
  */
 const CommandConfigure = {
     _cmding_disabled: false,
+    _cmd_valid: false,
+    _validating: false,
+    
+    // We need to keep track of the selected command state for initial command
+    // validation so we can handle commands that are always valid (commands
+    // with no arguments or only enumerated values).
+    _needsInitialValidityCheck: true,
+    _prevActiveCmd: null,
 
     oninit(vnode) {
         this._display_enum_raw = 'display-enum-raw' in vnode.attrs
@@ -459,6 +467,11 @@ const CommandConfigure = {
     },
 
     view(vnode) {
+        if (this._prevActiveCmd !== CommandSelectionData.activeCommand) {
+            this._prevActiveCmd = CommandSelectionData.activeCommand
+            this._needsInitialValidityCheck = true
+        }
+
         let commandSelection = null
         // If a command has been selected, render the command customization screen
         if (CommandSelectionData.activeCommand !== null) {
@@ -526,22 +539,58 @@ const CommandConfigure = {
                 return 0
         })
 
-        var cmdArgs = map(argdefns, (arg) => {
+        let cmdArgs = map(argdefns, (arg) => {
             return m('div', {class: 'form-group'}, flatten([
               m('label', {class: 'control-label'}, this.prettifyName(arg.name)),
               this.generateArgumentInput(arg)
             ]))
         })
 
-        let submitBtnAttrs = {class: 'btn btn-default', type: 'submit'}
+        // Run an initial validity check for the current command to make sure that
+        // we don't require validation for commands that are always
+        // going to be valid (Specifically, commands with no arguments or only
+        // enumerated values). If we don't do an initial check for these commands
+        // they'll never enter into a state where they're marked as valid / sent
+        // by the user.
+        if (this._needsInitialValidityCheck) {
+            this._needsInitialValidityCheck = false
+            this._cmd_valid = true
+
+            for (let arg of cmdArgs) {
+                for (let child of arg.children) {
+                    if (child.tag === 'input') {
+                        this._cmd_valid = false
+                        break
+                    }
+                }
+            }
+        }
+
+        let submitBtnAttrs = {class: 'btn btn-success', type: 'submit'}
+        let btnText = "Send Command"
+
         if (this._cmding_disabled) {submitBtnAttrs['disabled'] = 'disabled'}
+
+        if (this._validating || (! this._cmd_valid)) {
+            submitBtnAttrs['class'] = 'btn btn-danger'
+            submitBtnAttrs['disabled'] = 'disabled'
+
+            if (this._validating) {
+                btnText = m('span', [
+                    'Validating ',
+                    m('span', {class: 'glyphicon glyphicon-refresh right-spin'})
+                ])
+            }
+        }
 
         return m('form',
                  {
-                     class: 'command_customization_form',
-                     onsubmit: this.handleCommandFormSubmission,
-                     method: 'POST',
-                     action: '/cmd'
+                    class: 'command_customization_form',
+                    onchange: this.handleCommandFormValidation.bind(this),
+                    onsubmit: this.handleCommandFormSubmission.bind(this),
+                    method: 'POST',
+                    action: '/cmd',
+                    novalidate: ''
                  },
                  [
                      m('input',
@@ -551,7 +600,7 @@ const CommandConfigure = {
                            value: CommandSelectionData.activeCommand.name
                        }),
                      cmdArgs,
-                     m('button', submitBtnAttrs, "Send Command")
+                     m('button', submitBtnAttrs, btnText)
                  ]
                 )
     },
@@ -569,7 +618,7 @@ const CommandConfigure = {
      * Generate the argument input field for a given command's argument object.
      */
     generateArgumentInput(argument) {
-        var argInput = null
+        let argInput = null
         if ('enum' in argument) {
             argInput = m('select', {class: 'form-control'},
                           map(argument.enum, (v, k) => {
@@ -579,7 +628,13 @@ const CommandConfigure = {
                           })
                         )
         } else {
-            argInput = m('input', {class: 'form-control'})
+            argInput = m('input', {
+                class: 'form-control',
+                oninput: (e) => {
+                    let event = new Event('change', {bubbles: true});
+                    e.target.dispatchEvent(event);
+                }
+            })
         }
 
         if ('units' in argument && argument.units !== 'none') {
@@ -592,19 +647,70 @@ const CommandConfigure = {
         }
     },
 
-    /**
+    validateCommand(cmd) {
+        let data = new FormData()
+        data.append('command', cmd)
+        this._validating = true
+        clearTimeout(this._validation_timer)
+        this._validation_timer = setTimeout(() => {
+            m.request({
+                method: 'POST',
+                url: '/cmd/validate',
+                data: data,
+                extract: (xhr) => {}
+            }).then(() => {
+                this._cmd_valid = true
+                this._validating = false
+            }).catch(() => {
+                this._cmd_valid = false
+                this._validating = false
+            })
+        }, 500)
+    },
+
+    buildCommand(form) {
+        let command = form.elements['command-arg-name'].value
+
+        $(':input', form).each((index, input) => {
+            if (! $(input).hasClass('form-control')) return
+            command += ' ' + $(input).val()
+        })
+
+        return command
+    },
+
+    /*
+     *
+     */
+    handleCommandFormValidation(e) {
+        let shouldRunValidation = true;
+
+        if (! this._validating) {
+            for (let elem of e.currentTarget.elements) {
+                if (elem.getAttribute('type') === 'hidden' ||
+                    elem.getAttribute('type') === 'submit') {continue}
+
+                if (elem.value === '') {
+                    shouldRunValidation = false
+                    this._cmd_valid = false
+                    break
+                }
+            }
+        }
+
+        if (shouldRunValidation) {
+            this.validateCommand(this.buildCommand(e.currentTarget))
+        }
+    },
+
+    /*
      * Handles construction of the command and submission to the backend
      */
     handleCommandFormSubmission(e) {
         e.preventDefault()
 
         let url = e.currentTarget.action
-        let command = e.currentTarget.elements['command-arg-name'].value
-
-        $(':input', e.currentTarget).each((index, input) => {
-            if (! $(input).hasClass('form-control')) return
-            command += ' ' + $(input).val()
-        })
+        let command = this.buildCommand(e.currentTarget)
 
         // Note: FormData resoles issues with m.request passing data to the
         // backend in a form that the existing /cmd endpoint doesn't like.
