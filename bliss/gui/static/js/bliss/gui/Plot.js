@@ -80,7 +80,19 @@ class HighchartsBackend
             data:    [ ],
             tooltip: { valueDecimals: 2 },
             type:    attrs.type,
-            showInNavigator: true
+            showInNavigator: true,
+            boostThreshold: 1,
+
+            // When the series contains less points than the crop threshold,
+            // all points are drawn, even if the points fall outside the
+            // visible plot area at the current zoom.
+            cropThreshold: 1,
+
+            // When a series contains a data array that is longer than this,
+            // only one dimensional arrays of numbers, or two dimensional
+            // arrays with x and y values are allowed. Also, only the first
+            // point is tested, and the rest are assumed to be the same format.
+            turboThreshold: 1
         })
 
     }
@@ -102,6 +114,14 @@ class HighchartsBackend
             boost: {
                 seriesThreshold: 1,
             },
+
+            /*
+             * "Maximum Performance" series plot options that removes all
+             * extra functionality to squeeze out a bit of performance.
+             */
+            //plotOptions: {
+            //    series: { animation: false, enableMouseTracking: false, stickyTracking: true, shadow: false, dataLabels: { style: { textShadow: false } } },
+            //},
 
             rangeSelector: {
                 buttons: [
@@ -142,9 +162,9 @@ class HighchartsBackend
 
             if (series) {
                 const x = this._plot._time.get(packet).getTime()
-                console.log(x)
                 const y = packet.__get__(name)
-                series.addPoint([x, y])
+
+                series.addPoint([x, y], false)
 
                 // Zoom axis once after data spans 60 seconds
                 if (this._plot._initZoom === false) {
@@ -158,6 +178,7 @@ class HighchartsBackend
                 }
             }
         })
+        this._plot._chart.redraw()
     }
 }
 
