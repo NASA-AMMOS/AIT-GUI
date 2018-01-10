@@ -205,7 +205,11 @@ class PacketScope
             return {
               'eval': function(packet, expr) {
                   var raw = packet.__clone__(packet._data, true)
-                  return eval(expr)
+                  try {
+                    return eval(expr)
+                  } catch (e) {
+                    return null
+                  }
               }
             }
         `).call()
