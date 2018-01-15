@@ -216,6 +216,27 @@ class PacketScope
     }
 
 
+    _sanitize (cond) {
+        return cond.replace('\u2264', '<=').replace('\u2265', '>=')
+    }
+
+
+    /**
+     * Transforms a tenary relational expression conditional into a pair of
+     * binary relational expression conditionals. For example, given the string
+     * expression '1268.1041 <= r < 6522.7358' this function returns
+     * '(1268.1041 <= r) && (r < 6522.735)'.
+     */
+    _toBinaryCond (cond) {
+        const regex = /==|!=|<=|>=|<|>/g
+        const op    = cond.match(regex)
+        const t     = cond.split(regex)
+
+        return (op.length === 2) && (t.length === 3) ?
+            `(${t[0]} ${op[0]} ${t[1]}) && (${t[1]} ${op[1]} ${t[2]})` : cond
+    }
+
+
     /**
      * Evaluates the given expression within the context of this
      * PacketScope and the given Packet.  The packet parameter is
@@ -231,13 +252,25 @@ class PacketScope
         let code = ''
 
         for (const name in this._defn.constants) {
-            const value  = this._defn.constants[name]
-            code        += 'var ' + name + '=' + value + ';'
+            code        += `var ${name} = ${this._defn.constants[name]}; `
         }
 
         for (const sig in this._defn.functions) {
-            const body  = this._defn.functions[sig]
-            code       += 'function ' + sig + '{ return (' + body + ')};'
+            const body = this._defn.functions[sig]
+
+            code += `function ${sig} { `
+
+            if (typeof body === 'string') {
+                code += `return (${body}) `
+            }
+            else if (typeof body === 'object') {
+                for (const cond in body) {
+                    const pred  = this._toBinaryCond( this._sanitize(cond) )
+                    code       += `if (${pred}) { return (${body[cond]}) } `
+                }
+            }
+
+            code += '};'
         }
 
         return code
