@@ -75,14 +75,11 @@ class HTMLRoot:
     User   = bliss.config.get('gui.html.directory', Static)
 
 SEQRoot = bliss.config.get('sequence.directory', None)
-ScriptRoot = bliss.config.get('script.directory', None)
-CmdHistFile = bliss.config.get('command.history.filename',
-                os.path.join(bliss.config._ROOT_DIR, 'bliss-gui-cmdhist.pcap'))
-
 if SEQRoot and not os.path.isdir(SEQRoot):
     msg = 'sequence.directory does not exist. Sequence loads may fail.'
     bliss.core.log.warn(msg)
 
+ScriptRoot = bliss.config.get('script.directory', None)
 if ScriptRoot and not os.path.isdir(ScriptRoot):
     msg = (
         'script.directory points to a directory that does not exist. '
@@ -90,10 +87,15 @@ if ScriptRoot and not os.path.isdir(ScriptRoot):
     )
     bliss.core.log.warn(msg)
 
+_def_cmd_hist = os.path.join(bliss.config._ROOT_DIR, 'bliss-gui-cmdhist.pcap')
+CmdHistFile = bliss.config.get('command.history.filename', _def_cmd_hist)
 if not os.path.isfile(CmdHistFile):
     if not os.path.isdir(os.path.dirname(CmdHistFile)):
-        msg  = 'command.history.filename directory does not exist.  '
-        msg += 'Command history will not be saved.'
+        CmdHistFile = _def_cmd_hist
+        msg  = (
+            'command.history.filename directory does not exist. '
+            'Reverting to default {}'
+        ).format(_def_cmd_hist)
         bliss.core.log.warn(msg)
 
 App     = bottle.Bottle()
