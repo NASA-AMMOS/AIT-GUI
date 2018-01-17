@@ -418,7 +418,10 @@ const CommandSearch = {
  */
 const CommandConfigure = {
     _cmding_disabled: false,
+
     oninit(vnode) {
+        this._display_enum_raw = 'display-enum-raw' in vnode.attrs
+
         bliss.events.on('seq:exec', () => {
             this._cmding_disabled = true
         })
@@ -547,7 +550,9 @@ const CommandConfigure = {
         if ('enum' in argument) {
             argInput = m('select', {class: 'form-control'},
                           map(argument.enum, (v, k) => {
-                            return m('option', {value: k}, k + ' (' + v + ')')
+                            return (this._display_enum_raw ?
+                                m('option', {value: k}, k + ' (' + v + ')') :
+                                m('option', {value: k}, k))
                           })
                         )
         } else {
