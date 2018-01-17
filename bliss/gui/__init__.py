@@ -636,8 +636,14 @@ def handle():
         bottle.response.status = 400
         validation_status = '{} Command Failed Ground Verification'.format(command)
         log.error(validation_status)
+        for m in msgs:
+            log.error(m)
 
-    return validation_status
+    bottle.response.content_type = 'application/json'
+    return json.dumps({
+        'msgs': [str(m) for m in msgs],
+        'status': validation_status
+    })
 
 
 @App.route('/log', method='GET')

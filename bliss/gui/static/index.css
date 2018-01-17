@@ -145,7 +145,7 @@ body {
 .cmd-tab-container {
     display: grid;
     grid-template-columns: 5fr 7fr;
-    grid-template-rows: 100px auto;
+    grid-template-rows: auto auto;
     grid-template-areas:
         "cmdsearch  cmdsearch"
         "cmdbrowser cmdconfig";

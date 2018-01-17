@@ -69,6 +69,7 @@ const CommandInput = {
     _user_input_timer: null,
     _cmd_valid: false,
     _validating: false,
+    _validation_msgs: [],
 
     oninit(vnode) {
         bliss.cmd.typeahead = {dict: {}, hist:{}}
@@ -131,6 +132,7 @@ const CommandInput = {
             }).bind('typeahead:cursorchange', (ev, suggestion) => {
                 clearTimeout(this._user_input_timer)
                 this._validating = false
+                this._validation_msgs = []
                 this._cmd_valid = false
             })
         })
@@ -151,7 +153,25 @@ const CommandInput = {
             }
         }
 
-        return m('bliss-commandinput',
+        let errorDisplay = ''
+        if (this._validation_msgs.length !== 0) {
+            let errorAttrs = {class: 'alert alert-danger alert-dismissible error_display'}
+            errorDisplay = m('div', errorAttrs, [
+                m('div', [
+                    m('button', {
+                        type: 'button',
+                        class: 'close',
+                        'data-dimiss': 'alert',
+                        onclick: () => {this._validation_msgs = []}
+                    }, m('span', '\u00D7')),
+                    m('span', {class: 'glyphicon glyphicon-info-sign'}),
+                    m('strong', ' Command Validation Errors')
+                ]),
+                map(this._validation_msgs, (msg) => {return m('p', msg)}),
+            ])
+        }
+
+        return m('bliss-commandinput', [
                  m('form',
                    {
                        class: 'form-horizontal',
@@ -179,6 +199,7 @@ const CommandInput = {
                                  oninput: (e) => {
                                      this._cmd_valid = false
                                      this._validating = true
+                                     this._validation_msgs = []
                                      clearTimeout(this._user_input_timer)
                                      let form = e.target.closest('form')
 
@@ -219,8 +240,9 @@ const CommandInput = {
                            ),
                        ]),
                        m('span', {class: 'help-block'}, 'Ctrl + Enter to send command')
-                   ])
-               )
+                   ]),
+                   errorDisplay
+                ])
     },
 
     _typeaheadEventHandler(ev, suggestion) {
@@ -233,6 +255,7 @@ const CommandInput = {
         let form = ev.target.closest('form')
         this._cmd_valid = false
         this._validating = true
+        this._validation_msgs = []
 
         clearTimeout(this._user_input_timer)
         this._user_input_timer = setTimeout(() => {
@@ -251,13 +274,13 @@ const CommandInput = {
             method: 'POST',
             url: '/cmd/validate',
             data: data,
-            extract: (xhr) => {}
         }).then(() => {
             this._cmd_valid = true
             this._validating = false
-        }).catch(() => {
+        }).catch((res) => {
             this._cmd_valid = false
             this._validating = false
+            this._validation_msgs = res.msgs
         })
     }
 }
