@@ -45,7 +45,7 @@ class DygraphsBackend
 
     createOptions (attrs) {
         // set window range
-        this._plotrange = attrs['plot-range'] || 10
+        this._plotrange = attrs['plot-range'] || 600
 
         return {
             drawPoints: true,
