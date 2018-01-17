@@ -3,3 +3,39 @@ bliss-field {
     text-align:  left;
     cursor: pointer;
 }
+
+bliss-field[disable-tlm-popover] {
+    cursor: default;
+}
+
+bliss-field-popover p, dl {
+    margin: 0 0 3px;
+}
+
+bliss-field-popover dt {
+    display: inline;
+    white-space: pre;
+}
+
+bliss-field-popover dd {
+    display: inline;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    word-break: break-all;
+}
+
+bliss-field-popover dt {
+    margin-left: 10px;
+}
+
+bliss-field-popover dt::after {
+    content: ": ";
+}
+
+bliss-field-popover dd::after {
+    content: '\A';
+}
+
+bliss-field-popover dd:last-of-type::after {
+    content: '';
+}

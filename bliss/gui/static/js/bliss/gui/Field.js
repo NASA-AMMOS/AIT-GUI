@@ -140,68 +140,68 @@ const Field =
         this._raw    = vnode.attrs.raw === true
         this._cached = { packet: null, rawval: null }
         this._limits = null
-        this._field_defn = null
-
     },
 
     oncreate(vnode) {
         bliss.tlm.promise.then(() => {
+            let fieldDefn = null
+
             if (bliss.tlm.dict[this._pname] &&
                 bliss.tlm.dict[this._pname].fields[this._fname]) {
-                this._field_defn = bliss.tlm.dict[this._pname].fields[this._fname]
+                fieldDefn = bliss.tlm.dict[this._pname].fields[this._fname]
             }
 
-            if (this._field_defn) {
-                let popover_content = ""
-                let desc = this._field_defn.desc ? this._field_defn.desc : "None"
-                popover_content += "<b>Description:</b> " + desc + "<br />"
-
-                let type = this._field_defn.type ? this._field_defn.type._name : "Unknown"
-                popover_content += "<b>Data Type:</b> " + type + "<br />"
-
-                let bytes = typeof(this._field_defn.bytes) === "object" ? (
-                    this._field_defn.bytes[0] + " - " + this._field_defn.bytes[1]) : (
-                    this._field_defn.bytes)
-                popover_content += "<b>Byte(s) in Packet:</b> " + bytes + "<br />"
+            if (fieldDefn && !('disable-tlm-popover' in vnode.attrs)) {
+                let desc = fieldDefn.desc ? fieldDefn.desc : "None"
+                let type = fieldDefn.type ? fieldDefn.type._name : "Unknown"
+                let bytes = typeof(fieldDefn.bytes) === "object" ? (
+                    fieldDefn.bytes[0] + " - " + fieldDefn.bytes[1]) : (
+                    fieldDefn.bytes)
 
                 let hex_padding = 2
-                if (typeof(this._field_defn.bytes) === "object") {
-                    hex_padding = (this._field_defn.bytes[1] - this._field_defn.bytes[0] + 1) * 2
+                if (typeof(fieldDefn.bytes) === "object") {
+                    hex_padding = (fieldDefn.bytes[1] - fieldDefn.bytes[0] + 1) * 2
                 }
 
-                let mask = this._field_defn.mask ? (
-                    `0x${sprintf(`%0${hex_padding}X`, this._field_defn.mask)}`) : (
+                let mask = fieldDefn.mask ? (
+                    `0x${sprintf(`%0${hex_padding}X`, fieldDefn.mask)}`) : (
                     "None")
-                popover_content += "<b>Bit Mask:</b> " + mask + "<br />"
 
-                if (this._field_defn.enum) {
-                    let enums = "<b>Enumerated Values:</b><br />"
-                    let _enum = this._field_defn.enum
+                let popover_content = `
+                    <p><b>Description:</b> ${desc}</p>
+                    <p><b>Data Type:</b> ${type}</p>
+                    <p><b>Byte(s) in Packet:</b> ${bytes}</p>
+                    <p><b>Bit Mask:</b> ${mask}</p>
+                `
+
+                if (fieldDefn.enum) {
+                    let enums = ""
+                    let _enum = fieldDefn.enum
                     for (let k in _enum) {
-                        enums += "&emsp;<b>" + k + ':</b> ' + _enum[k] + "<br />"
+                        enums += `<dt>${k}</dt><dd>${_enum[k]}`
                     }
-                    popover_content += enums
+                    popover_content += `<b>Enumerated Values:</b><dl>${enums}</dl>`
                 }
 
-                if (this._field_defn.dntoeu) {
-                    let dntoeu = "<b>DN-to-EU:</b><br />"
-                    let _dntoeu = this._field_defn.dntoeu
+                if (fieldDefn.dntoeu) {
+                    let dntoeu = ""
+                    let _dntoeu = fieldDefn.dntoeu
                     for (let k in _dntoeu) {
-                        dntoeu += "&emsp;<b>" + k + ':</b> ' + _dntoeu[k] + "<br />"
+                        dntoeu += `<dt>${k}</dt><dd>${_dntoeu[k]}`
                     }
-                    popover_content += dntoeu
+                    popover_content += `<b>DN-to-EU:</b><dl>${dntoeu}</dl>`
                 }
 
-                if (this._field_defn.aliases) {
-                    let aliases = "<b>Aliases:</b><br />"
-                    let _aliases = this._field_defn.aliases
+                if (fieldDefn.aliases) {
+                    let aliases = ""
+                    let _aliases = fieldDefn.aliases
                     for (let k in _aliases) {
-                        aliases += "&emsp;<b>" + k + ':</b> ' + _aliases[k] + "<br />"
+                        aliases += `<dt>${k}</dt><dd>${_aliases[k]}`
                     }
-                    popover_content += aliases
+                    popover_content += `<b>Aliases:</b><dl>${aliases}</dl>`
                 }
 
-                let title = '<div>' + this._field_defn.name +
+                let title = '<div>' + fieldDefn.name +
                             '<span class="pull-right" style="cursor:pointer">' +
                               '\u00D7' +
                             '</span></div>'
@@ -212,7 +212,7 @@ const Field =
                 }
 
                 $(vnode.dom).popover({
-                    content : popover_content,
+                    content : `<bliss-field-popover>${popover_content}</bliss-field-popover>`,
                     title: title,
                     html: true,
                     placement: 'auto right',
