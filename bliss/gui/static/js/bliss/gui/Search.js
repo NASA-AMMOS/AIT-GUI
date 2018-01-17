@@ -190,7 +190,7 @@ const MnemonicSearch = {
                         method: 'POST',
                         url: '/messages',
                         data: {
-                            severity: 'info',
+                            severity: 'notice',
                             message: msg
                         }
                     })
