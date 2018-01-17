@@ -35,16 +35,27 @@ class DygraphsBackend
     }
 
     createChart (vnode, options) {
-        return new Dygraph(vnode.dom, [ [0, 0] ], options)
+        let startarray = [ ]
+        this._plot._options.labels.forEach( (name) => {
+            startarray.push(0)
+        })
+
+        return new Dygraph(vnode.dom, [ startarray ], options)
     }
 
     createOptions (attrs) {
+        // set window range
+        this._plotrange = attrs['plot-range'] || 600
+
         return {
             drawPoints: true,
-            title:      attrs.title,
             xlabel:     'Time (UTC)',
-            ylabel:     attrs['y-title'],
-            labels:     ['Time']
+            labels:     ['Time'],
+            height:     500,
+            width:      800,
+            legend:     'always',
+            labelsSeparateLines: true,
+            showRangeSelector: true
         }
     }
 
@@ -61,6 +72,13 @@ class DygraphsBackend
         })
 
         this._plot._data.push(row)
+
+        // If we get too many records, start to pop off the array
+        // This is only way I can see to set a moving window
+        if (this._plot._data.length > this._plotrange) {
+            this._plot._data.shift()
+        }
+
         this._plot._chart.updateOptions( { 'file': this._plot._data } )
     }
 }
