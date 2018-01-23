@@ -40,6 +40,10 @@ const CommandHistory = {
         bliss.events.on('cmd:hist', () => {
             this.refreshCommandHistory()
         })
+
+        bliss.events.on('seq:done', () => {
+            this.refreshCommandHistory()
+        })
     },
 
     view(vnode) {
