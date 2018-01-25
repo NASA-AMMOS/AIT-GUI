@@ -291,20 +291,25 @@ const Field =
             }
 
             if (this.hasLimitCheck()) {
-                if (! 'class' in vnode.attrs) {
+                // Limit checks should always be performed against a DN-to-EU
+                // converted value since limits are expected to be defined
+                // in EU values.
+                let limitChkVal = (this._raw) ? this.getValue(packet, false) : value
+
+                if (! ('class' in vnode.attrs)) {
                     vnode.attrs.class = ""
                 }
 
-                if (this.valueIsInErrorRange(value)) {
+                if (this.valueIsInErrorRange(limitChkVal)) {
                     this._limitOut = true
-                    vnode.attrs.class += "alert alert-danger"
+                    vnode.attrs.class += "alert-danger"
                     bliss.events.emit('field:limitOut', {
                         field: this._pname + '_' + this._fname,
                         type: 'error'
                     })
-                } else if (this.valueIsInWarnRange(value)) {
+                } else if (this.valueIsInWarnRange(limitChkVal)) {
                     this._limitOut = true
-                    vnode.attrs.class += "alert alert-warning"
+                    vnode.attrs.class += "alert-warning"
                     bliss.events.emit('field:limitOut', {
                         field: this._pname + '_' + this._fname,
                         type: 'warning'
