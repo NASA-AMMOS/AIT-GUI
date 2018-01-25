@@ -287,9 +287,11 @@ const TabSet =
         bliss.events.on('field:limitOut', (f) => {
             let field = f['field']
             let type = '___limit_' + f['type']
+            let other_type = `___limit_${(f['type'] === 'warning'? 'error': 'warning')}`
             for (let t in this.tabs) {
                 if (field in this.tabs[t]) {
                     this.tabs[t][type][field] = null
+                    delete this.tabs[t][other_type][field]
                 }
             }
         })
