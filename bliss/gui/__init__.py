@@ -444,7 +444,7 @@ def handle():
 
     logger = getattr(log, severity, log.info)
     logger(message)
-    
+
 
 @App.route('/messages', method='GET')
 def handle():
@@ -848,7 +848,7 @@ def handle():
             script_exec_lock.acquire()
 
         if _RUNNING_SCRIPT:
-            _RUNNING_SCRIPT.kill()
+            _RUNNING_SCRIPT.kill(UIAbortException())
         script_exec_lock.release()
         Sessions.addEvent('script:aborted', None)
 
@@ -935,3 +935,21 @@ def handle():
     with Sessions.current() as session:
         Sessions.addEvent('prompt:done', None)
         PromptResponse = json.loads(bottle.request.body.read())
+
+
+class UIAbortException(Exception):
+    """ Raised when user aborts script execution via GUI controls """
+    def __init__ (self, msg=None):
+        self._msg = msg
+
+    def __str__ (self):
+        return self.msg
+
+    @property
+    def msg(self):
+        s = 'UIAbortException: User aborted script execution via GUI controls.'
+
+        if self._msg:
+            s += ': ' + self._msg
+
+        return s
