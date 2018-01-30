@@ -631,13 +631,10 @@ def handle():
     if valid:
         bottle.response.status = 200
         validation_status = '{} Passed Ground Verification'.format(command)
-        log.info(validation_status)
+        log.info('Command Validation: {}'.format(validation_status))
     else:
         bottle.response.status = 400
         validation_status = '{} Command Failed Ground Verification'.format(command)
-        log.error(validation_status)
-        for m in msgs:
-            log.error(m)
 
     bottle.response.content_type = 'application/json'
     return json.dumps({
