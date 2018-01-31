@@ -78,8 +78,22 @@ const Sequence = {
             class: 'btn btn-success pull-right'
         }
 
+        let abortBtnAttrs = {
+            type: 'button',
+            class: 'btn btn-danger pull-right',
+            onclick: (e) => {
+                e.preventDefault()
+                m.request({
+                    method: 'POST',
+                    url: '/seq/abort'
+                })
+            }
+        }
+
         if (this._disableControls) {
-            submitBtnAttrs['disabled'] = 'disabled'
+            submitBtnAttrs['style'] = 'display:none;'
+        } else {
+            abortBtnAttrs['style'] = 'display:none;'
         }
 
         let seqDisplayList = this.sequences
@@ -154,6 +168,7 @@ const Sequence = {
                      filterInputGroup,
                      sequenceSelectGroup,
                      m('div', {class: 'form-group'},
+                       m('button', abortBtnAttrs, 'Abort'),
                        m('button', submitBtnAttrs, 'Send'))
                  ]))
     },

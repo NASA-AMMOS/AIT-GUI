@@ -67,6 +67,7 @@ from bliss.core import util
 
 
 _RUNNING_SCRIPT = None
+_RUNNING_SEQ = None
 CMD_API = bliss.core.api.CmdAPI(bliss.config.get('command.port', bliss.DEFAULT_CMD_PORT))
 
 class HTMLRoot:
@@ -700,9 +701,23 @@ def handle():
 
     :formparam seqfile: The sequence filename located in SEQRoot to execute
     """
+    global _RUNNING_SEQ
+
     with Sessions.current() as session:
         bn_seqfile = bottle.request.forms.get('seqfile')
-        gevent.spawn(bgExecSeq, bn_seqfile)
+        _RUNNING_SEQ = gevent.spawn(bgExecSeq, bn_seqfile)
+
+@App.route('/seq/abort', method='POST')
+def handle():
+    """ Abort the active running sequence """
+    global _RUNNING_SEQ
+
+    with Sessions.current() as session:
+        if _RUNNING_SEQ:
+            _RUNNING_SEQ.kill()
+            _RUNNING_SEQ = None
+            log.info('Sequence aborted by user')
+            Sessions.addEvent('seq:err', 'Sequence aborted by user')
 
 
 def bgExecSeq(bn_seqfile):
@@ -715,16 +730,19 @@ def bgExecSeq(bn_seqfile):
 
     log.info("Executing sequence: " + seqfile)
     Sessions.addEvent('seq:exec', bn_seqfile)
-    seq_p = gevent.subprocess.Popen(["bliss-seq-send", seqfile],
-                                    stdout=gevent.subprocess.PIPE)
-    seq_out, seq_err = seq_p.communicate()
-    if seq_p.returncode is not 0:
-        if not seq_err:
-            seq_err = "Unknown Error"
-        Sessions.addEvent('seq:err', bn_seqfile + ': ' + seq_err)
-        return
+    try:
+        seq_p = gevent.subprocess.Popen(["bliss-seq-send", seqfile],
+                                        stdout=gevent.subprocess.PIPE)
+        seq_out, seq_err = seq_p.communicate()
+        if seq_p.returncode is not 0:
+            if not seq_err:
+                seq_err = "Unknown Error"
+            Sessions.addEvent('seq:err', bn_seqfile + ': ' + seq_err)
+            return
 
-    Sessions.addEvent('seq:done', bn_seqfile)
+        Sessions.addEvent('seq:done', bn_seqfile)
+    except gevent.GreenletExit:
+        seq_p.kill()
 
 
 script_exec_lock = gevent.lock.Semaphore(1)
