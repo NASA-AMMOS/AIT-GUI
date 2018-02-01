@@ -19,7 +19,9 @@ import defaults from 'lodash/defaults'
  * An event toggle-able Modal Component
  *
  * A customizable Modal component that is toggled and configured
- * via events.
+ * via events. The Modal component will smoothly handle multiple
+ * simultaneous modal requests by queueing additional 'show' calls
+ * behind the currently displayed modal.
  *
  * Events:
  *   'modal:show' - Display a modal to the user. Modal configuration
@@ -47,22 +49,25 @@ import defaults from 'lodash/defaults'
  */
 const Modal = {
     _display_modal: false,
-    _data: null,
+    _modals: [],
 
     _reset_modal() {
-        this._display_modal = false
-        this._data = null
+        this._modals.shift()
+
+        if (this._modals.length === 0) {
+            this._display_modal = false
+        }
     },
 
     oncreate(vnode) {
         bliss.events.on('modal:show', (data) => {
             this._display_modal = true
-            this._data = data
-            defaults(this._data, {
+            defaults(data, {
                 displayBackground: true,
                 insertHeaderCloseBtn: true,
                 insertFooterCloseBtn: true
             })
+            this._modals.push(data)
             m.redraw()
         })
 
@@ -79,12 +84,12 @@ const Modal = {
         let body = m('span')
         let footer = m('span')
 
-        if (this._data !== null) {
-            if ('header' in this._data) {
-                header = m('h4', {class: 'modal-title'}, this._data.header)
+        if (this._modals.length !== 0) {
+            if ('header' in this._modals[0]) {
+                header = m('h4', {class: 'modal-title'}, this._modals[0].header)
             }
 
-            if (this._data.insertHeaderCloseBtn) {
+            if (this._modals[0].insertHeaderCloseBtn) {
                 header = [
                     m('button', {
                         type: 'button',
@@ -98,15 +103,15 @@ const Modal = {
                 ]
             }
 
-            if ('body' in this._data) {
-                body = this._data.body
+            if ('body' in this._modals[0]) {
+                body = this._modals[0].body
             }
 
-            if ('footer' in this._data){
-                footer = this._data.footer
+            if ('footer' in this._modals[0]){
+                footer = this._modals[0].footer
             }
 
-            if (this._data.insertFooterCloseBtn) {
+            if (this._modals[0].insertFooterCloseBtn) {
                 footer = [
                     footer,
                     m('div', {
@@ -131,7 +136,7 @@ const Modal = {
             )
         )
 
-        if (this._data.displayBackground) {
+        if (this._modals[0].displayBackground) {
             modal = [
                 modal,
                 m('div', {class: 'modal-backdrop fade in'})
