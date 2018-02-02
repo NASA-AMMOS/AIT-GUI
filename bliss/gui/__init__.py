@@ -60,7 +60,6 @@ import bottle
 import pkg_resources
 import requests
 
-import bliss
 import bliss.core
 
 from bliss.core import api, ccsds, cfg, cmd, evr, gds, limits, log, pcap, tlm
@@ -68,7 +67,7 @@ from bliss.core import util
 
 
 _RUNNING_SCRIPT = None
-CMD_API = bliss.core.api.CmdAPI(3075)
+CMD_API = bliss.core.api.CmdAPI(bliss.config.get('command.port', bliss.DEFAULT_CMD_PORT))
 
 class HTMLRoot:
     Static = pkg_resources.resource_filename('bliss.gui', 'static/')
@@ -86,17 +85,6 @@ if ScriptRoot and not os.path.isdir(ScriptRoot):
         'Script loads may fail.'
     )
     bliss.core.log.warn(msg)
-
-_def_cmd_hist = os.path.join(bliss.config._ROOT_DIR, 'bliss-gui-cmdhist.pcap')
-CmdHistFile = bliss.config.get('command.history.filename', _def_cmd_hist)
-if not os.path.isfile(CmdHistFile):
-    if not os.path.isdir(os.path.dirname(CmdHistFile)):
-        CmdHistFile = _def_cmd_hist
-        msg  = (
-            'command.history.filename directory does not exist. '
-            'Reverting to default {}'
-        ).format(_def_cmd_hist)
-        bliss.core.log.warn(msg)
 
 App     = bottle.Bottle()
 Servers = [ ]
@@ -569,7 +557,7 @@ def handle():
     cmds = []
 
     try:
-        with pcap.open(CmdHistFile, 'r') as stream:
+        with pcap.open(CMD_API.CMD_HIST_FILE, 'r') as stream:
             if 'detailed' in bottle.request.query:
                 cmds = [
                     {
@@ -609,9 +597,6 @@ def handle():
         args = [util.toNumber(t, t) for t in args[1:]]
 
         if CMD_API.send(name, *args):
-            with pcap.open(CmdHistFile, 'a') as output:
-                output.write(command)
-
             Sessions.addEvent('cmd:hist', command)
             bottle.response.status = 200
         else:
