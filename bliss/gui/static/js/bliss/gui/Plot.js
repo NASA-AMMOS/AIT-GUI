@@ -28,6 +28,7 @@ class DygraphsBackend
 {
     constructor (plot) {
         this._plot = plot
+        this._plot_id = Math.random().toString()
     }
 
     addSeries (id, attrs) {
@@ -40,7 +41,11 @@ class DygraphsBackend
             startarray.push(0)
         })
 
-        return new Dygraph(vnode.dom, [ startarray ], options)
+        // Dygraphs is being initialized off of a nested div within the
+        // bliss-plot tag so that displaying the legend in an external
+        // div works as expected. If the external div is nested within the
+        // same tag that Dygraph is initialized on then functionality breaks.
+        return new Dygraph(vnode.dom.children[0], [ startarray ], options)
     }
 
     createOptions (attrs) {
@@ -54,7 +59,8 @@ class DygraphsBackend
             height:     500,
             width:      800,
             legend:     'always',
-            labelsSeparateLines: true,
+            labelsSeparateLines: false,
+            labelsDiv: this._plot_id,
             showRangeSelector: true
         }
     }
@@ -282,7 +288,18 @@ const Plot =
 
     // Mithril lifecycle method
     view (vnode) {
-        return m('bliss-plot', vnode.attrs)
+        if (window.Highcharts) {
+            return m('bliss-plot', vnode.attrs)
+        } else {
+            return m('bliss-plot', vnode.attrs, [
+                m('div'),
+                m('div', {
+                    id: this._backend._plot_id,
+                    class: 'dygraph-legend',
+                    style: `width: ${this._options['width']}px;`
+                })
+            ])
+        }
     }
 }
 
