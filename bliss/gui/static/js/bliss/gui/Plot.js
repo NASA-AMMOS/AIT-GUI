@@ -29,6 +29,7 @@ class DygraphsBackend
     constructor (plot) {
         this._plot = plot
         this._plot_id = Math.random().toString()
+        this._user_specified_label = false
     }
 
     addSeries (id, attrs) {
@@ -62,6 +63,15 @@ class DygraphsBackend
             labelsSeparateLines: false,
             labelsDiv: this._plot_id,
             showRangeSelector: true
+        }
+    }
+
+    handleOptionsOverride(options, overrides) {
+        Object.assign(options, overrides)
+
+        if ('labelsDiv' in overrides) {
+            this._plot_id = overrides['labelsDiv']
+            this._user_specified_label = true
         }
     }
 
@@ -176,6 +186,10 @@ class HighchartsBackend
         }
     }
 
+    handleOptionsOverride(options, overrides) {
+        Object.assign(options, overrides)
+    }
+
     plot(packet) {
         const pname = packet._defn.name
         const names = this._plot._packets[pname]
@@ -223,7 +237,7 @@ const Plot =
      */
     processTag (vnode) {
         if (vnode.tag === 'bliss-plotconfig') {
-            Object.assign(this._options, JSON.parse(vnode.text))
+            this._backend.handleOptionsOverride(this._options, JSON.parse(vnode.text))
         }
         else if (vnode.tag === 'bliss-plotseries') {
             this.processTagSeries(vnode)
@@ -291,14 +305,19 @@ const Plot =
         if (window.Highcharts) {
             return m('bliss-plot', vnode.attrs)
         } else {
-            return m('bliss-plot', vnode.attrs, [
-                m('div'),
-                m('div', {
-                    id: this._backend._plot_id,
-                    class: 'dygraph-legend',
-                    style: `width: ${this._options['width']}px;`
-                })
-            ])
+            let plot_contents = [m('div')]
+
+            if (! this._backend._user_specified_label) {
+                plot_contents.push(
+                    m('div', {
+                        id: this._backend._plot_id,
+                        class: 'dygraph-legend',
+                        style: `width: ${this._options['width']}px;`
+                    })
+                )
+            }
+
+            return m('bliss-plot', vnode.attrs, plot_contents)
         }
     }
 }
