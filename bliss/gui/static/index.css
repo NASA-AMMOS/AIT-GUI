@@ -20,6 +20,7 @@
 @import "./node_modules/bootstrap/dist/css/bootstrap.css";
 @import "./node_modules/bootstrap/dist/css/bootstrap-theme.css";
 @import "./node_modules/codemirror/lib/codemirror.css";
+@import "./node_modules/dygraphs/dist/dygraph.css"
 @import "./css/typeahead.css";
 
 /**
