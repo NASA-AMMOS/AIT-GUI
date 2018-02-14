@@ -673,6 +673,62 @@ def handle():
         except geventwebsocket.WebSocketError:
             pass
 
+@App.route('/tlm/query', method='POST')
+def handle():
+    """"""
+    _fields_file_path = os.path.join(HTMLRoot.Static, 'fields_in.txt')
+
+    data_dir = bottle.request.forms.get('dataDir')
+    time_field = bottle.request.forms.get('timeField')
+    packet = bottle.request.forms.get('packet')
+    fields = bottle.request.forms.get('fields').split(',')
+    start_time = bottle.request.forms.get('startTime')
+    end_time = bottle.request.forms.get('endTime')
+
+    if not (time_field and packet and fields and start_time):
+        bottle.abort(400, 'Malformed parameters')
+
+    with open(_fields_file_path, 'w') as fields_file:
+        for f in fields:
+            fields_file.write(f + '\n')
+
+    pcaps = []
+    for d, dirs, files in os.walk(data_dir):
+        for f in files:
+            if f.endswith('.pcap'):
+                pcaps.append(os.path.join(d, f))
+
+    if len(pcaps) == 0:
+        msg = 'Unable to locate PCAP files for query given data directory {}'.format(data_dir)
+        log.error(msg)
+        bottle.abort(400, msg)
+
+    tlm_query_proc = gevent.subprocess.call([
+        "bliss-tlm-csv",
+        "--time_field",
+        time_field,
+        "--fields",
+        _fields_file_path,
+        "--stime",
+        start_time,
+        "--etime",
+        end_time,
+        "--packet",
+        packet,
+        "--csv",
+        os.path.join(HTMLRoot.Static, 'query_out.csv')
+    ] + ["{}".format(p) for p in pcaps])
+
+    os.remove(_fields_file_path)
+
+    return bottle.static_file('query_out.csv', root=HTMLRoot.Static, mimetype='application/octet-stream')
+
+
+@App.route('/data', method='GET')
+def handle():
+    """Expose bliss.config.data info to the frontend"""
+    return json.dumps(bliss.config._datapaths)
+
 
 @App.route('/seq', method='GET')
 def handle():
