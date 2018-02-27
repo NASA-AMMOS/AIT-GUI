@@ -899,14 +899,13 @@ def handle():
 @App.route('/script/abort', method='DELETE')
 def handle():
     """ Abort a running script """
-    with Sessions.current() as session:
-        if not script_exec_lock.locked():
-            script_exec_lock.acquire()
+    if not script_exec_lock.locked():
+        script_exec_lock.acquire()
 
-        if _RUNNING_SCRIPT:
-            _RUNNING_SCRIPT.kill(UIAbortException())
-        script_exec_lock.release()
-        Sessions.addEvent('script:aborted', None)
+    if _RUNNING_SCRIPT:
+        _RUNNING_SCRIPT.kill(UIAbortException())
+    script_exec_lock.release()
+    Sessions.addEvent('script:aborted', None)
 
 
 def bgExecScript(script_path):
