@@ -80,23 +80,56 @@ class FieldDefinition
 
 class Packet
 {
-    constructor (defn, data, raw=false) {
-        this._defn = defn
-        this._data = data
-        this._raw  = raw
+    /**
+     * Creates and returns a new `Packet` (subclass) instance based on the
+     * given `PacketDefinition` and packet data. If the optional `raw`
+     * parameter is true, all field accesses will result in the raw value
+     * being returned (e.g. DN to EU conversions will be skipped).
+     *
+     * NOTE: This method will also create and register a new `Packet`
+     * subclass based on the given `PacketDefinition`, if this is the first
+     * time `create()` is called with that `PacketDefinition`.
+     */
+    static
+    create (defn, data, raw=false) {
+        const name = defn.name
+        let   ctor = this[name]
 
-        if (Packet.prototype.__init__ === undefined) {
-            for (const name in this._defn.fields) {
-                //const getter = () => this.__get__(name)
-                Object.defineProperty(Packet.prototype, name, {
-                    get: function () {
-                        return this.__get__(name)
-                    }
-                })
-            }
-            Packet.prototype.__init__ = true
+        if (ctor === undefined) {
+            ctor       = Packet.createSubclass(defn)
+            this[name] = ctor
         }
+
+        return new ctor(data, raw)
     }
+
+
+    /**
+     * Creates and returns a new (anonymous) `Packet` subclass at runtime.
+     */
+    static
+    createSubclass (defn) {
+        let SubPacket = function (data, raw) {
+            this._defn = defn
+            this._data = data
+            this._raw  = raw
+        }
+
+        SubPacket.prototype             = Object.create(Packet.prototype)
+        SubPacket.prototype.constructor = SubPacket
+
+        for (const name in defn.fields) {
+            // const getter = () => this.__get__(name)
+            Object.defineProperty(SubPacket.prototype, name, {
+                get: function () {
+                    return this.__get__(name)
+                }
+            })
+        }
+
+        return SubPacket
+    }
+
 
     __get__ (name, raw=false) {
         let value = undefined
@@ -117,8 +150,9 @@ class Packet
         return value
     }
 
+
     __clone__ (data, raw=false) {
-        return new Packet(this._defn, data, raw)
+        return Packet.create(this._defn, data, raw)
     }
 }
 
@@ -368,7 +402,7 @@ class TelemetryStream
         // packet definition, the packet cannot be processed further.
         if ((uid == 0 && data.byteLength == 0) || !defn) return
 
-        let packet = new Packet(defn, data)
+        let packet = Packet.create(defn, data)
 
         clearInterval(this._interval)
         this._stale    = 0
