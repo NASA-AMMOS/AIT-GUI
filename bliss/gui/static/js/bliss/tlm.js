@@ -119,7 +119,6 @@ class Packet
         SubPacket.prototype.constructor = SubPacket
 
         for (const name in defn.fields) {
-            // const getter = () => this.__get__(name)
             Object.defineProperty(SubPacket.prototype, name, {
                 get: function () {
                     return this.__get__(name)

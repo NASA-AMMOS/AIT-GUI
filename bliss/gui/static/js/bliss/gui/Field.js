@@ -144,27 +144,27 @@ const Field =
 
     oncreate(vnode) {
         bliss.tlm.promise.then(() => {
-            let fieldDefn = null
+            this._fieldDefn = null
 
             if (bliss.tlm.dict[this._pname] &&
                 bliss.tlm.dict[this._pname].fields[this._fname]) {
-                fieldDefn = bliss.tlm.dict[this._pname].fields[this._fname]
+                this._fieldDefn = bliss.tlm.dict[this._pname].fields[this._fname]
             }
 
-            if (fieldDefn && !('disable-tlm-popover' in vnode.attrs)) {
-                let desc = fieldDefn.desc ? fieldDefn.desc : "None"
-                let type = fieldDefn.type ? fieldDefn.type._name : "Unknown"
-                let bytes = typeof(fieldDefn.bytes) === "object" ? (
-                    fieldDefn.bytes[0] + " - " + fieldDefn.bytes[1]) : (
-                    fieldDefn.bytes)
+            if (this._fieldDefn && !('disable-tlm-popover' in vnode.attrs)) {
+                let desc = this._fieldDefn.desc ? this._fieldDefn.desc : "None"
+                let type = this._fieldDefn.type ? this._fieldDefn.type._name : "Unknown"
+                let bytes = typeof(this._fieldDefn.bytes) === "object" ? (
+                    this._fieldDefn.bytes[0] + " - " + this._fieldDefn.bytes[1]) : (
+                    this._fieldDefn.bytes)
 
                 let hex_padding = 2
-                if (typeof(fieldDefn.bytes) === "object") {
-                    hex_padding = (fieldDefn.bytes[1] - fieldDefn.bytes[0] + 1) * 2
+                if (typeof(this._fieldDefn.bytes) === "object") {
+                    hex_padding = (this._fieldDefn.bytes[1] - this._fieldDefn.bytes[0] + 1) * 2
                 }
 
-                let mask = fieldDefn.mask ? (
-                    `0x${sprintf(`%0${hex_padding}X`, fieldDefn.mask)}`) : (
+                let mask = this._fieldDefn.mask ? (
+                    `0x${sprintf(`%0${hex_padding}X`, this._fieldDefn.mask)}`) : (
                     "None")
 
                 let popover_content = `
@@ -174,34 +174,34 @@ const Field =
                     <p><b>Bit Mask:</b> ${mask}</p>
                 `
 
-                if (fieldDefn.enum) {
+                if (this._fieldDefn.enum) {
                     let enums = ""
-                    let _enum = fieldDefn.enum
+                    let _enum = this._fieldDefn.enum
                     for (let k in _enum) {
                         enums += `<dt>${k}</dt><dd>${_enum[k]}`
                     }
                     popover_content += `<b>Enumerated Values:</b><dl>${enums}</dl>`
                 }
 
-                if (fieldDefn.dntoeu) {
+                if (this._fieldDefn.dntoeu) {
                     let dntoeu = ""
-                    let _dntoeu = fieldDefn.dntoeu
+                    let _dntoeu = this._fieldDefn.dntoeu
                     for (let k in _dntoeu) {
                         dntoeu += `<dt>${k}</dt><dd>${_dntoeu[k]}`
                     }
                     popover_content += `<b>DN-to-EU:</b><dl>${dntoeu}</dl>`
                 }
 
-                if (fieldDefn.aliases) {
+                if (this._fieldDefn.aliases) {
                     let aliases = ""
-                    let _aliases = fieldDefn.aliases
+                    let _aliases = this._fieldDefn.aliases
                     for (let k in _aliases) {
                         aliases += `<dt>${k}</dt><dd>${_aliases[k]}`
                     }
                     popover_content += `<b>Aliases:</b><dl>${aliases}</dl>`
                 }
 
-                let title = '<div>' + fieldDefn.name +
+                let title = '<div>' + this._fieldDefn.name +
                             '<span class="pull-right" style="cursor:pointer">' +
                               '\u00D7' +
                             '</span></div>'
@@ -252,12 +252,10 @@ const Field =
         })
     },
 
-    // Mithril lifecycle method
     onbeforeupdate (vnode, old) {
         return this.hasChanged()
     },
 
-    // Mithril view() method
     view (vnode) {
         const packet = this.getPacket()
         let   value  = this.getValue(packet, this._raw)
@@ -272,6 +270,18 @@ const Field =
         }
         else if (value instanceof EVRDefinition) {
             value = value.name ? value.name : (value.code ? value.code : 'Unidentified EVR')
+        }
+        else if(Array.isArray(value)) {
+            // If we're handling an array value that means the field is a ArrayType.
+            // ArrayType elements are displayed as separate hex dumps of their contents.
+            let elemSize = 2 * this._fieldDefn.type._nbytes / this._fieldDefn.type._num_elems
+            let valAcc = ''
+            let format = `0x%0${elemSize}X `
+            for (let i of value) {
+                valAcc += sprintf(format, i)
+            }
+
+            value = valAcc
         }
         else {
             if (vnode.attrs.format) {
