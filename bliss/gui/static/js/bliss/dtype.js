@@ -71,6 +71,35 @@ class EVRType
 }
 
 
+class ArrayType
+{
+    constructor(name) {
+        // Note: We need to strip out the primitive type that the array
+        // is composed of as well as the number of elements from the type
+        // string (E.g., ArrayType('U8[3]')). It would be nice if we
+        // received the type as only 'U8[3]' so we could handle this
+        // more elegantly.
+        this._elem_type = name.slice(11, name.indexOf('['))
+        this._prim_type = TypeMap[this._elem_type]
+        this._num_elems = parseInt(name.slice(name.indexOf('[') + 1, name.indexOf(']')))
+        this._name = name.slice(11, name.length - 2)
+        this._nbytes = this._num_elems * this._prim_type._nbytes
+    }
+
+    decode(view, offset=0) {
+        if (!inBounds(view, this._nbytes, offset)) return null
+
+        let retVals = []
+        for (let i = 0; i < this._num_elems; i++) {
+            let curOffset = (i * this._prim_type._nbytes) + offset
+            retVals.push(this._prim_type.decode(view, curOffset))
+        }
+
+        return retVals
+    }
+}
+
+
 /**
  * PrimitiveType
  *
@@ -233,7 +262,15 @@ TypeMap['TIME64'] = new Time64Type('TIME64')
  * @returns the PrimitiveType for typename or undefined.
  */
 function get (typename) {
-    return TypeMap[typename]
+    let type = undefined
+
+    if (typename in TypeMap) {
+        type = TypeMap[typename]
+    } else if (typename.startsWith('ArrayType')) {
+        type = new ArrayType(typename)
+    }
+
+    return type
 }
 
 
