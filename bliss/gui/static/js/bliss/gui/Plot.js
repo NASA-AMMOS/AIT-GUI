@@ -95,7 +95,9 @@ class DygraphsBackend
             this._plot._data.shift()
         }
 
-        this._plot._chart.updateOptions( { 'file': this._plot._data } )
+        if (this._plot.shouldRedraw()) {
+            this._plot._chart.updateOptions( { 'file': this._plot._data } )
+        }
     }
 }
 
@@ -216,7 +218,9 @@ class HighchartsBackend
                 }
             }
         })
-        this._plot._chart.redraw()
+        if (this._plot.shouldRedraw()) {
+            this._plot._chart.redraw()
+        }
     }
 }
 
@@ -273,7 +277,22 @@ const Plot =
     },
 
 
-    // Mithril lifecycle method
+    /**
+     * Determine if a plot should redraw given the time since last rendering
+     */
+    shouldRedraw() {
+        let curTime = Date.now()
+        let redrawDelta = (curTime - this._lastRedrawTime) / 1000
+
+        if (redrawDelta > this._redrawDelta) {
+            this._lastRedrawTime = curTime
+            return true
+        } else {
+            return false
+        }
+    },
+
+
     oninit (vnode) {
         this._backend = (window.Highcharts) ?
             new HighchartsBackend(this) : new DygraphsBackend(this)
@@ -283,6 +302,16 @@ const Plot =
         this._packets  = { }
         this._time     = null
         this._initZoom = false
+        this._redrawFrequency = parseInt(vnode.attrs['redraw-frequency']) || 10
+        let redrawFreqMin = parseInt(vnode.attrs['redraw-frequency-variation-min']) || -2
+        let redrawFreqMax = parseInt(vnode.attrs['redraw-frequency-variation-max']) || 2
+        let fuzzyRedrawVariation = ('redraw-frequency-variation' in vnode.attrs) ? vnode.attrs['redraw-frequency-variation'] === true : false
+
+        // If we want a "fuzzy redraw frequency" we add a random value from
+        // [redrawFreqMin to redrawFreqMax] to the redraw frequency.
+        this._redrawDelta = this._redrawFrequency + (fuzzyRedrawVariation ?
+            Math.random() * (redrawFreqMax - redrawFreqMin) + redrawFreqMin : 0)
+        this._lastRedrawTime = Date.now()
 
         vnode.children.forEach(child => this.processTag(child))
 
@@ -294,13 +323,11 @@ const Plot =
     },
 
 
-    // Mithril lifecycle method
     oncreate (vnode) {
         this._chart = this._backend.createChart(vnode, this._options)
     },
 
 
-    // Mithril lifecycle method
     view (vnode) {
         if (window.Highcharts) {
             return m('bliss-plot', vnode.attrs)
