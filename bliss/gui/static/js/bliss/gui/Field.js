@@ -33,7 +33,7 @@ const Field =
         if (!packet) return
 
         this._cached.packet = packet
-        this._cached.rawval = this.getValue(packet, true)
+        this._cached.val = this.getValue(packet, this._raw)
     },
 
 
@@ -66,7 +66,7 @@ const Field =
     hasChanged () {
         const packet = this.getPacket()
         return this._cached.packet !== packet &&
-               this._cached.rawval !== this.getValue(packet, true)
+               this._cached.val !== this.getValue(packet, this._raw)
     },
 
     /**
