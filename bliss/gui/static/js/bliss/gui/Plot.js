@@ -30,9 +30,11 @@ class DygraphsBackend
         this._plot = plot
         this._plot_id = Math.random().toString()
         this._user_specified_label = false
+        this._series = []
     }
 
     addSeries (id, attrs) {
+        this._series.push(id)
         this._plot._options.labels.push(attrs.caption || attrs.name)
     }
 
@@ -55,6 +57,7 @@ class DygraphsBackend
 
         return {
             drawPoints: true,
+            connectSeparatedPoints: true,
             xlabel:     'Time (UTC)',
             labels:     ['Time'],
             height:     500,
@@ -83,8 +86,16 @@ class DygraphsBackend
 
         let row = [ this._plot._time.get(packet) ]
 
-        names.forEach( (name) => {
-            row.push( packet.__get__(name) )
+        // For each series of data, if it's in the current packet
+        // that we're updating, add the associated point. Otherwise,
+        // add a null value. Dygraphs requires that the data added
+        // to the plot maintains the same "shape" as the labels.
+        this._series.forEach((id) => {
+            if (id.startsWith(pname)) {
+                row.push(packet.__get__(id.split('.')[1]))
+            } else {
+                row.push(null)
+            }
         })
 
         this._plot._data.push(row)
