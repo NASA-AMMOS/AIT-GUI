@@ -79,3 +79,8 @@ bliss-messages .message {
     order: 3;
     width: 100%
 }
+
+bliss-messages .scroll-reset {
+    order: 4;
+    cursor: pointer;
+}
