@@ -106,6 +106,7 @@ const MnemonicSearch = {
 
         let data = {}
         let tlm = bliss.tlm.dict[this._packet]._fields
+        let limits = bliss.limits.dict[`${this._packet}.${this._selection}`]
 
         if (this._selection in tlm) {
             let tlm_point = tlm[this._selection]
@@ -179,6 +180,49 @@ const MnemonicSearch = {
                         ])
                     }),
                 ]))
+            }
+
+            if (limits) {
+                let l = []
+                if (limits.value) {
+                    for (let k of ['warn', 'error']) {
+                        if (! k in limits.value) {continue}
+
+                        l.push(m('div', [
+                            m('b', `\u2003${k}:`),
+                            m('br')
+                        ]))
+
+                        let vals = (typeof limits.value[k] === 'object') ? limits.value[k] : [limits.value[k]]
+                        for (let v of vals) {
+                            l.push(m('div', [
+                                m('span', `\u2003\u2003${v}`),
+                                m('br')
+                            ]))
+                        }
+                    }
+                } else {
+                    for (let t of ['lower', 'upper']) {
+                        if (! t in limits) {continue}
+
+                        l.push(m('div', [
+                            m('b', `\u2003${t}:`),
+                            m('br')
+                        ]))
+
+                        for (let k of ['warn', 'error']) {
+                            if (k in limits[t]) {
+                                l.push(m('div', [
+                                    m('b', `\u2003\u2003${k}: `),
+                                    m('span', limits[t][k]),
+                                    m('br')
+                                ]))
+                            }
+                        }
+                    }
+                }
+
+                data.body.push(m('div', [m('b', 'Limits: ', m('br'))].concat(l)))
             }
 
             data.body.push(m('hr'))
