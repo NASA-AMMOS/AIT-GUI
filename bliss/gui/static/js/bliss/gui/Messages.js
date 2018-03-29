@@ -64,11 +64,24 @@ const Messages =
             ])
         )
 
-        let header = m('div', {class: 'entry entry--header'}, [
-                m('div', {class: 'timestamp'}, 'Timestamp'),
-                m('div', {class: 'severity'}, 'Severity'),
-                m('div', {class: 'message'}, 'Message')
-            ])
+        let header_contents =  [
+            m('div', {class: 'timestamp'}, 'Timestamp'),
+            m('div', {class: 'severity'}, 'Severity'),
+            m('div', {class: 'message'}, 'Message')
+        ]
+
+        // If the users moved the scrollbar out of the auto-scroll position
+        // provide them with a button to return to the default scroll position.
+        if (! (this._updateScroll)) {
+            header_contents.push(m('div', {
+                class: 'scroll-reset',
+                onclick: (e) => {
+                    this._updateScroll = true
+                }
+            }, m('span', {class: 'glyphicon glyphicon-chevron-down'})))
+        }
+
+        let header = m('div', {class: 'entry entry--header'}, header_contents)
 
         return m('bliss-messages', [
                  header,
@@ -77,9 +90,9 @@ const Messages =
                    onscroll: (e) => {
                        let msgs = vnode.dom.getElementsByClassName('entry_container')[0]
                        if (msgs.scrollTop == msgs.scrollHeight - msgs.clientHeight) {
-                           this._updateScroll = true;
+                           this._updateScroll = true
                        } else {
-                           this._updateScroll = false;
+                           this._updateScroll = false
                            this._scrollTop = msgs.scrollTop
                        }
                    }
