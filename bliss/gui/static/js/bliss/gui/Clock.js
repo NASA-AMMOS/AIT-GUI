@@ -34,45 +34,74 @@ const Clock =
 {
     _now: null,
     _h24: true,
-    _utc: true,
+    _utc: false,
+    _gps: true,
     _doy: false,
+    _utc_gps_offset: 0,
 
-
-    toggleH24 () { this._h24 = !this._h24 },
-    toggleUTC () { this._utc = !this._utc },
-    toggleDOY () { this._doy = !this._doy },
+    toggleH24() { this._h24 = !this._h24 },
+    toggleTimeFormat() {
+        if (this._gps) {
+            this._gps = false
+            this._utc = true
+        } else if (this._utc) {
+            this._gps = false
+            this._utc = false
+        } else {
+            this._gps = true
+            this._utc = false
+        }
+    },
+    toggleDOY() { this._doy = !this._doy },
     update()     { this._now = new Date() },
 
 
-    // Mithril lifecycle method
     oninit (vnode) {
         const attrs = vnode.attrs
 
+        m.request({
+            url: '/leapseconds',
+            method: 'GET'
+        }).then((data) => {
+            this._utc_gps_offset = data[data.length - 1][1]
+        })
+
         this._h24 = attrs.h24 !== undefined ? attrs.h24 : Clock._h24
         this._utc = attrs.utc !== undefined ? attrs.utc : Clock._utc
+        this._gps = attrs.gps !== undefined ? attrs.gps : Clock._gps
         this._doy = attrs.doy !== undefined ? attrs.doy : Clock._doy
         this.update()
     },
 
 
-    // Mithril lifecycle method
     oncreate (vnode) {
         setInterval( () => { Clock.update.call(this); m.redraw(); }, 1000 )
     },
 
 
-    // Mithril view() method
     view (vnode) {
-        const opts = { doy: this._doy, h24: this._h24, utc: this._utc }
-        const date = format.date(this._now, opts)
-        const time = format.time(this._now, opts)
-        const tz   = format.tz  (this._now, opts)
+        const opts = {
+            doy: this._doy,
+            h24: this._h24,
+            utc: this._utc,
+            gps: this._gps,
+            utc_gps_offset: this._utc_gps_offset
+        }
+
+        // Create a copy of the clock's time to avoid flickering. This will
+        // happen when the clock is in GPS mode and the current time updates.
+        let datetime = new Date(this._now.getTime())
+
+        format.adjustUTCtoGPS(datetime, opts)
+        const date = format.date(datetime, opts)
+        const time = format.time(datetime, opts)
+        const tz   = format.tz  (datetime, opts)
 
 
         return m('bliss-clock', vnode.attrs, [
             m('span.date', { onclick: Clock.toggleDOY.bind(this) }, date), ' ',
             m('span.time', { onclick: Clock.toggleH24.bind(this) }, time), ' ',
-            m('span.tz'  , { onclick: Clock.toggleUTC.bind(this) }, tz)
+            m('span.tz'  , { onclick: Clock.toggleTimeFormat.bind(this) }, tz)
         ])
     }
 }

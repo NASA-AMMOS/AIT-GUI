@@ -62,7 +62,7 @@ import requests
 
 import bliss.core
 
-from bliss.core import api, ccsds, cfg, cmd, evr, gds, limits, log, pcap, tlm
+from bliss.core import api, ccsds, cfg, cmd, dmc, evr, gds, limits, log, pcap, tlm
 from bliss.core import util
 
 
@@ -728,6 +728,23 @@ def handle():
 def handle():
     """Expose bliss.config.data info to the frontend"""
     return json.dumps(bliss.config._datapaths)
+
+
+@App.route('/leapseconds', method='GET')
+def handle():
+    """Return UTC-GPS Leapsecond data
+
+    **Example Response**:
+
+    .. sourcecode: json
+
+       [
+           ["1981-07-01 00:00:00", 1],
+           ["1982-07-01 00:00:00", 2],
+           ["1983-07-01 00:00:00", 3]
+       ]
+    """
+    return json.dumps(dmc.LeapSeconds.leapseconds, default=str)
 
 
 @App.route('/seq', method='GET')

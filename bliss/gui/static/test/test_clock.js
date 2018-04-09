@@ -33,11 +33,16 @@ describe('Clock object', function () {
         clock._h24.should.equal(false)
     })
 
-    it('should allow for toggling to/from UTC time', function() {
+    it('should allow for toggling to/from GPS/UTC/Local time', function() {
         var clock = bliss.gui.Clock
-        clock._utc.should.equal(true)
-        clock.toggleUTC()
         clock._utc.should.equal(false)
+        clock._gps.should.equal(true)
+        clock.toggleTimeFormat()
+        clock._utc.should.equal(true)
+        clock._gps.should.equal(false)
+        clock.toggleTimeFormat()
+        clock._utc.should.equal(false)
+        clock._gps.should.equal(false)
     })
 
     it('should allow for toggling Julian date to/from DOY', function() {
