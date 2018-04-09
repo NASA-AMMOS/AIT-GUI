@@ -19,6 +19,41 @@ information to foreign countries or providing access to foreign persons.
 <head>
   <link rel="stylesheet" href="bliss/gui/static/build/bliss.bundle.css">
   <script src="bliss/gui/static/build/bliss.bundle.js"></script>
+  <style>
+    td {
+      padding:  1px 5px 1px 5px;
+      vertical-align:  middle;
+    }
+
+    table.telem {
+      width:  100%;
+    }
+
+    table.telem td {
+      font-weight:  bold;
+    }
+
+    table.telem.col2 td {
+      width:  25%;
+    }
+
+    table.telem.col4 td {
+      width:  12.5%;
+    }
+
+    .telem-field-name {
+      font-weight: bold;
+    }
+
+    .telem-group-title
+    {
+      background-color:  #f5f5f5;
+      border:  1px solid #e3e3e3;
+      border-radius:  3px;
+      padding:  3px;
+      text-align:  center;
+    }
+  </style>
 </head>
 <body id='bliss-gui'>
 
@@ -65,11 +100,53 @@ information to foreign countries or providing access to foreign persons.
   <div class='telemcontainer'>
     <bliss-tabset class="nav-tabs">
       <bliss-tab title="Foo">
-        Voltage_D: <bliss-field packet="1553_HS_Packet" name="Voltage_D"></bliss-field>
-        <br />
-        Product Type: <bliss-field packet="Ethernet_HS_Packet" name="product_type"></bliss-field>
-        <br />
-        Current_A: <bliss-field packet="1553_HS_Packet" name="Current_A"></bliss-field>
+        <div class="col-sm-6">
+          <h4 class="telem-group-title">1553 HS Voltages</h4>
+          <table class="telem col2">
+            <tr> <td> Voltage_A: <bliss-field packet="1553_HS_Packet" name="Voltage_A"></bliss-field>
+                 <td> Voltage_B: <bliss-field packet="1553_HS_Packet" name="Voltage_B"></bliss-field>
+            <tr> <td> Voltage_C: <bliss-field packet="1553_HS_Packet" name="Voltage_C"></bliss-field>
+                 <td> Voltage_D: <bliss-field packet="1553_HS_Packet" name="Voltage_D"></bliss-field>
+          </table>
+
+          <br />
+          <br />
+          <br />
+
+          <bliss-plot redraw-frequency="1">
+            <bliss-plot-config>
+              {
+                "width": 600,
+                "height": 300
+              }
+            </bliss-plot-config>
+            <bliss-plot-series packet="1553_HS_Packet" name="Voltage_A"></bliss-plot-series>
+            <bliss-plot-series packet="1553_HS_Packet" name="Voltage_B"></bliss-plot-series>
+            <bliss-plot-series packet="1553_HS_Packet" name="Voltage_C"></bliss-plot-series>
+            <bliss-plot-series packet="1553_HS_Packet" name="Voltage_D"></bliss-plot-series>
+          </bliss-plot>
+        </div>
+        <div class="col-sm-6">
+          <h4 class="telem-group-title">1553 HS Currents</h4>
+          <table class="telem col2">
+            <tr> <td> Current_A: <bliss-field packet="1553_HS_Packet" name="Current_A"></bliss-field>
+          </table>
+
+          <br />
+          <br />
+          <br />
+          <br />
+
+          <bliss-plot redraw-frequency="1">
+            <bliss-plot-config>
+              {
+                "width": 600,
+                "height": 300
+              }
+            </bliss-plot-config>
+            <bliss-plot-series packet="1553_HS_Packet" name="Current_A"></bliss-plot-series>
+          </bliss-plot>
+        </div>
       </bliss-tab>
       <bliss-tab title="TlmQuery"><bliss-telemetryquery></bliss-telemetryquery></bliss-tab>
       <bliss-tab title="Bar"> Bar </bliss-tab>
