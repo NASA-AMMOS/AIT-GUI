@@ -17,17 +17,23 @@
 import { DOY, timezone } from './time'
 
 
-function date (obj, { doy = false, utc = true } = {}) {
-    let   yyyy, mm, dd, formatted
-    const date = normalize(obj)
+function adjustUTCtoGPS(obj, {gps = true, utc_gps_offset = 0}) {
+    if (gps) {
+        let datetime = normalize(obj)
+        datetime.setSeconds(datetime.getSeconds() + utc_gps_offset)
+    }
+}
 
 
-    if (utc) {
+function date (obj, { doy = false, gps = true } = {}) {
+    let yyyy, mm, dd, formatted
+    let date = normalize(obj)
+
+    if (gps || utc) {
         yyyy = date.getUTCFullYear()
         mm   = date.getUTCMonth()
         dd   = date.getUTCDate()
-    }
-    else {
+    } else {
         yyyy = date.getFullYear()
         mm   = date.getMonth()
         dd   = date.getDate()
@@ -87,18 +93,16 @@ function pad3 (n) {
 }
 
 
-function time (obj, { h24 = true, utc = true } = {}) {
-    let   hh, mm, ss, formatted
-    let   suffix = ' AM'
-    const time   = normalize(obj)
+function time (obj, { h24 = true, gps = true } = {}) {
+    let hh, mm, ss, formatted
+    let suffix = ' AM'
+    let time = normalize(obj)
 
-
-    if (utc) {
+    if (gps || utc) {
         hh = time.getUTCHours()
         mm = time.getUTCMinutes()
         ss = time.getUTCSeconds()
-    }
-    else {
+    } else {
         hh = time.getHours()
         mm = time.getMinutes()
         ss = time.getSeconds()            
@@ -119,9 +123,15 @@ function time (obj, { h24 = true, utc = true } = {}) {
 }
 
 
-function tz (obj, { utc = true } = {}) {
-    return utc ? 'UTC' : timezone(obj)
+function tz (obj, { utc = false, gps = true } = {}) {
+    if (gps) {
+        return 'GPS'
+    } else if (utc) {
+        return 'UTC'
+    } else {
+        return timezone(obj)
+    }
 }
 
 
-export { date, datetime, time, tz }
+export { date, datetime, time, tz, adjustUTCtoGPS }
