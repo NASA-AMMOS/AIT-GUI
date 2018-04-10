@@ -186,7 +186,7 @@ const MnemonicSearch = {
                 let l = []
                 if (limits.value) {
                     for (let k of ['warn', 'error']) {
-                        if (! k in limits.value) {continue}
+                        if (! (k in limits.value)) {continue}
 
                         l.push(m('div', [
                             m('b', `\u2003${k}:`),
@@ -203,7 +203,7 @@ const MnemonicSearch = {
                     }
                 } else {
                     for (let t of ['lower', 'upper']) {
-                        if (! t in limits) {continue}
+                        if (! (t in limits)) {continue}
 
                         l.push(m('div', [
                             m('b', `\u2003${t}:`),
