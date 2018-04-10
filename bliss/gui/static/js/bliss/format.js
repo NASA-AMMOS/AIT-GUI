@@ -17,7 +17,7 @@
 import { DOY, timezone } from './time'
 
 
-function adjustUTCtoGPS(obj, {gps = true, utc_gps_offset = 0}) {
+function adjustUTCtoGPS(obj, {gps = true, utc = false, utc_gps_offset = 0}) {
     if (gps) {
         let datetime = normalize(obj)
         datetime.setSeconds(datetime.getSeconds() + utc_gps_offset)
@@ -25,7 +25,7 @@ function adjustUTCtoGPS(obj, {gps = true, utc_gps_offset = 0}) {
 }
 
 
-function date (obj, { doy = false, gps = true } = {}) {
+function date (obj, { doy = false, gps = true, utc = false } = {}) {
     let yyyy, mm, dd, formatted
     let date = normalize(obj)
 
@@ -93,7 +93,7 @@ function pad3 (n) {
 }
 
 
-function time (obj, { h24 = true, gps = true } = {}) {
+function time (obj, { h24 = true, gps = true, utc = false } = {}) {
     let hh, mm, ss, formatted
     let suffix = ' AM'
     let time = normalize(obj)
