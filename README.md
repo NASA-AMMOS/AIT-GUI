@@ -1,22 +1,22 @@
-Bespoke Links to Instruments for Surface and Space (BLISS) GUI
-==============================================================
+AMMOS Instrument Toolkit (AIT) GUI
+==================================
 
-BLISS GUI provides a framework for building a custom website for realtime telemetry monitoring, commanding, and other MOS operations with only minimal HTML and configuration file changes. Built on top of the BLISS Core libraries, BLISS GUI provides web-development friendly access to the underlying telemetry, commanding, EVR, system logging, and other BLISS Core functions in addition to a suite of pre-built UI Components and a REST API to handle common MOS use cases.
+AIT GUI provides a framework for building a custom website for realtime telemetry monitoring, commanding, and other MOS operations with only minimal HTML and configuration file changes. Built on top of the AIT Core libraries, AIT GUI provides web-development friendly access to the underlying telemetry, commanding, EVR, system logging, and other AIT Core functions in addition to a suite of pre-built UI Components and a REST API to handle common MOS use cases.
 
 Getting Started
 ---------------
 
-You can read through the [Installation Page](https://github.jpl.nasa.gov/pages/bliss/bliss-gui/installation.html) for instruction on how to install BLISS GUI.
+You can read through the [Installation Page](http://ait-gui.readthedocs.io/en/latest/installation.html) for instruction on how to install AIT GUI.
 
 Contributing
 ------------
 
-For information on how to contribute please see the [BLISS GUI Contributors Guides](https://github.jpl.nasa.gov/pages/bliss/bliss-gui/contribute.html)
+For information on how to contribute please see the [AIT GUI Contributors Guides](http://ait-gui.readthedocs.io/en/latest/contribute.html)
 
 Browser Requirements
 --------------------
 
-BLISS GUI requires one of the following browsers:
+AIT GUI requires one of the following browsers:
 
 - Firefox version 52.0 or newer
 - Chrome version 57.0 or newer
