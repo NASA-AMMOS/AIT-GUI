@@ -85,12 +85,9 @@ setup(
     include_package_data = True,
 
     install_requires = ['bliss-core>=0.35.0'],
-    dependency_links = [
-       'https://bliss.jpl.nasa.gov/pypi/simple/bliss-core/'
-    ],
     extras_require = {
         'docs':  [
-            'Sphinx',
+            'Sphinx==1.7.2',
             'sphinx_rtd_theme',
             'sphinxcontrib-httpdomain'
         ]
