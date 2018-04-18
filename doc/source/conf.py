@@ -15,6 +15,10 @@
 import sys
 import os
 
+# BLISS_CONFIG is set to fake location so that the build on ReadTheDocs complete.
+if os.environ.get('BLISS_CONFIG', None) is None:
+    os.environ['BLISS_CONFIG'] = "config.yml"
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
