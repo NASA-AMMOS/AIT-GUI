@@ -58,7 +58,7 @@ const Messages =
     view(vnode) {
         const rows = this._messages.map(msg =>
             m('div', {class: 'entry entry--' + msg.severity.toLowerCase()}, [
-                m('div', {class: 'timestamp'}, format.datetime(msg.timestamp)),
+                m('div', {class: 'timestamp'}, format.datetime(msg.timestamp, {utc: true, gps: false})),
                 m('div', {class: 'severity'}, msg.severity),
                 m('div', {class: 'message'}, msg.message)
             ])
