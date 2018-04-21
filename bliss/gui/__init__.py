@@ -878,14 +878,22 @@ def handle():
     :statuscode 400: When the script name cannot be located
     """
     global _RUNNING_SCRIPT
-    with Sessions.current() as session:
-        script_name = bottle.request.forms.get('scriptPath')
-        script_path = os.path.join(ScriptRoot, script_name)
 
-        if not os.path.exists(script_path):
-            bottle.abort(400, "Script cannot be located")
+    if _RUNNING_SCRIPT is None:
+        with Sessions.current() as session:
+            script_name = bottle.request.forms.get('scriptPath')
+            script_path = os.path.join(ScriptRoot, script_name)
 
-        _RUNNING_SCRIPT = gevent.spawn(bgExecScript, script_path)
+            if not os.path.exists(script_path):
+                bottle.abort(400, "Script cannot be located")
+
+            _RUNNING_SCRIPT = gevent.spawn(bgExecScript, script_path)
+    else:
+        msg = (
+            'Attempted to execute script while another script is running. '
+            'Please wait until the previous script completes and try again'
+        )
+        log.warn(msg)
 
 
 @App.route('/script/run', method='PUT')
@@ -926,6 +934,8 @@ def handle():
 
 
 def bgExecScript(script_path):
+    global _RUNNING_SCRIPT
+
     debugger = BlissDB()
     with open(script_path) as infile:
         script = infile.read()
@@ -940,6 +950,8 @@ def bgExecScript(script_path):
             e
         ))
         Sessions.addEvent('script:error', str(e))
+    finally:
+        _RUNNING_SCRIPT = None
 
 
 class BlissDB(bdb.Bdb):

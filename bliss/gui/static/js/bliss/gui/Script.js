@@ -210,10 +210,23 @@ const ScriptLoadModal = {
 const ScriptExecCtrl = {
     oninit(vnode) {
         this._script_state = vnode.attrs.scriptState
+        this._script_exec_triggered = false
     },
 
     view(vnode) {
         this._script_state = vnode.attrs.scriptState
+
+        // We need to track whether we have internally triggered a script
+        // execution and compare it against the "global" execution state
+        // to ensure that we're preventing functionality from being
+        // triggered multiple times. Most importantly, we need this to
+        // ensure that a script cannot be triggered twice via double
+        // clicking the execution button
+        //
+        // If the global state indicates that a script is running we know
+        // that we can safely say that the execution has propagated and
+        // we can stop preventing functionality.
+        if (this._script_state === 'running') this._script_exec_triggered = false
 
         // Invert the script execution state to give us the button display
         // classes / states
@@ -233,13 +246,21 @@ const ScriptExecCtrl = {
                         url: '/script/run'
                     })
                 } else {
+                    if (this._script_exec_triggered) return
+
                     if (vnode.attrs.ScriptSelectionData.selected !== null) {
+                        this._script_exec_triggered = true
                         let data = new FormData()
                         data.append('scriptPath', vnode.attrs.ScriptSelectionData.selected)
                         m.request({
                             method: 'POST',
                             url: '/script/run',
                             data: data
+                        }).catch(() => {
+                            // If something failed when we were trying to run the script we
+                            // need to update internal logic so we're not out of sync. E.g.,
+                            // the script might have not been loaded so nothing executed.
+                            this._script_exec_triggered = false
                         })
                     }
                 }
