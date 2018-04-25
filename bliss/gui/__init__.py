@@ -44,7 +44,7 @@ import gevent.monkey; gevent.monkey.patch_all()
 import geventwebsocket
 
 import bdb
-import collections
+from collections import defaultdict
 import copy
 import datetime
 import json
@@ -62,7 +62,7 @@ import requests
 
 import bliss.core
 
-from bliss.core import api, ccsds, cfg, cmd, dmc, evr, gds, limits, log, pcap, tlm
+from bliss.core import api, ccsds, cfg, cmd, dmc, evr, gds, limits, log, notify, pcap, tlm
 from bliss.core import util
 
 
@@ -89,6 +89,7 @@ if ScriptRoot and not os.path.isdir(ScriptRoot):
 
 App     = bottle.Bottle()
 Servers = [ ]
+Monitor_Greenlet = None
 
 bottle.debug(True)
 bottle.TEMPLATE_PATH.append(HTMLRoot.User)
@@ -339,6 +340,8 @@ def cleanup():
     for s in Servers:
         s.stop()
 
+    cleanup_monitoring()
+
 
 def startBrowser(url, name=None):
     browser = None
@@ -365,6 +368,51 @@ def startBrowser(url, name=None):
 
 def wait():
     gevent.wait()
+
+
+def enable_monitoring():
+    global Monitor_Greenlet
+
+    def telem_handler(session):
+        limit_dict = defaultdict(dict)
+        for k, v in limits.getDefaultDict().iteritems():
+            packet, field = k.split('.')
+            limit_dict[packet][field] = v
+
+        packet_dict = defaultdict(dict)
+        for k, v in tlm.getDefaultDict().iteritems():
+            packet_dict[v.uid] = v
+
+        while True:
+            if len(session.telemetry) > 0:
+                p = session.telemetry.popleft()
+                packet = packet_dict[p[0]]
+                decoded = tlm.Packet(packet, data=bytearray(p[1]))
+
+                if packet.name in limit_dict:
+                    for field, defn in limit_dict[packet.name].iteritems():
+                        v = decoded._getattr(field)
+                        if defn.error(v):
+                            msg = 'Field {} error out of limit with value {}'.format(field, v)
+                            log.error(msg)
+                            notify.trigger_notification('limit-error', msg)
+                            raise gevent.GreenletExit()
+                        elif defn.warn(v):
+                            msg = 'Field {} warning out of limit with value {}'.format(field, v)
+                            log.warn(msg)
+                            notify.trigger_notification('limit-warn', msg)
+                            raise gevent.GreenletExit()
+
+            gevent.sleep(0)
+
+    s = bliss.gui.Sessions.create()
+    Monitor_Greenlet = gevent.spawn(telem_handler, s)
+
+
+def cleanup_monitoring():
+    global Monitor_Greenlet
+
+    if Monitor_Greenlet: Monitor_Greenlet.kill()
 
 
 Sessions = SessionStore()
