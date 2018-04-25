@@ -76,7 +76,7 @@ class CustomInstallCmd(install):
 
 setup(
     name = 'bliss-gui',
-    version = '0.23.1',
+    version = '0.24.0',
     packages = find_packages(exclude=['tests']),
     author = 'BLISS-Core Development Team',
     author_email = 'bliss@jpl.nasa.gov',
@@ -84,7 +84,7 @@ setup(
     namespace_packages   = ['bliss'],
     include_package_data = True,
 
-    install_requires = ['bliss-core>=0.36.0'],
+    install_requires = ['bliss-core>=0.37.0'],
     extras_require = {
         'docs':  [
             'Sphinx==1.7.2',

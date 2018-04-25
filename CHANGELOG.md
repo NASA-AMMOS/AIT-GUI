@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.24.0](https://github.com/NASA-AMMOS/AIT-GUI/tree/0.24.0) (2018-04-24)
+[Full Changelog](https://github.com/NASA-AMMOS/AIT-GUI/compare/0.23.1...0.24.0)
+
+**Closed issues:**
+
+- Add telemetry limit monitoring and user notification support [\#22](https://github.com/NASA-AMMOS/AIT-GUI/issues/22)
+
+**Merged pull requests:**
+
+- Issue \#22 - Add telemetry limit monitoring and user notification support [\#23](https://github.com/NASA-AMMOS/AIT-GUI/pull/23) ([MJJoyce](https://github.com/MJJoyce))
+
 ## [0.23.1](https://github.com/NASA-AMMOS/AIT-GUI/tree/0.23.1) (2018-04-21)
 [Full Changelog](https://github.com/NASA-AMMOS/AIT-GUI/compare/0.23.0...0.23.1)
 
