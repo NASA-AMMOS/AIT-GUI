@@ -58,7 +58,7 @@ class DygraphsBackend
         return {
             drawPoints: true,
             connectSeparatedPoints: true,
-            xlabel:     'Time (UTC)',
+            xlabel:     'Time',
             labels:     ['Time'],
             height:     500,
             width:      800,
