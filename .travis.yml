@@ -1,0 +1,10 @@
+language: node_js
+node_js:
+  - "node"
+  
+before_install:
+  - cd bliss/gui/static
+
+branches:
+  only:
+    - master
