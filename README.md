@@ -22,3 +22,6 @@ AIT GUI requires one of the following browsers:
 - Chrome version 57.0 or newer
 
 Safari v10.1 or newer will likely work as well but compatibility is not regularly checked or guaranteed.
+
+-----
+[![Build Status](https://travis-ci.org/NASA-AMMOS/AIT-GUI.svg?branch=master)](https://travis-ci.org/NASA-AMMOS/AIT-GUI) [![Documentation Status](https://readthedocs.org/projects/ait-gui/badge/?version=master)](http://ait-gui.readthedocs.io/en/master/?badge=master)
