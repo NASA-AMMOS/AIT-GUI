@@ -16,8 +16,17 @@ from setuptools import setup, find_packages
 from setuptools.command.install import install
 from setuptools.command.develop import develop
 
+import io
 import os
 import subprocess
+
+description = "A framework for building a custom website for realtime telemetry monitoring, commanding, and other MOS " \
+              "operations, built atop the AIT Core libraries."
+
+# Get the long description from the README file
+here = os.path.abspath(os.path.dirname(__file__))
+with io.open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
+    long_description = f.read()
 
 def install_ui_deps():
     try:
@@ -77,8 +86,12 @@ class CustomInstallCmd(install):
 setup(
     name = 'bliss-gui',
     version = '0.24.0',
+    description = description,
+    long_description = long_description,
+    long_description_content_type = 'text/x-rst',
+    url = 'https://github.com/NASA-AMMOS/AIT-GUI',
     packages = find_packages(exclude=['tests']),
-    author = 'BLISS-Core Development Team',
+    author = 'AMMOS Instrument Toolkit Development Team',
     author_email = 'bliss@jpl.nasa.gov',
 
     namespace_packages   = ['bliss'],
