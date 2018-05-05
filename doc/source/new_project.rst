@@ -1,7 +1,7 @@
 New Project Setup
 =================
 
-The following documentation will teach you how to get started using AIT GUI to build a MOS website for your project. The guide assumes that you've created a repository in which your project's GUI code will reside and that it is a Python based project. It also assumes that you've run through the `AIT Core New Project Setup <https://github.jpl.nasa.gov/pages/bliss/bliss-core/project_setup.html>`_ guide as well.
+The following documentation will teach you how to get started using AIT GUI to build a MOS website for your project. The guide assumes that you've created a repository in which your project's GUI code will reside and that it is a Python based project. It also assumes that you've run through the `AIT Core New Project Setup <https://ait-core.readthedocs.io/en/latest/project_setup.html>`_ guide as well.
 
 Note, we're using the following directory layout in this example. You can use it as a reference to understand why we have paths specified the way we do:
 
@@ -21,19 +21,15 @@ If you use a requirements file for specifying dependencies:
 
 .. code-block:: bash
 
-   --extra-index-url https://bliss.jpl.nasa.gov/pypi/simple/
-   bliss-gui==1.0.0
+   ait-gui==1.0.0
 
 If you use **setup.py** for specifying dependencies:
 
 .. code-block:: bash
 
    install_requires = [
-       bliss-gui==1.0.0
+       ait-gui==1.0.0
    ],
-   dependency_links = [
-       'https://bliss.jpl.nasa.gov/pypi/simple/bliss-gui'
-   ]
 
 Creating a Simple Index File
 ----------------------------
@@ -44,8 +40,8 @@ Now that we are depending on AIT GUI let's get a simple index page up and runnin
 
    <!doctype html>
    <head>
-     <link rel="stylesheet" href="bliss/gui/static/build/bliss.bundle.css">
-     <script src="bliss/gui/static/build/bliss.bundle.js"></script>
+     <link rel="stylesheet" href="ait/gui/static/build/ait.bundle.css">
+     <script src="ait/gui/static/build/ait.bundle.js"></script>
    </head>
    <body>
 
@@ -58,15 +54,15 @@ Now that we are depending on AIT GUI let's get a simple index page up and runnin
    </div>
 
    <div class="container">
-     <bliss-tabset class="nav-tabs">
-       <bliss-tab title="Welcome">
+     <ait-tabset class="nav-tabs">
+       <ait-tab title="Welcome">
          <h1>Welcome to AIT GUI</h1>
-       </bliss-tab>
-       <bliss-tab title="Clock">
+       </ait-tab>
+       <ait-tab title="Clock">
          <h1>The current time</h1>
-         <bliss-clock class="navbar-text" doy="true"></bliss-clock>
-       </bliss-tab>
-     </bliss-tabset>
+         <ait-clock class="navbar-text" doy="true"></ait-clock>
+       </ait-tab>
+     </ait-tabset>
    </body>
 
 Setup GUI Config Values
@@ -93,7 +89,7 @@ You're all set to open your GUI for the first time. Startup the GUI process by r
 
 .. code-block:: bash
 
-   bliss_gui.py
+   ait_gui.py
 
 This should automatically open up a browser and point it to **localhost:8080**. If it doesn't, open up your browser of choice and point it at the URL. You should see something that looks like the following.
 

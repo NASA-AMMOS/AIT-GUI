@@ -1,12 +1,12 @@
 Contributor Guides
 ==================
 
-These guides provide information on AIT GUI specific development practices. You should also review the `AIT Contributor Guides <https://github.jpl.nasa.gov/pages/bliss/bliss-core/contribute.html>`_ for additional information.
+These guides provide information on AIT GUI specific development practices. You should also review the `AIT Contributor Guides <https://github.jpl.nasa.gov/pages/ait/ait-core/contribute.html>`_ for additional information.
 
 Installation
 ------------
 
-You should follow the developer installation instructions for AIT Core in the `AIT Contributor Guides <https://github.jpl.nasa.gov/pages/bliss/bliss-core/contribute.html>`_ before installing AIT GUI.
+You should follow the developer installation instructions for AIT Core in the `AIT Contributor Guides <https://github.jpl.nasa.gov/pages/ait/ait-core/contribute.html>`_ before installing AIT GUI.
 
 To install AIT GUI as a develop-mode package and install all relevant UI packages run:
 
@@ -18,14 +18,14 @@ We recommend that you add the following line to your **postactivate** script for
 
 .. code-block:: bash
 
-   > export PATH="/path/to/bliss-gui/bliss/gui/static/node_modules/.bin:$PATH"
+   > export PATH="/path/to/ait-gui/ait/gui/static/node_modules/.bin:$PATH"
 
 Code Location
 -------------
 
-The Python backend code is located in **bliss/gui/__init__.py**.
+The Python backend code is located in **ait/gui/__init__.py**.
 
-The JavaScript frontend code is located in **bliss/gui/static**.
+The JavaScript frontend code is located in **ait/gui/static**.
 
 Frontend Build
 --------------

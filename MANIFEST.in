@@ -1,1 +1,1 @@
-recursive-include bliss/gui *
+recursive-include ait/gui *

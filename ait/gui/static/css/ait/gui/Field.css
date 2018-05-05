@@ -1,0 +1,41 @@
+ait-field {
+    font-weight: normal;
+    text-align:  left;
+    cursor: pointer;
+}
+
+ait-field[disable-tlm-popover] {
+    cursor: default;
+}
+
+ait-field-popover p, dl {
+    margin: 0 0 3px;
+}
+
+ait-field-popover dt {
+    display: inline;
+    white-space: pre;
+}
+
+ait-field-popover dd {
+    display: inline;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    word-break: break-all;
+}
+
+ait-field-popover dt {
+    margin-left: 10px;
+}
+
+ait-field-popover dt::after {
+    content: ": ";
+}
+
+ait-field-popover dd::after {
+    content: '\A';
+}
+
+ait-field-popover dd:last-of-type::after {
+    content: '';
+}
