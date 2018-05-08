@@ -1,0 +1,57 @@
+/*
+ * Advanced Multi-Mission Operations System (AMMOS) Instrument Toolkit (AIT)
+ * Bespoke Link to Instruments and Small Satellites (BLISS)
+ *
+ * Copyright 2017, by the California Institute of Technology. ALL RIGHTS
+ * RESERVED. United States Government Sponsorship acknowledged. Any
+ * commercial use must be negotiated with the Office of Technology Transfer
+ * at the California Institute of Technology.
+ *
+ * This software may be subject to U.S. export control laws. By accepting
+ * this software, the user agrees to comply with all applicable U.S. export
+ * laws and regulations. User has the responsibility to obtain export licenses,
+ * or other export authority as may be required before exporting such
+ * information to foreign countries or providing access to foreign persons.
+ */
+
+#ait-gui ait-tabset .tab_title--out-of-limit--warning {
+    background-color: #fcf8e3;
+}
+
+#ait-gui ait-tabset .tab_title--out-of-limit--error {
+    background-color: #f2dede;
+}
+
+/* Animate ait-tab moves */
+ait-tabset li {
+    transition: .15s ease-in-out;
+}
+
+ait-tabset .tab-content {
+    padding-top: 15px;
+}
+
+/**
+ * Make room to indicate where a tab would be positioned when dropped.
+ * Note this changes (left/top or right/bottom) depending upon whether
+ * the tab being dragged comes `before` or `after` the tab that its
+ * currently being dragged over.
+ */
+ait-tabset li.drag-over-before {
+    padding-left: 4em;
+}
+
+ait-tabset li.drag-over-after {
+    padding-right: 4em;
+}
+
+ait-tabset ul.nav-stacked li.drag-over-before {
+    padding-left: 0;
+    padding-top:  4em;
+}
+
+ait-tabset ul.nav-stacked li.drag-over-after {
+    padding-right:  0;
+    padding-bottom: 4em;
+}
+

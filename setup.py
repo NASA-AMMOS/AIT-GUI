@@ -16,15 +16,24 @@ from setuptools import setup, find_packages
 from setuptools.command.install import install
 from setuptools.command.develop import develop
 
+import io
 import os
 import subprocess
+
+description = "A framework for building a custom website for realtime telemetry monitoring, commanding, and other MOS " \
+              "operations, built atop the AIT Core libraries."
+
+# Get the long description from the README file
+here = os.path.abspath(os.path.dirname(__file__))
+with io.open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
+    long_description = f.read()
 
 def install_ui_deps():
     try:
         FNULL = open(os.devnull, 'wb')
         subprocess.check_call("npm", stdout=FNULL, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError:
-        print subprocess.check_output("cd bliss/gui/static; npm install", shell=True)
+        print subprocess.check_output("cd ait/gui/static; npm install", shell=True)
     except OSError:
         print "Unable to locate npm on system. Skipping dependency installation"
     finally:
@@ -75,16 +84,20 @@ class CustomInstallCmd(install):
 
 
 setup(
-    name = 'bliss-gui',
+    name = 'ait-gui',
     version = '0.24.0',
+    description = description,
+    long_description = long_description,
+    long_description_content_type = 'text/x-rst',
+    url = 'https://github.com/NASA-AMMOS/AIT-GUI',
     packages = find_packages(exclude=['tests']),
-    author = 'BLISS-Core Development Team',
-    author_email = 'bliss@jpl.nasa.gov',
+    author = 'AIT Development Team',
+    author_email = 'ait-pmc@googlegroups.com',
 
-    namespace_packages   = ['bliss'],
+    namespace_packages   = ['ait'],
     include_package_data = True,
 
-    install_requires = ['bliss-core>=0.37.0'],
+    install_requires = ['ait-core>=0.37.0'],
     extras_require = {
         'docs':  [
             'Sphinx==1.7.2',
@@ -100,10 +113,10 @@ setup(
 
     entry_points = {
         'console_scripts': [
-            '{}=bliss.gui.bin.{}:main'.format(
+            '{}=ait.gui.bin.{}:main'.format(
                 f.split('.')[0].replace('_', '-'),
                 f.split('.')[0])
-            for f in os.listdir('./bliss/gui/bin')
+            for f in os.listdir('./ait/gui/bin')
             if f.endswith('.py') and
             f != '__init__.py'
         ]

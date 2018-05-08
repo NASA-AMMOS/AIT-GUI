@@ -1,0 +1,39 @@
+{
+  "name": "ait-gui",
+  "version": "0.24.0",
+  "description": "AIT GUI",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack --optimize-minimize",
+    "dev-build": "webpack",
+    "test": "NODE_PATH=`pwd`/js mocha"
+  },
+  "author": "ait-pmc@googlegroups.com",
+  "license": "MIT",
+  "devDependencies": {
+    "babel-core": "^6.21.0",
+    "babel-loader": "^6.2.10",
+    "babel-polyfill": "^6.23.0",
+    "babel-preset-es2015": "^6.18.0",
+    "bootstrap": "^3.3.7",
+    "chai": "^3.5.0",
+    "codemirror": "^5.26.0",
+    "css-loader": "^0.26.0",
+    "dygraphs": "^2.0.0",
+    "extract-text-webpack-plugin": "^1.0.1",
+    "file-loader": "^0.9.0",
+    "jquery": "^3.2.1",
+    "jsdom": "^9.11.0",
+    "jsdom-global": "^2.1.1",
+    "lodash": "^4.16.6",
+    "mithril": "^1.1.0",
+    "mithril-query": "^2.2.0",
+    "mocha": "^3.1.2",
+    "sinon": "^1.17.6",
+    "strftime": "^0.10.0",
+    "style-loader": "^0.13.1",
+    "typeahead.js": "^0.11.1",
+    "url-loader": "^0.5.7",
+    "webpack": "^1.13.3"
+  }
+}

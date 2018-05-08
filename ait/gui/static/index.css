@@ -1,0 +1,195 @@
+/*
+* Advanced Multi-Mission Operations System (AMMOS) Instrument Toolkit (AIT)
+* Bespoke Link to Instruments and Small Satellites (BLISS)
+*
+* Copyright 2013, by the California Institute of Technology. ALL RIGHTS
+* RESERVED. United States Government Sponsorship acknowledged. Any
+* commercial use must be negotiated with the Office of Technology Transfer
+* at the California Institute of Technology.
+*
+* This software may be subject to U.S. export control laws. By accepting
+* this software, the user agrees to comply with all applicable U.S. export
+* laws and regulations. User has the responsibility to obtain export licenses,
+* or other export authority as may be required before exporting such
+* information to foreign countries or providing access to foreign persons.
+*/
+
+/**
+ * Global External Library CSS
+ */
+@import "./node_modules/bootstrap/dist/css/bootstrap.css";
+@import "./node_modules/bootstrap/dist/css/bootstrap-theme.css";
+@import "./node_modules/codemirror/lib/codemirror.css";
+@import "./node_modules/dygraphs/dist/dygraph.css";
+@import "./css/typeahead.css";
+
+/**
+ * AIT GUI Component CSS
+ */
+@import "./css/ait/gui/Clock.css";
+@import "./css/ait/gui/Command.css";
+@import "./css/ait/gui/Field.css";
+@import "./css/ait/gui/Messages.css";
+@import "./css/ait/gui/Plot.css";
+@import "./css/ait/gui/Query.css";
+@import "./css/ait/gui/Script.css";
+@import "./css/ait/gui/Search.css";
+@import "./css/ait/gui/Sequence.css";
+@import "./css/ait/gui/Status.css";
+@import "./css/ait/gui/TabSet.css";
+
+/**
+ *
+ * Fixed Footer
+ *
+ * Use the following settings if you want to have a footer fixed to the
+ * bottom of the viewport. This is useful when you want a piece of content
+ * to be visible on the page at all times (E.g., logs via ait-messages)
+ *
+ * If you don't want a fixed footer you should comment out these settings
+ * and use the settings described in the "No Footer" section below.
+ */
+body {
+    padding-top: 70px;
+    margin-bottom: 230px
+}
+
+.fixed-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 220px;
+    z-index: 999;
+    padding: 10px;
+    border-top: 2px solid black;
+    border-radius: 10px;
+    background-color: white;
+}
+/* End Fixed Footer Section */
+
+/**
+ *
+ * No Footer
+ *
+ * Use the following settings if you do not want a fixed footer on the page.
+ *
+ */
+body {
+    margin-bottom: 0;
+}
+/* End No Footer Section */
+
+.popover {
+    width: 400px;
+    min-width: 200px;
+    max-width: 400px;
+}
+
+.tooltip-inner {
+    width: 400px;
+    min-width: 200px;
+    max-width: 400px;
+}
+
+/**
+ * Main Site Layout
+ */
+@media (min-width: 1945px) {
+    .site-container {
+        display: grid;
+        grid-template-columns: 2fr 4fr;
+        grid-template-rows: minmax(calc(100vh - 750px), auto) 10px;
+        grid-template-areas:
+            "ctrl        telem"
+            "leftnote    rightnote";
+        padding: 5px;
+    }
+}
+
+@media (max-width: 1944px) {
+    .site-container {
+        display: grid;
+        grid-template-columns: auto auto;
+
+        /* Use this when we have a fixed footer */
+        /* grid-template-rows: minmax(calc(100vh - 370px), auto) 20px auto 10px; */
+        /* Use this when we don't have a fixed footer */
+        grid-template-rows: minmax(calc(100vh - 140px), auto) 20px auto 10px;
+
+        grid-template-areas:
+            "telem    telem"
+            "space    space"
+            "ctrl     ctrl"
+            "leftnote rightnote";
+        padding: 5px;
+    }
+}
+
+.telemcontainer {
+    grid-area: telem;
+    padding: 0 20px 0 20px;
+}
+
+.ctrlcontainer {
+    grid-area: ctrl;
+    padding: 0 20px 0 20px;
+}
+
+.rightnotifycontainer {
+    grid-area: rightnote;
+    text-align: right;
+}
+
+/**
+ * Command Tab Layout
+ */
+.cmd-tab-container {
+    display: grid;
+    grid-template-columns: 5fr 7fr;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+        "cmdsearch  cmdsearch"
+        "cmdbrowser cmdconfig";
+    grid-gap: 20px;
+}
+
+.cmd-search-container {
+    grid-area: cmdsearch;
+}
+
+.cmd-browser-container {
+    grid-area: cmdbrowser;
+}
+
+.cmd-config-container {
+    grid-area: cmdconfig
+}
+
+.cmd-config-container div.row {
+    margin: 0;
+}
+
+.glyphicon.right-spin {
+    animation: glyphicon-spin-r 2s infinite linear;
+}
+
+@-webkit-keyframes glyphicon-spin-r {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(359deg);
+    }
+}
+
+@keyframes glyphicon-spin-r {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(359deg);
+    }
+}

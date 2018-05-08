@@ -1,0 +1,16 @@
+ait-telemetryquery .field_selection {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    border: 1px solid #CCC;
+    border-radius: 5px;
+}
+
+ait-telemetryquery .field_label {
+    margin: 5px 10px 5px 10px;
+}
+
+ait-telemetryquery .field_label:hover {
+
+    cursor: pointer;
+}
