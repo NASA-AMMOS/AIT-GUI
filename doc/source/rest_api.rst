@@ -1,5 +1,5 @@
 AIT REST API
 ============
 
-.. autobottle:: bliss.gui:App
+.. autobottle:: ait.gui:App
    :include-empty-docstring:

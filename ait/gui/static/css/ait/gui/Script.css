@@ -1,0 +1,50 @@
+/*
+ * Advanced Multi-Mission Operations System (AMMOS) Instrument Toolkit (AIT)
+ * Bespoke Link to Instruments and Small Satellites (BLISS)
+ *
+ * Copyright 2017, by the California Institute of Technology. ALL RIGHTS
+ * RESERVED. United States Government Sponsorship acknowledged. Any
+ * commercial use must be negotiated with the Office of Technology Transfer
+ * at the California Institute of Technology.
+ *
+ * This software may be subject to U.S. export control laws. By accepting
+ * this software, the user agrees to comply with all applicable U.S. export
+ * laws and regulations. User has the responsibility to obtain export licenses,
+ * or other export authority as may be required before exporting such
+ * information to foreign countries or providing access to foreign persons.
+ */
+
+ait-script .pause {color: red}
+ait-script .paused {color: red}
+ait-script .play {color: green}
+ait-script .stopped {color: black}
+ait-script .running {color: green}
+ait-script .error {color: red}
+
+ait-script .load_dialog--hidden {
+    display: none;
+}
+
+ait-scriptnotification {
+    margin: 20px 0 20px 0;
+    display: inline-block;
+}
+
+codeMirrorExecGutter {
+    width: 20px;
+}
+
+@media (min-width: 1945px) {
+    .CodeMirror {
+        /* Use this with the fixed footer */
+        /* height: calc(100vh - 525px); */
+        /* Use this with no fixed footer */
+        height: calc(100vh - 320px);
+    }
+}
+
+@media (max-width: 1944px) {
+    .CodeMirror {
+        height: 500px;
+    }
+}

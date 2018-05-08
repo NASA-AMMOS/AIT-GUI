@@ -1,0 +1,105 @@
+/*
+ * Advanced Multi-Mission Operations System (AMMOS) Instrument Toolkit (AIT)
+ * Bespoke Link to Instruments and Small Satellites (BLISS)
+ *
+ * Copyright 2017, by the California Institute of Technology. ALL RIGHTS
+ * RESERVED. United States Government Sponsorship acknowledged. Any
+ * commercial use must be negotiated with the Office of Technology Transfer
+ * at the California Institute of Technology.
+ *
+ * This software may be subject to U.S. export control laws. By accepting
+ * this software, the user agrees to comply with all applicable U.S. export
+ * laws and regulations. User has the responsibility to obtain export licenses,
+ * or other export authority as may be required before exporting such
+ * information to foreign countries or providing access to foreign persons.
+ */
+
+@media (min-width: 1945px) {
+    ait-commandsearch {
+        height: auto;
+    }
+
+    ait-commandconfigure > div {
+        /* Use this with the fixed footer */
+        /* height: calc(100vh - 510px); */
+        /* Use this without the fixed footer */
+        height: calc(100vh - 290px);
+        overflow: auto;
+    }
+
+    ait-commandsearch .command_accordions_list {
+        /* Use this with the fixed footer*/
+        /* height: calc(100vh - 570px); */
+        /* Use this without the fixed footer */
+        height: calc(100vh - 350px);
+        overflow: auto;
+    }
+
+    ait-commandhistory {
+        display: block;
+        /* Use this with the fixed footer */
+        /* height: calc(100vh - 380px); */
+        /* Use this without the fixed footer */
+        height: calc(100vh - 150px);
+        overflow: auto;
+    }
+}
+
+@media (max-width: 1944px) {
+    ait-commandsearch {
+        height: 500px;
+    }
+
+    ait-commandconfigure > div {
+        height: 500px;
+        overflow: auto;
+    }
+
+    ait-commandsearch .command_accordions_list {
+        height: 430px;
+        overflow: auto;
+    }
+
+    ait-commandhistory {
+        display: block;
+        height: 500px;
+        overflow: auto;
+    }
+}
+
+ait-commandsearch .command_tree {
+    margin-top: 20px;
+}
+
+/**
+ * Naming convention inconsistency here is due to this being
+ * an override of the bootstrap accordion panel-heading class.
+ */
+ait-commandsearch .panel-heading {
+    display: block;
+    cursor: pointer;
+}
+
+ait-commandsearch .command_list {
+    list-style-type: none;
+    padding-left: 0;
+
+}
+
+ait-commandconfigure .command_selection_help {
+    margin-top: 20px;
+}
+
+ait-commandconfigure .command_customization_form {
+    margin-top: 20px;
+    overflow: hidden;
+}
+
+
+/*
+ * Command Input Component
+ */
+ait-commandinput .error_display {
+    width: 75%;
+    margin: 0 0 0 13%;
+}

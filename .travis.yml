@@ -3,7 +3,7 @@ node_js:
   - "node"
   
 before_install:
-  - cd bliss/gui/static
+  - cd ait/gui/static
 
 branches:
   only:

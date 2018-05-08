@@ -1,0 +1,10 @@
+ait-plot {
+    display: block;
+}
+
+ait-plot .dygraph-legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-evenly;
+}

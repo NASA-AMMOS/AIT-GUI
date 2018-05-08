@@ -1,0 +1,204 @@
+<!doctype html>
+
+<!--
+Advanced Multi-Mission Operations System (AMMOS) Instrument Toolkit (AIT)
+Bespoke Link to Instruments and Small Satellites (BLISS)
+
+Copyright 2013, by the California Institute of Technology. ALL RIGHTS
+RESERVED. United States Government Sponsorship acknowledged. Any
+commercial use must be negotiated with the Office of Technology Transfer
+at the California Institute of Technology.
+
+This software may be subject to U.S. export control laws. By accepting
+this software, the user agrees to comply with all applicable U.S. export
+laws and regulations. User has the responsibility to obtain export licenses,
+or other export authority as may be required before exporting such
+information to foreign countries or providing access to foreign persons.
+-->
+
+<head>
+  <link rel="stylesheet" href="ait/gui/static/build/ait.bundle.css">
+  <script src="ait/gui/static/build/ait.bundle.js"></script>
+  <style>
+    td {
+      padding:  1px 5px 1px 5px;
+      vertical-align:  middle;
+    }
+
+    table.telem {
+      width:  100%;
+    }
+
+    table.telem td {
+      font-weight:  bold;
+    }
+
+    table.telem.col2 td {
+      width:  25%;
+    }
+
+    table.telem.col4 td {
+      width:  12.5%;
+    }
+
+    .telem-field-name {
+      font-weight: bold;
+    }
+
+    .telem-group-title
+    {
+      background-color:  #f5f5f5;
+      border:  1px solid #e3e3e3;
+      border-radius:  3px;
+      padding:  3px;
+      text-align:  center;
+    }
+  </style>
+</head>
+<body id='ait-gui'>
+
+<div class="navbar navbar-inverse navbar-fixed-top">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">AIT GUI</a><br>
+    </div>
+    <ul class="nav navbar-nav navbar-left">
+      <li><form class='navbar-form'><ait-mnemonicsearch packet="1553_HS_Packet"></ait-mnemonicsearch></form>
+      <li><p class="navbar-text ait-status-indicators">
+            <ait-simstatus on='sim:iss:on'
+                       off='sim:iss:off'
+                       pending='sim:iss:pending'
+                       error='sim:iss:error'
+                       default='off' action='/sim/iss/'></ait-simstatus>
+             ISS</p></li>
+    </ul>
+
+    <ul class="nav navbar-nav navbar-right">
+      <li><p class="navbar-text">Telemetry Status:</p></li>
+
+      <li><p class="navbar-text ait-status-indicators" id="ptlm-status">
+            <ait-led on='ait:psu:packet'
+                       off='ait:psu:close'
+                       pending='ait:psu:open'
+                       error='ait:psu:stale'
+                       default='pending'></ait-led>
+             PSU</p></li>
+
+      <li><p class="navbar-text ait-status-indicators" id="ptlm-status">
+            <ait-led on='ait:tlm:packet'
+                       off='ait:tlm:close'
+                       pending='ait:tlm:open'
+                       error='ait:tlm:stale'
+                       default='pending'></ait-led>
+             FSW</p></li>
+      <li><ait-clock class="navbar-text" doy="true"></ait-clock></li>
+    </ul>
+  </div>
+</div>
+
+<div class='site-container'>
+  <div class='telemcontainer'>
+    <ait-tabset class="nav-tabs">
+      <ait-tab title="Foo">
+        <div class="col-sm-6">
+          <h4 class="telem-group-title">1553 HS Voltages</h4>
+          <table class="telem col2">
+            <tr> <td> Voltage_A: <ait-field packet="1553_HS_Packet" name="Voltage_A"></ait-field>
+                 <td> Voltage_B: <ait-field packet="1553_HS_Packet" name="Voltage_B"></ait-field>
+            <tr> <td> Voltage_C: <ait-field packet="1553_HS_Packet" name="Voltage_C"></ait-field>
+                 <td> Voltage_D: <ait-field packet="1553_HS_Packet" name="Voltage_D"></ait-field>
+          </table>
+
+          <br />
+          <br />
+          <br />
+
+          <ait-plot redraw-frequency="1">
+            <ait-plot-config>
+              {
+                "width": 600,
+                "height": 300
+              }
+            </ait-plot-config>
+            <ait-plot-series packet="1553_HS_Packet" name="Voltage_A"></ait-plot-series>
+            <ait-plot-series packet="1553_HS_Packet" name="Voltage_B"></ait-plot-series>
+            <ait-plot-series packet="1553_HS_Packet" name="Voltage_C"></ait-plot-series>
+            <ait-plot-series packet="1553_HS_Packet" name="Voltage_D"></ait-plot-series>
+          </ait-plot>
+        </div>
+        <div class="col-sm-6">
+          <h4 class="telem-group-title">1553 HS Currents</h4>
+          <table class="telem col2">
+            <tr> <td> Current_A: <ait-field packet="1553_HS_Packet" name="Current_A"></ait-field>
+          </table>
+
+          <br />
+          <br />
+          <br />
+          <br />
+
+          <ait-plot redraw-frequency="1">
+            <ait-plot-config>
+              {
+                "width": 600,
+                "height": 300
+              }
+            </ait-plot-config>
+            <ait-plot-series packet="1553_HS_Packet" name="Current_A"></ait-plot-series>
+          </ait-plot>
+        </div>
+      </ait-tab>
+      <ait-tab title="TlmQuery"><ait-telemetryquery></ait-telemetryquery></ait-tab>
+      <ait-tab title="Bar"> Bar </ait-tab>
+      <ait-tab title="Baz"> Baz </ait-tab>
+      <ait-tab title="Bop"> Bop </ait-tab>
+      <ait-tab title="Clock">
+        <h1>The current time</h1>
+        <ait-clock class="navbar-text" doy="true"></ait-clock>
+      </ait-tab>
+    </ait-tabset>
+  </div>
+  
+
+  <div class='ctrlcontainer'>
+    <ait-tabset class='nav-tabs'>
+      <ait-tab title='Logs'>
+        <ait-messages></ait-messages>
+      </ait-tab>
+      <ait-tab title='Commanding'>
+        <div class='cmd-tab-container'>
+          <div class="cmd-browser-container">
+            <ait-command-search>
+            </ait-command-search>
+          </div>
+          <div class="cmd-config-container">
+            <ait-command-configure>
+            </ait-command-configure>
+          </div>
+          <div class='cmd-search-container'>
+            <ait-command-input></ait-command-input>
+            <hr />
+          </div>
+        </div>
+      </ait-tab>
+      <ait-tab title='Command History'>
+        <ait-command-history></ait-command-history>
+      </ait-tab>
+      <ait-tab title='Sequences'>
+        <ait-sequence></ait-sequence> 
+      </ait-tab>
+      <ait-tab title="Script Control">
+        <div class="row">
+          <label class="col-lg-6">Script Control Dashboard</label>
+        </div>
+        <ait-scripts></ait-scripts>
+      </ait-tab>
+    </ait-tabset>
+  </div>
+
+  <div class='rightnotifycontainer'>
+    <div class='text-muted'><small>{{version}}</small></div>
+  </div>
+</div>
+
+</body>
