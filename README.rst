@@ -16,13 +16,6 @@ You can read through the `Installation
 Page <http://ait-gui.readthedocs.io/en/latest/installation.html>`__ for
 instruction on how to install AIT GUI.
 
-Contributing
-------------
-
-For information on how to contribute please see the `AIT GUI
-Contributors
-Guides <http://ait-gui.readthedocs.io/en/latest/contribute.html>`__
-
 Browser Requirements
 --------------------
 
@@ -33,6 +26,19 @@ AIT GUI requires one of the following browsers:
 
 Safari v10.1 or newer will likely work as well but compatibility is not
 regularly checked or guaranteed.
+
+Join the Community
+------------------
+
+The project's `User and Developer Mailing List <https://groups.google.com/forum/#!forum/ait-dev>`__ is the best way to communicate with the team, ask questions, brainstorm plans for future changes, and help contribute to the project.
+
+This project exists thanks to the dedicated users, contributors, committers, and project management committee members. If you'd like to learn more about how the project is organized and how to become a part of the team please check out the `Project Structure and Governance <https://github.com/NASA-AMMOS/AIT-Core/wiki/Project-Structure-and-Governance>`__ documentation.
+
+Contributing
+------------
+
+For information on how to contribute please see the `AIT Contributing
+Guide <https://github.com/NASA-AMMOS/AIT-Core/wiki/Contributing>`__
 
 --------------
 
