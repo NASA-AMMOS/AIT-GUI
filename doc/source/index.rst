@@ -11,7 +11,6 @@ The AMMOS Instrument Toolkit (AIT) GUI provides a framework for building a custo
    new_project
    ait_gui
    rest_api
-   contribute
 
 
 Indices and tables
