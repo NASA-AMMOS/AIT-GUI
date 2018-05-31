@@ -29,7 +29,7 @@
     "mithril": "^1.1.0",
     "mithril-query": "^2.2.0",
     "mocha": "^3.1.2",
-    "sinon": "^1.17.6",
+    "sinon": "4.5.0",
     "strftime": "^0.10.0",
     "style-loader": "^0.13.1",
     "typeahead.js": "^0.11.1",
