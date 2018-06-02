@@ -21,14 +21,35 @@ import * as format from 'ait/format'
  * AIT Clock UI Widget
  *
  * The AIT Clock UI Widget displays a clock with date and time that
- * updates every second.  The display is configurable with at
- * initialization time or by clicking on specific parts of the time.
+ * updates every second.  The display is configurable at initialization 
+ * time or by clicking on specific parts of the time / date display.
  *
  * Configurable / Toggleable options include:
  *
  *   - 12-hour or 24-hour time
  *   - Date (month and day) or Day of Year (DOY)
- *   - UTC or localtime
+ *   - GPS, UTC, or localtime
+ *
+ * **Optional Attributes:**
+ *
+ * h24
+ *   Display clock in 24 hour time instead of 12 hour time. (default: true)
+ *
+ * gps
+ *   Display clock in GPS time. This value overrides UTC time display
+ *   if both are true. (default: true)
+ *
+ * utc
+ *   Display clock in UTC time. (defaut: false)
+ *
+ * doy
+ *   Display date as Day of Year. (default: false)
+ *
+ * @example
+ * <ait-clock></ait-clock>
+ *
+ * @example
+ * <ait-clock h24='true' utc='true'></ait-clock>
  */
 const Clock =
 {

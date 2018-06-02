@@ -236,6 +236,107 @@ class HighchartsBackend
 }
 
 
+/**
+ *
+ * Display a plot of telemetry data
+ *
+ * Plot configuration can be done with a number of children tags and
+ * attributes. A plot must have at least one **ait-plot-series** child
+ * so that it has something to plot
+ *
+ * The Plot component supports graphing with Dygraphs (default) and
+ * HighCharts. If you want to use HighCharts instead of Dygraphs you
+ * need to include the Highcharts JS file in your page. If the
+ * *window.Highcharts* object is defined then Highcharts will be used.
+ *
+ * **Optional Attributes:**
+ *
+ * redraw-frequency
+ *   The frequency, in seconds, that the plot should be redrawn. (default: 10)
+ *
+ * redraw-frequency-variation
+ *   Toggle whether plot redraw frequency should be affected by random
+ *   variation. If enabled, the redraw frequency of the plot will vary
+ *   by [redraw-frequency-var-min, redraw-frequency-variation-max] seconds each
+ *   refresh. This is useful if you have a large number of plots and need
+ *   to avoid all of them attempting to redraw at the same time.
+ *   (default: false)
+ *
+ * redraw-frequency-variation-min (-2)
+ *   The minimum variation in seconds to add to the redraw frequency
+ *
+ * redraw-frequency-variation-max (2)
+ *   The maximum variation in seconds to add to the redraw frequency
+ *
+ * **ait-plot-series:**
+ *
+ * Configure the series of data that should be plotted. At least 1 series of
+ * data is required for the plot to function.
+ *
+ * Required attributes:
+ *
+ * packet
+ *   The packet in which the series telemetry point is located.
+ *
+ * field
+ *   The name of the field in the packet that defines this series.
+ *
+ * Optional attributes:
+ * 
+ * type
+ *   The type of series being displayed. This is not relevant for all plot
+ *   backends. For instance, Highcharts would use this to define the type
+ *   of plot to show whereas Dygraphs does not support this value. If you're
+ *   using Highcharts this attribute is required and would most commonly be
+ *   set to **line**.
+ *
+ * .. code:: Javascript
+ *
+ *    <ait-plot-series packet="1553_HS_Packet" field="Voltage_A"></ait-plot-series>
+ *
+ * **ait-plot-config:**
+ *
+ * Allows the passing of a JSON object for configuration of the current
+ * backend into the plot. Any setting that is valid for the backend
+ * being used can be included in the JSON object. Please consult the relevant
+ * backend's documentation for information on valid settings.
+ *
+ * .. code::
+ *
+ *    <ait-plot-config>
+ *      {
+ *         "title": "Plot title",
+ *         "xlabel": "X label",
+ *         "ylabel": "Y label"  
+ *      }
+ *    </ait-plot-config>
+ *
+ * **ait-plot-time:**
+ *
+ * Facilitates setting the name of a telemetry field defining the timestamp
+ * used when plotting data. If the evaluation of the specified telemetry field
+ * does not result in a number of Date() object the current time is used
+ * instead. If no **ait-plot-time** tag is specified the current time
+ * is used.
+ *
+ * .. code:: Javascript
+ *
+ *    <ait-plot-time packet="1553_HS_Packet" field="FSWTimeField"></ait-plot-time>
+ *
+ * @example
+ * <ait-plot redraw-frequency="1">
+ *   <ait-plot-config>
+ *     {
+ *       "width": 600,
+ *       "height": 300
+ *     }
+ *   </ait-plot-config>
+ *   <ait-plot-series packet="1553_HS_Packet" name="Voltage_A"></ait-plot-series>
+ *   <ait-plot-series packet="1553_HS_Packet" name="Voltage_B"></ait-plot-series>
+ *   <ait-plot-series packet="1553_HS_Packet" name="Voltage_C"></ait-plot-series>
+ *   <ait-plot-series packet="1553_HS_Packet" name="Voltage_D"></ait-plot-series>
+ * </ait-plot> 
+ */
 const Plot =
 {
     /**
@@ -264,7 +365,7 @@ const Plot =
 
 
     /**
-     * Process tag: `<ait-plot-series type="..." caption="..." ...>`.
+     * Process tag: `<ait-plot-series type="..." ...>`.
      */
     processTagSeries (vnode) {
         const name   = vnode.attrs.name

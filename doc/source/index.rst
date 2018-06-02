@@ -10,6 +10,7 @@ The AMMOS Instrument Toolkit (AIT) GUI provides a framework for building a custo
    installation
    new_project
    ait_gui
+   widgets
    rest_api
 
 

@@ -25,6 +25,14 @@ import values from 'lodash/values'
 var typeahead = require('typeahead.js/dist/typeahead.jquery');
 var Bloodhound = require('typeahead.js/dist/bloodhound');
 
+/**
+ * Command History file display component
+ *
+ * Displays command history data and auto-refreshes on receipt of
+ * **cmd:hist** or **seq:done** events.
+ *
+ * @example <ait-command-history></ait-command-history>
+ */
 const CommandHistory = {
     _cmdHistory: null,
 
@@ -67,6 +75,15 @@ const CommandHistory = {
     }
 }
 
+/**
+ * Search input field for locating, verifying, and submitting commands.
+ *
+ * Searches over the command dictionary and command history. The component
+ * will be automatically disabled when a sequence is being run. Responds to
+ * the **cmd:hist**, **seq:exec**, **seq:done**, and **seq:err** events.
+ *
+ * @example <ait-command-input></ait-command-input>
+ */
 const CommandInput = {
     _cntrl_toggled: false,
     _cmding_disabled: false,
@@ -293,6 +310,14 @@ let CommandSelectionData = {
     activeCommand: null,
 }
 
+/**
+ * Command Browser Search sub-component
+ *
+ * Handles command searching / filtering for the Command Browser component.
+ * Displays commands by subsystem and filters choices based on user input.
+ *
+ * @example <ait-command-search></ait-command-search>
+ */
 const CommandSearch = {
     groupedCommands: {},
     commandFilter: '',
@@ -440,8 +465,21 @@ const CommandSearch = {
 }
 
 /**
- * Handle the configuration of command arguments for the currently select
- * command (specified via CommandSelectionData.activeCommand)
+ * Command Browser Configure sub-component
+ *
+ * Handles command configuration, validation, and submission. This command to be
+ * configured is set in *CommandSelectionData.activeCommand*.
+ *
+ * **CommandSelectionData.activeCommand Format:**
+ *
+ * .. code::
+ *
+ *    {
+ *        name: <command name>,
+ *        desc: <command description>
+ *    }
+ *
+ * @example <ait-command-configure></ait-command-configure>
  */
 const CommandConfigure = {
     _cmding_disabled: false,

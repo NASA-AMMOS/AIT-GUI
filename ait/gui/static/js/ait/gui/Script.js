@@ -485,7 +485,10 @@ const ScriptNotification = {
 
 
 /**
- * Manages global script states and component layout
+ * Script display, state management, and execution control.
+ *
+ * @example
+ * <ait-scripts></ait-scripts>
  */
 const Scripts = {
     oninit(vnode) {

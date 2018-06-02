@@ -21,6 +21,34 @@ import * as strftime from 'strftime'
 import { CommandDefinition } from '../cmd.js'
 import { EVRDefinition }     from '../evr.js'
 
+/**
+ * Display a given packet's telemetry point value in the display.
+ *
+ * **Required Attributes:**
+ *
+ * packet
+ *   The packet name where the telemetry point is located
+ *
+ * name
+ *   The name of the field in the packet to display
+ *
+ * **Optional Attributes:**
+ *
+ * raw
+ *   Toggle whether the field should be displayed as a raw value instead
+ *   of the default of displaying a DN-to-EU value. (default: false)
+ *
+ * disable-tlm-popover
+ *   Toggle whether a popover should be placed on the field value displaying
+ *   telemetry dictionary information for the displayed field. (default: false)
+ *
+ * format
+ *   Format string to use when displaying the value. The value for the field
+ *   is passed through either strftime or sprintf depending on type if format
+ *   is specified. If the field is an array type the format attribute is
+ *   ignored. By default, a field is displayed as a 5 digit precision number.
+ *   (default: none)
+ */
 const Field =
 {
     _limitOut: false,
