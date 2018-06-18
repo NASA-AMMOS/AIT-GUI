@@ -24,6 +24,45 @@ import * as format from 'ait/format'
 import Field from './Field'
 import Clock from './Clock'
 
+/**
+ * Search for a Packets's telemetry fields by name and display dictionary data
+ * and data snapshot of selected value in a modal. 
+ *
+ * Requires that ait-modal is included in the page for modal functionality
+ * to work. Default styling via the display-border and invert-colors attributes
+ * is set for display as part of the default Bootstrap navbar. You should consider
+ * adjusting these settings if you plan to display the component in a different part
+ * of the UI.
+ *
+ * **Required Attributes:**
+ *
+ * packet
+ *   The name of the packet in the telemetry dictionary that should be searched for fields
+ *
+ * **Optional Attributes:**
+ *
+ * result-count
+ *   The number of results to show when autocompleting (default: 20)
+ *
+ * display-border
+ *   Adds the 'no-borders' css class to the component display. This drops borders
+ *   from the displayed input field. (default: false)
+ *
+ * invert-colors
+ *   Adds the 'inverse-colors' class to the component display. When included
+ *   this displays the component as a black background with white
+ *   foreground / icons when unfocused. (default: true)
+ *
+ * @example
+ * <ait-mnemonic-search packet="1553_HS_Packet"></ait-mnemonic-search>
+ *
+ * @example
+ * <ait-mnemonic-search packet="1553_HS_Packet"
+ *     result-count="10"
+ *     display-border="true"
+ *     invert-colors="false">
+ * </ait-mnemonic-search>
+ */
 const MnemonicSearch = {
     _packet: null,
     _selection: null,

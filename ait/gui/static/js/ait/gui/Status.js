@@ -27,14 +27,12 @@
  *  You can specify multiple triggers for a single state by separating the
  *  event names with a ','
  *
- * Example:
- *   <ait-led on="seq:exec,seq:sent" off="seq:done"></ait-led>
+ * @example
+ * <ait-led on="seq:exec,seq:sent" off="seq:done"></ait-led>
  *
- *  If you want to start the LED in a state besides 'off' set it via
- *  the 'default' attribute
- *
- * Example:
- *   <ait-led on="seq:exec,seq:sent" default="pending"></ait-led>
+ * @example
+ * // If you want to start the LED in a state besides 'off' set it via the 'default' attribute
+ * <ait-led on="seq:exec,seq:sent" default="pending"></ait-led>
  */
 const LED = {
     _states: ['on', 'off', 'pending', 'error'],
@@ -68,27 +66,29 @@ const LED = {
  * about the state of the simulator. You can configure these states
  * ('on', 'off', 'pending', and 'error') via attributes on the tag.
  *
- * Example:
- *   <ait-simmonitor on='sim:iss:on'
- *                     off='sim:iss:off'
- *                     pending='sim:iss:pending'
- *                     error='sim:iss:error'
- *                     default='off' action='/sim/iss/'></ait-simmonitor>
- *  
- *  You can specify multiple triggers for a single state by separating the
- *  event names with a ','.
+ * You can specify multiple triggers for a single state by separating the
+ * event names with a ','.
  *
- *  The 'default' attribute specifies the state of the monitored sim on bootup.
- *  If you start your sim in a particular state you should update 'default'
- *  accordingly so the component can properly track the sim. The 'off' state
- *  is the default.
+ * The 'default' attribute specifies the state of the monitored sim on bootup.
+ * If you start your sim in a particular state you should update 'default'
+ * accordingly so the component can properly track the sim. The 'off' state
+ * is the default.
  *
- *  The 'action' attribute is the URL for POSTs to be made for starting and
- *  stopping the monitored Sim. SimStatus expects the following interface
- *  with the sim:
+ * The 'action' attribute is the URL for POSTs to be made for starting and
+ * stopping the monitored Sim. SimStatus expects the following interface
+ * with the sim::
  *
- *      POST 'action' + '/start' to start the sim.
- *      POST 'action' + '/stop' to stop the sim.
+ *     POST 'action' + '/start' to start the sim.
+ *     POST 'action' + '/stop' to stop the sim.
+ *
+ * @example:
+ *   <ait-simmonitor
+ *     on='sim:iss:on'
+ *     off='sim:iss:off'
+ *     pending='sim:iss:pending'
+ *     error='sim:iss:error'
+ *     default='off' action='/sim/iss/'>
+ *   </ait-simmonitor>
  *
  */
 const SimStatus = Object.assign(Object.create(LED), {
@@ -147,6 +147,52 @@ const SimStatus = Object.assign(Object.create(LED), {
 })
 
 
+/**
+ * Customizable component for prompting the user via a modal
+ *
+ * Supported Prompt types:
+ *
+ *     confirm
+ *       Display a prompt to the user asking them to confirm/deny
+ *       a supplied message.
+ *
+ * Prompt state is managed via events:
+ *
+ * prompt:init
+ *   Initialize and display the prompt to the user. The event
+ *   data should contain.
+ *
+ *   .. code:
+ *
+ *      {
+ *        'type': The type of prompt being triggered.
+ *        'options': The configuration options for the prompt type
+ *
+ *      }
+ *
+ * prompt:timeout
+ *   Expected to be called when the user takes too long to respond
+ *   to the prompt so cleanup can be handled
+ *
+ * prompt:done
+ *   Expected to be called when the prompt no long needs displayed
+ *   to the user so cleanup can be handled.
+ *
+ * **Prompt Type Configuration:**
+ *
+ * **confirm**
+ *
+ * A confirm type prompt asks the user to confirm/deny a given message
+ *
+ * msg
+ *   The message to display in the modal body
+ *
+ * .. note::
+ *
+ *    The Prompt component is automatically injected into the UI by default.
+ *    If you wish to use the Modal functionality you can do so without
+ *    adding anything to your UI.
+ */
 const Prompt = {
     _display_prompt: false,
     _type: null,

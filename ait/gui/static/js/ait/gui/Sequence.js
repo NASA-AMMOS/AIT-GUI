@@ -16,6 +16,14 @@
 
 import map from 'lodash/map'
 
+/**
+ * Sequence selection and execution component
+ *
+ * **Optional Attributes:**
+ *
+ * action
+ *   The form action attribute to POST. (default: '/seq')
+ */
 const Sequence = {
     _disableControls: false,
     _filter_val: '',

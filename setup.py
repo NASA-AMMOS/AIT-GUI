@@ -102,7 +102,8 @@ setup(
         'docs':  [
             'Sphinx==1.7.2',
             'sphinx_rtd_theme',
-            'sphinxcontrib-httpdomain'
+            'sphinxcontrib-httpdomain',
+            'sphinx-js'
         ]
     },
 

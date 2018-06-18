@@ -18,6 +18,13 @@ import m from 'mithril'
 import * as format from 'ait/format'
 
 
+/**
+ *
+ * Component for displaying log messages
+ *
+ * @example <ait-messages></ait-messages>
+ *
+ */
 const Messages =
 {
     _messages: [],

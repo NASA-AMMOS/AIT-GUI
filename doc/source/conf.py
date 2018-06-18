@@ -19,6 +19,13 @@ import os
 if os.environ.get('AIT_CONFIG', None) is None:
     os.environ['AIT_CONFIG'] = "config.yml"
 
+if os.getenv('READTHEDOCS'):
+    root_for_relative_js_paths = '../../ait/gui/static'
+    js_source_path = ['../../ait/gui/static/js/ait', '../../ait/gui/static/js/ait/gui']
+else:
+    root_for_relative_js_paths = 'ait/gui/static'
+    js_source_path = ['ait/gui/static/js/ait', 'ait/gui/static/js/ait/gui']
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -36,6 +43,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
     'sphinxcontrib.autohttp.bottle',
+    'sphinx_js'
 ]
 
 # Add any paths that contain templates here, relative to this directory.

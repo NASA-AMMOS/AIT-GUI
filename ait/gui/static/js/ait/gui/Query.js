@@ -1,32 +1,37 @@
 import map from 'lodash/map'
 
-/*
- * TelemetryQuery Component
- *
+/**
  * Generate and run queries against captured telemetry data in PCAP files and
  * retrieve a CSV of the resulting data.
  *
- * Configuration attributes:
- *      data-dir (optional): The data directory key specifying which directory
- *          should be used when gathering telemetry data PCAPs.
+ * **Optional Attributes:**
  *
- *      packet (optional): The name of the packet definition in the telemetry
- *          dictionary from which fields will be selected for the query.
+ *  data-dir
+ *    The data directory key specifying which directory should be used when
+ *    gathering telemetry data PCAPs.
  *
- *      time-field (optional): The telemetry field name that will be used as the
- *          time baseline in the query.
+ *  packet
+ *    The name of the packet definition in the telemetry dictionary from which
+ *    fields will be selected for the query.
  *
- *      Note, specifying one or more of these optional attributes will remove
- *      the corresponding input field from the UI.
+ *  time-field
+ *    The telemetry field name that will be used as the time baseline in the
+ *    query.
  *
- * Example Tags:
- *  <ait-telemetryquery></ait-telemetryquery>
+ *  .. note::
  *
- *  <ait-telemetryquery data-dir='/tmp/fakepcapdir'
- *                        packet='1553_EHS_Packet'
- *                        time-field='time_coarse'>
- *  </ait-telemetryquery>
+ *     Specifying one or more of these optional attributes will remove the
+ *     corresponding input field from the UI.
  *
+ * @example
+ * <ait-telemetryquery></ait-telemetryquery>
+ *
+ * @example
+ * <ait-telemetryquery
+ *   data-dir='/tmp/fakepcapdir'
+ *   packet='1553_EHS_Packet'
+ *   time-field='time_coarse'>
+ * </ait-telemetryquery>
  */
 const TelemetryQuery = {
     _data_paths: {},

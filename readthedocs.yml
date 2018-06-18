@@ -1,3 +1,5 @@
+build:
+  image: latest
 formats:
     - none
 python:

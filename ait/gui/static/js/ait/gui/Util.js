@@ -15,7 +15,8 @@
  */
 
 import defaults from 'lodash/defaults'
-/*
+
+/**
  * An event toggle-able Modal Component
  *
  * A customizable Modal component that is toggled and configured
@@ -23,29 +24,44 @@ import defaults from 'lodash/defaults'
  * simultaneous modal requests by queueing additional 'show' calls
  * behind the currently displayed modal.
  *
- * Events:
- *   'modal:show' - Display a modal to the user. Modal configuration
- *      should be included in the body of the event.
+ * **Events:**
  *
- *   'modal:hide' - Stop displaying the current active modal.
+ * modal:show
+ *   Display a modal to the user. Modal configuration should be included
+ *   in the body of the event.
+ *
+ * modal:hide
+ *   Stop displaying the current active modal.
  *
  * Modal configuration is passed via the 'modal:show' event body. The following
  * values are valid configuration values.
+ *
  *   header
  *      Contains the content to be displayed as the modal's title.
+ *
  *   body
  *      Contains the content to display as the modal's body
+ *
  *   footer
  *      Contains the content to display as the modal's footer
+ *
  *   insertHeaderCloseBtn
  *      Toggles whether a close button should be inserted
  *      into the modal header for the caller. Defaults to true.
+ *
  *   insertFooterCloseBtn
  *      Toggles whether a close button should be inserted
  *      into the modal footer for the caller. Defaults to true.
+ *
  *   displayBackground
  *      Toggles whether the modal background should be inserted
  *      when rendering the modal. Defaults to true.
+ *
+ * .. note::
+ *
+ *    The Modal component is automatically injected into the UI by default.
+ *    If you wish to use the Modal functionality you can do so without
+ *    adding anything to your UI.
  */
 const Modal = {
     _display_modal: false,
