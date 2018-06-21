@@ -21,17 +21,15 @@
  * Allows for configuration of 4 state event handlers
  * ('on', 'off', 'pending', and 'error') via attributes on the ait-led tag.
  *
- * Example:
- *   <ait-led on="seq:exec" off="seq:done" error="seq:err"></ait-led>
- *  
- *  You can specify multiple triggers for a single state by separating the
- *  event names with a ','
+ * You can specify multiple triggers for a single state by separating the
+ * event names with a ','
  *
  * @example
  * <ait-led on="seq:exec,seq:sent" off="seq:done"></ait-led>
  *
  * @example
- * // If you want to start the LED in a state besides 'off' set it via the 'default' attribute
+ * // If you want to start the LED in a state besides 'off' set
+ * // it via the 'default' attribute
  * <ait-led on="seq:exec,seq:sent" default="pending"></ait-led>
  */
 const LED = {
