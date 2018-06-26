@@ -101,18 +101,18 @@ const DragDrop =
 /**
  * AIT TabSet
  *
- * AIT TabSet is a Mithril UI component for a `<ait-tabset>`,
- * which manages a set of children `<ait-tab>`s.  Tabs have a title
+ * AIT TabSet is a Mithril UI component for a **<ait-tabset>**,
+ * which manages a set of children **<ait-tab>**'s.  Tabs have a title
  * attribute and their own child content.  When a TabSet is rendered
- * to the DOM via its `view()` method, it:
+ * to the DOM via its **view()** method, it:
  *
- *     1.  Uses `<ait-tabset>` and `<ait-tab>` HTML5 custom tags
+ *     1.  Uses **<ait-tabset>** and **<ait-tab>** HTML5 custom tags
  *         for targeted CSS styling and customization, and
  *
  *     2.  Uses Bootstrap HTML structure and CSS classes
  *
  * A AIT TabSet is signficantly more succinct than Bootstrap tabs.
- * For example, compare creating a AIT TabSet directly in HTML:
+ * For example, compare creating a AIT TabSet directly in HTML::
  *
  *     <ait-tabset class="nav-tabs">
  *         <ait-tab title="Foo"> ... </ait-tab>
@@ -120,7 +120,7 @@ const DragDrop =
  *         <ait-tab title="Baz"> ... </ait-tab>
  *     </ait-tab>
  *
- * To the corresponding Bootstrap HTML and CSS:
+ * To the corresponding Bootstrap HTML and CSS::
  *
  *     <ul class="nav nav-tabs">
  *         <li> <a href="#">Foo</a> </li>
@@ -134,11 +134,11 @@ const DragDrop =
  *     <!-- Repeat for the contents of all three tabs -->
  *
  * Tabs may also be rendered as Bootstrap pills, stacked, justified,
- * etc. by adding the [appropriate CSS
- * classes](http://getbootstrap.com/components/#nav) to a
+ * etc. by adding the `appropriate CSS
+ * classes <http://getbootstrap.com/components/#nav>`_ to a
  * <ait-tabset>.
  *
- * Tabs may be reordered programmatically via `TabSet.move(from, to)`
+ * Tabs may be reordered programmatically via **TabSet.move(from, to)**
  * or by interactively via drag-and-drop.
  */
 const TabSet =
