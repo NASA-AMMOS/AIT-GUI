@@ -396,12 +396,10 @@ def enable_monitoring():
                             msg = 'Field {} error out of limit with value {}'.format(field, v)
                             log.error(msg)
                             notify.trigger_notification('limit-error', msg)
-                            raise gevent.GreenletExit()
                         elif defn.warn(v):
                             msg = 'Field {} warning out of limit with value {}'.format(field, v)
                             log.warn(msg)
                             notify.trigger_notification('limit-warn', msg)
-                            raise gevent.GreenletExit()
 
             gevent.sleep(0)
 
