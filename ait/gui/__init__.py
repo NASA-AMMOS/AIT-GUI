@@ -393,11 +393,13 @@ def enable_monitoring():
                     for field, defn in limit_dict[packet.name].iteritems():
                         v = decoded._getattr(field)
                         if defn.error(v):
-                            msg = 'Field {} error out of limit with value {}'.format(field, v)
+                            msg = 'Field {} error out of limit at {} with value {}'.format(
+                                    field, datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%SZ"), v)
                             log.error(msg)
                             notify.trigger_notification('limit-error', msg)
                         elif defn.warn(v):
-                            msg = 'Field {} warning out of limit with value {}'.format(field, v)
+                            msg = 'Field {} warning out of limit at {} with value {}'.format(
+                                    field, datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%SZ"), v)
                             log.warn(msg)
                             notify.trigger_notification('limit-warn', msg)
 
