@@ -39,6 +39,7 @@ AIT Graphical User Interface (GUI).
 
 import gevent
 import gevent.event
+import gevent.util
 import gevent.lock
 import gevent.monkey; gevent.monkey.patch_all()
 import geventwebsocket
@@ -47,6 +48,7 @@ import bdb
 from collections import defaultdict
 import copy
 import datetime
+import importlib
 import json
 import os
 import socket
@@ -62,7 +64,7 @@ import requests
 
 import ait.core
 
-from ait.core import api, ccsds, cfg, cmd, dmc, evr, gds, limits, log, notify, pcap, tlm
+from ait.core import api, ccsds, cfg, cmd, db, dmc, evr, gds, limits, log, notify, pcap, tlm
 from ait.core import util
 
 
@@ -89,7 +91,7 @@ if ScriptRoot and not os.path.isdir(ScriptRoot):
 
 App     = bottle.Bottle()
 Servers = [ ]
-Monitor_Greenlet = None
+Greenlets = []
 
 bottle.debug(True)
 bottle.TEMPLATE_PATH.append(HTMLRoot.User)
@@ -340,7 +342,7 @@ def cleanup():
     for s in Servers:
         s.stop()
 
-    cleanup_monitoring()
+    gevent.killall(Greenlets)
 
 
 def startBrowser(url, name=None):
@@ -367,12 +369,16 @@ def startBrowser(url, name=None):
 
 
 def wait():
-    gevent.wait()
+    if len(Greenlets) > 0:
+        done = gevent.joinall(Greenlets, raise_error=True, count=1)
+        for d in done:
+            if issubclass(type(d.value), KeyboardInterrupt):
+                raise d.value
+    else:
+        gevent.wait()
 
 
 def enable_monitoring():
-    global Monitor_Greenlet
-
     def telem_handler(session):
         limit_dict = defaultdict(dict)
         for k, v in limits.getDefaultDict().iteritems():
@@ -383,36 +389,71 @@ def enable_monitoring():
         for k, v in tlm.getDefaultDict().iteritems():
             packet_dict[v.uid] = v
 
-        while True:
-            if len(session.telemetry) > 0:
-                p = session.telemetry.popleft()
-                packet = packet_dict[p[0]]
-                decoded = tlm.Packet(packet, data=bytearray(p[1]))
+        log.info('Starting telemetry limit monitoring')
+        try:
+            while True:
+                if len(session.telemetry) > 0:
+                    p = session.telemetry.popleft()
+                    packet = packet_dict[p[0]]
+                    decoded = tlm.Packet(packet, data=bytearray(p[1]))
 
-                if packet.name in limit_dict:
-                    for field, defn in limit_dict[packet.name].iteritems():
-                        v = decoded._getattr(field)
-                        if defn.error(v):
-                            msg = 'Field {} error out of limit at {} with value {}'.format(
-                                    field, datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%SZ"), v)
-                            log.error(msg)
-                            notify.trigger_notification('limit-error', msg)
-                        elif defn.warn(v):
-                            msg = 'Field {} warning out of limit at {} with value {}'.format(
-                                    field, datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%SZ"), v)
-                            log.warn(msg)
-                            notify.trigger_notification('limit-warn', msg)
+                    if packet.name in limit_dict:
+                        for field, defn in limit_dict[packet.name].iteritems():
+                            v = decoded._getattr(field)
+                            if defn.error(v):
+                                msg = 'Field {} error out of limit with value {}'.format(field, v)
+                                log.error(msg)
+                                notify.trigger_notification('limit-error', msg)
+                                raise gevent.GreenletExit()
+                            elif defn.warn(v):
+                                msg = 'Field {} warning out of limit with value {}'.format(field, v)
+                                log.warn(msg)
+                                notify.trigger_notification('limit-warn', msg)
+                                raise gevent.GreenletExit()
 
-            gevent.sleep(0)
+                gevent.sleep(0)
+        finally:
+            log.info('Telemetry limit monitoring terminated')
 
     s = ait.gui.Sessions.create()
-    Monitor_Greenlet = gevent.spawn(telem_handler, s)
+    telem_handler = gevent.util.wrap_errors(KeyboardInterrupt, telem_handler)
+    Greenlets.append(gevent.spawn(telem_handler, s))
 
 
-def cleanup_monitoring():
-    global Monitor_Greenlet
+def enable_data_archiving(datastore='ait.core.db.InfluxDBBackend', **kwargs):
+    packet_dict = defaultdict(dict)
+    for k, v in tlm.getDefaultDict().iteritems():
+        packet_dict[v.uid] = v
 
-    if Monitor_Greenlet: Monitor_Greenlet.kill()
+    try:
+        mod, cls = datastore.rsplit('.', 1)
+        dbconn = getattr(importlib.import_module(mod), cls)()
+        dbconn.connect(**kwargs)
+    except ImportError:
+        log.error("Could not import specified datastore {}".format(datastore))
+        return
+    except Exception as e:
+        log.error("Unable to connect to InfluxDB backend. Disabling data archive ...")
+        return
+
+    def data_archiver(session):
+        try:
+            log.info('Starting telemetry data archiving')
+            while True:
+                if len(session.telemetry) > 0:
+                    p = session.telemetry.popleft()
+                    packet = packet_dict[p[0]]
+                    decoded = tlm.Packet(packet, data=bytearray(p[1]))
+                    dbconn.insert(decoded, **kwargs)
+
+                gevent.sleep(0)
+        finally:
+            dbconn.close()
+            log.info('Telemetry data archiving terminated')
+
+    s = ait.gui.Sessions.create()
+    data_archiver = gevent.util.wrap_errors(KeyboardInterrupt, data_archiver)
+    Greenlets.append(gevent.spawn(data_archiver, s))
 
 
 Sessions = SessionStore()
