@@ -432,7 +432,7 @@ def enable_data_archiving(datastore='ait.core.db.InfluxDBBackend', **kwargs):
     except ImportError:
         log.error("Could not import specified datastore {}".format(datastore))
         return
-    except e:
+    except Exception as e:
         log.error("Unable to connect to InfluxDB backend. Disabling data archive ...")
         return
 
