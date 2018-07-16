@@ -1,5 +1,33 @@
 # Change Log
 
+## [1.1.0](https://github.com/NASA-AMMOS/AIT-GUI/tree/1.1.0) (2018-07-16)
+[Full Changelog](https://github.com/NASA-AMMOS/AIT-GUI/compare/1.0.0...1.1.0)
+
+**Closed issues:**
+
+- Better handle KeyboardInterrupts in optional service greenlets [\#80](https://github.com/NASA-AMMOS/AIT-GUI/issues/80)
+- Add database write integration [\#79](https://github.com/NASA-AMMOS/AIT-GUI/issues/79)
+- Update out-of-limit message to include time [\#78](https://github.com/NASA-AMMOS/AIT-GUI/issues/78)
+- Limit monitoring disables after limit trip [\#76](https://github.com/NASA-AMMOS/AIT-GUI/issues/76)
+- Clean up messy widget docs [\#73](https://github.com/NASA-AMMOS/AIT-GUI/issues/73)
+- Plots: title and y-title do not work [\#70](https://github.com/NASA-AMMOS/AIT-GUI/issues/70)
+- Update package versions so npm ci is usable [\#68](https://github.com/NASA-AMMOS/AIT-GUI/issues/68)
+- Add documentation for GUI widgets [\#47](https://github.com/NASA-AMMOS/AIT-GUI/issues/47)
+- Update README with default contributing and community information [\#43](https://github.com/NASA-AMMOS/AIT-GUI/issues/43)
+- Remove Contributing Guide from Sphinx docs [\#42](https://github.com/NASA-AMMOS/AIT-GUI/issues/42)
+- Update CHANGELOG [\#40](https://github.com/NASA-AMMOS/AIT-GUI/issues/40)
+
+**Merged pull requests:**
+
+- Issue \#79 and \#80 - Data archiving and better interrupt handling [\#81](https://github.com/NASA-AMMOS/AIT-GUI/pull/81) ([MJJoyce](https://github.com/MJJoyce))
+- Issue \#76 - Remove greenlet exception raise bug in limit monitoring [\#77](https://github.com/NASA-AMMOS/AIT-GUI/pull/77) ([MJJoyce](https://github.com/MJJoyce))
+- Issue \#73 - Component docstring cleanup [\#74](https://github.com/NASA-AMMOS/AIT-GUI/pull/74) ([MJJoyce](https://github.com/MJJoyce))
+- Issue \#47 - Add GUI widget docs [\#71](https://github.com/NASA-AMMOS/AIT-GUI/pull/71) ([MJJoyce](https://github.com/MJJoyce))
+- Issue \#68 - Update Sinon package version so npm ci works [\#69](https://github.com/NASA-AMMOS/AIT-GUI/pull/69) ([MJJoyce](https://github.com/MJJoyce))
+- Issue \#43 - Update README with default contributing/community info [\#45](https://github.com/NASA-AMMOS/AIT-GUI/pull/45) ([MJJoyce](https://github.com/MJJoyce))
+- Issue \#42 - Remove contributing guide from Sphinx docs [\#44](https://github.com/NASA-AMMOS/AIT-GUI/pull/44) ([MJJoyce](https://github.com/MJJoyce))
+- Issue \#40 - Fix missing CHANGELOG releases [\#41](https://github.com/NASA-AMMOS/AIT-GUI/pull/41) ([MJJoyce](https://github.com/MJJoyce))
+
 ## [1.0.0](https://github.com/NASA-AMMOS/AIT-GUI/tree/1.0.0) (2018-05-08)
 [Full Changelog](https://github.com/NASA-AMMOS/AIT-GUI/compare/0.24.0...1.0.0)
 
