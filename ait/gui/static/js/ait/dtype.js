@@ -274,4 +274,4 @@ function get (typename) {
 }
 
 
-export { get }
+export { PrimitiveType, get }
