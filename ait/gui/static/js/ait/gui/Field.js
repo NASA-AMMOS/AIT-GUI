@@ -166,7 +166,7 @@ const Field =
         this._fname  = vnode.attrs.name
         this._pname  = vnode.attrs.packet
         this._raw    = vnode.attrs.raw === true
-        this._cached = { packet: null, rawval: null }
+        this._cached = { packet: null, val: null }
         this._limits = null
     },
 
@@ -179,68 +179,19 @@ const Field =
                 this._fieldDefn = ait.tlm.dict[this._pname].fields[this._fname]
             }
 
+            let title = '<div>' + this._fieldDefn.name +
+                        '<span class="pull-right" style="cursor:pointer">' +
+                          '\u00D7' +
+                        '</span></div>'
+
+            let popover_id
+            let bodyClickClosePopoverHandler = () => {
+                $(vnode.dom).popover('hide')
+            }
+
             if (this._fieldDefn && !('disable-tlm-popover' in vnode.attrs)) {
-                let desc = this._fieldDefn.desc ? this._fieldDefn.desc : "None"
-                let type = this._fieldDefn.type ? this._fieldDefn.type._name : "Unknown"
-                let bytes = typeof(this._fieldDefn.bytes) === "object" ? (
-                    this._fieldDefn.bytes[0] + " - " + this._fieldDefn.bytes[1]) : (
-                    this._fieldDefn.bytes)
-
-                let hex_padding = 2
-                if (typeof(this._fieldDefn.bytes) === "object") {
-                    hex_padding = (this._fieldDefn.bytes[1] - this._fieldDefn.bytes[0] + 1) * 2
-                }
-
-                let mask = this._fieldDefn.mask ? (
-                    `0x${sprintf(`%0${hex_padding}X`, this._fieldDefn.mask)}`) : (
-                    "None")
-
-                let popover_content = `
-                    <p><b>Description:</b> ${desc}</p>
-                    <p><b>Data Type:</b> ${type}</p>
-                    <p><b>Byte(s) in Packet:</b> ${bytes}</p>
-                    <p><b>Bit Mask:</b> ${mask}</p>
-                `
-
-                if (this._fieldDefn.enum) {
-                    let enums = ""
-                    let _enum = this._fieldDefn.enum
-                    for (let k in _enum) {
-                        enums += `<dt>${k}</dt><dd>${_enum[k]}`
-                    }
-                    popover_content += `<b>Enumerated Values:</b><dl>${enums}</dl>`
-                }
-
-                if (this._fieldDefn.dntoeu) {
-                    let dntoeu = ""
-                    let _dntoeu = this._fieldDefn.dntoeu
-                    for (let k in _dntoeu) {
-                        dntoeu += `<dt>${k}</dt><dd>${_dntoeu[k]}`
-                    }
-                    popover_content += `<b>DN-to-EU:</b><dl>${dntoeu}</dl>`
-                }
-
-                if (this._fieldDefn.aliases) {
-                    let aliases = ""
-                    let _aliases = this._fieldDefn.aliases
-                    for (let k in _aliases) {
-                        aliases += `<dt>${k}</dt><dd>${_aliases[k]}`
-                    }
-                    popover_content += `<b>Aliases:</b><dl>${aliases}</dl>`
-                }
-
-                let title = '<div>' + this._fieldDefn.name +
-                            '<span class="pull-right" style="cursor:pointer">' +
-                              '\u00D7' +
-                            '</span></div>'
-
-                let popover_id
-                let bodyClickClosePopoverHandler = () => {
-                    $(vnode.dom).popover('hide')
-                }
-
                 $(vnode.dom).popover({
-                    content : `<ait-field-popover>${popover_content}</ait-field-popover>`,
+                    content : () => {return this.createPopoverContent()},
                     title: title,
                     html: true,
                     placement: 'auto right',
@@ -278,6 +229,59 @@ const Field =
                 })
             }
         })
+    },
+
+    createPopoverContent() {
+        let desc = this._fieldDefn.desc ? this._fieldDefn.desc : "None"
+        let type = this._fieldDefn.type ? this._fieldDefn.type._name : "Unknown"
+        let bytes = typeof(this._fieldDefn.bytes) === "object" ? (
+            this._fieldDefn.bytes[0] + " - " + this._fieldDefn.bytes[1]) : (
+            this._fieldDefn.bytes)
+
+        let hex_padding = 2
+        if (typeof(this._fieldDefn.bytes) === "object") {
+            hex_padding = (this._fieldDefn.bytes[1] - this._fieldDefn.bytes[0] + 1) * 2
+        }
+
+        let mask = this._fieldDefn.mask ? (
+            `0x${sprintf(`%0${hex_padding}X`, this._fieldDefn.mask)}`) : (
+            "None")
+
+        let popover_content = `
+            <p><b>Description:</b> ${desc}</p>
+            <p><b>Data Type:</b> ${type}</p>
+            <p><b>Byte(s) in Packet:</b> ${bytes}</p>
+            <p><b>Bit Mask:</b> ${mask}</p>
+        `
+
+        if (this._fieldDefn.enum) {
+            let enums = ""
+            let _enum = this._fieldDefn.enum
+            for (let k in _enum) {
+                enums += `<dt>${k}</dt><dd>${_enum[k]}`
+            }
+            popover_content += `<b>Enumerated Values:</b><dl>${enums}</dl>`
+        }
+
+        if (this._fieldDefn.dntoeu) {
+            let dntoeu = ""
+            let _dntoeu = this._fieldDefn.dntoeu
+            for (let k in _dntoeu) {
+                dntoeu += `<dt>${k}</dt><dd>${_dntoeu[k]}`
+            }
+            popover_content += `<b>DN-to-EU:</b><dl>${dntoeu}</dl>`
+        }
+
+        if (this._fieldDefn.aliases) {
+            let aliases = ""
+            let _aliases = this._fieldDefn.aliases
+            for (let k in _aliases) {
+                aliases += `<dt>${k}</dt><dd>${_aliases[k]}`
+            }
+            popover_content += `<b>Aliases:</b><dl>${aliases}</dl>`
+        }
+
+        return `<ait-field-popover>${popover_content}</ait-field-popover>`
     },
 
     onbeforeupdate (vnode, old) {
@@ -363,5 +367,73 @@ const Field =
     }
 }
 
-export default Field
-export { Field }
+const EVRField = Object.assign(Object.create(Field), {
+    oninit(vnode) {
+        this._fname  = vnode.attrs.name
+        this._pname  = vnode.attrs.packet
+        this._raw    = vnode.attrs.raw === true
+        this._cached = { packet: null, val: null }
+        this._data_fields = []
+
+        vnode.children.forEach(child => {
+                if (child.tag === 'ait-evrdata') {
+                    this._data_fields.push(child.attrs.name)
+                }
+        })
+    },
+
+    createPopoverContent() {
+        let desc = this._fieldDefn.desc ? this._fieldDefn.desc : "None"
+        let type = this._fieldDefn.type ? this._fieldDefn.type._name : "Unknown"
+        let bytes = typeof(this._fieldDefn.bytes) === "object" ? (
+            this._fieldDefn.bytes[0] + " - " + this._fieldDefn.bytes[1]) : (
+            this._fieldDefn.bytes)
+
+        let hex_padding = 2
+        if (typeof(this._fieldDefn.bytes) === "object") {
+            hex_padding = (this._fieldDefn.bytes[1] - this._fieldDefn.bytes[0] + 1) * 2
+        }
+
+        let mask = this._fieldDefn.mask ? (
+            `0x${sprintf(`%0${hex_padding}X`, this._fieldDefn.mask)}`) : (
+            "None")
+
+        let popover_content = `
+            <p><b>Description:</b> ${desc}</p>
+            <p><b>Data Type:</b> ${type}</p>
+            <p><b>Byte(s) in Packet:</b> ${bytes}</p>
+            <p><b>Bit Mask:</b> ${mask}</p>
+        `
+
+        if (this._cached.val && this._cached.val.msg) {
+            let da = []
+            if (this._cached.packet) {
+                for (let c of this._data_fields) {
+                    da.push(this._cached.packet.__get__(c, true))
+                }
+            }
+
+            let msg = (this._cached.val) ? this._cached.val.formatMessage(da) : ''
+            popover_content += `<p><b>EVR Message:</b> ${msg}</p>`
+        }
+
+        return `<ait-field-popover>${popover_content}</ait-field-popover>`
+    },
+
+    view(vnode) {
+        const packet = this.getPacket()
+        let   value  = this.getValue(packet, this._raw)
+
+        this.cache(packet)
+
+        if (value === undefined || value === null) {
+            value = 'N/A'
+        } else {
+            value = value.name ? value.name : (value.code ? value.code : 'Unidentified EVR')
+        }
+        return m('ait-field', vnode.attrs, value)
+    }
+})
+
+export default {Field, EVRField}
+export {Field, EVRField}
