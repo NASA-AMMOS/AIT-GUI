@@ -32,12 +32,16 @@ class CommandDictionary
             this[defn.name]             = defn
             this._byOpcode[defn.opcode] = defn
 
-            if (defn.subsystem) {
-                let commands = this._bySubsystem[defn.subsystem] || [ ]
-
-                commands.push(defn)
-                this._bySubsystem[defn.subsystem] = commands
+            let subsys = null
+            if (!defn.subsystem) {
+                subsys = 'GENERAL'
+            } else {
+                subsys = defn.subsystem
             }
+
+            let commands = this._bySubsystem[subsys] || [ ]
+            commands.push(defn)
+            this._bySubsystem[subsys] = commands
         }
     }
 
