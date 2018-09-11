@@ -1,5 +1,20 @@
 # Change Log
 
+## [1.2.0](https://github.com/NASA-AMMOS/AIT-GUI/tree/1.2.0) (2018-09-11)
+[Full Changelog](https://github.com/NASA-AMMOS/AIT-GUI/compare/1.1.0...1.2.0)
+
+**Closed issues:**
+
+- Add EVR message formatting to mirror Core functionality [\#85](https://github.com/NASA-AMMOS/AIT-GUI/issues/85)
+- Telemetry monitoring greenlet exception raise regressed [\#84](https://github.com/NASA-AMMOS/AIT-GUI/issues/84)
+- Command Browser requires subsystem attribute to function properly [\#82](https://github.com/NASA-AMMOS/AIT-GUI/issues/82)
+
+**Merged pull requests:**
+
+- Issue \#84 - Fix greenlet exception raise bug in telem monitoring code [\#87](https://github.com/NASA-AMMOS/AIT-GUI/pull/87) ([MJJoyce](https://github.com/MJJoyce))
+- Issue \#85 - Add support for EVR message formatting [\#86](https://github.com/NASA-AMMOS/AIT-GUI/pull/86) ([MJJoyce](https://github.com/MJJoyce))
+- Issue \#82 - Add commands without subsystem to default subsystem group [\#83](https://github.com/NASA-AMMOS/AIT-GUI/pull/83) ([MJJoyce](https://github.com/MJJoyce))
+
 ## [1.1.0](https://github.com/NASA-AMMOS/AIT-GUI/tree/1.1.0) (2018-07-16)
 [Full Changelog](https://github.com/NASA-AMMOS/AIT-GUI/compare/1.0.0...1.1.0)
 
