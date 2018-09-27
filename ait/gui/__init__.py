@@ -732,6 +732,49 @@ def handle():
             __setResponseToEventStream()
             yield 'data: %s\n\n' % json.dumps(msg)
 
+@App.route('/tlm/realtime/openmct')
+def handle():
+    """Return telemetry packets in realtime to client"""
+    session = Sessions.create()
+    pad   = bytearray(1)
+    wsock = bottle.request.environ.get('wsgi.websocket')
+
+    if not wsock:
+        bottle.abort(400, 'Expected WebSocket request.')
+
+    try:
+        tlmdict = ait.core.tlm.getDefaultDict()
+        while not wsock.closed:
+            try:
+                uid, data = session.telemetry.popleft(timeout=30)
+                pkt_defn = None
+                for k, v in tlmdict.iteritems():
+                    if v.uid == uid:
+                        pkt_defn = v
+                        break
+                else:
+                    continue
+
+                wsock.send(json.dumps({
+                    'packet': pkt_defn.name,
+                    'data': ait.core.tlm.Packet(pkt_defn, data=data).toJSON()
+                }))
+
+            except IndexError:
+                # If no telemetry has been received by the GUI
+                # server after timeout seconds, "probe" the client
+                # websocket connection to make sure it's still
+                # active and if so, keep it alive.  This is
+                # accomplished by sending a packet with an ID of
+                # zero and no packet data.  Packet ID zero with no
+                # data is ignored by AIT GUI client-side
+                # Javascript code.
+
+                if not wsock.closed:
+                    wsock.send(pad + struct.pack('>I', 0))
+    except geventwebsocket.WebSocketError:
+        pass
+
 
 @App.route('/tlm/realtime')
 def handle():
