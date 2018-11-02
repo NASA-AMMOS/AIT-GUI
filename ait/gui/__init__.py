@@ -400,6 +400,10 @@ def enable_monitoring():
                     if packet.name in limit_dict:
                         for field, defn in limit_dict[packet.name].iteritems():
                             v = decoded._getattr(field)
+
+                            if type(v) is evr.EVRDefn:
+                                v = v.name
+
                             if defn.error(v):
                                 msg = 'Field {} error out of limit with value {}'.format(field, v)
                                 log.error(msg)
