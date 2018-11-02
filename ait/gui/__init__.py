@@ -391,6 +391,9 @@ def enable_monitoring():
 
         log.info('Starting telemetry limit monitoring')
         try:
+            limit_trip_repeat = 0
+            prev_v = None
+            prev_defn = None
             while True:
                 if len(session.telemetry) > 0:
                     p = session.telemetry.popleft()
@@ -407,11 +410,28 @@ def enable_monitoring():
                             if defn.error(v):
                                 msg = 'Field {} error out of limit with value {}'.format(field, v)
                                 log.error(msg)
-                                notify.trigger_notification('limit-error', msg)
+
+                                if limit_trip_repeat < 30 and v == prev_v and defn == prev_defn:
+                                    limit_trip_repeat += 1
+                                else:
+                                    limit_trip_repeat = 0
+                                    notify.trigger_notification('limit-error', msg)
+
+                                prev_v = v
+                                prev_defn = defn
+
                             elif defn.warn(v):
                                 msg = 'Field {} warning out of limit with value {}'.format(field, v)
                                 log.warn(msg)
-                                notify.trigger_notification('limit-warn', msg)
+
+                                if limit_trip_repeat < 30 and v == prev_v and defn == prev_defn:
+                                    limit_trip_repeat += 1
+                                else:
+                                    limit_trip_repeat = 0
+                                    notify.trigger_notification('limit-warn', msg)
+
+                                prev_v = v
+                                prev_defn = defn
 
                 gevent.sleep(0)
         finally:
