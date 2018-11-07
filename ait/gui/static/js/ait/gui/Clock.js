@@ -57,6 +57,7 @@ const Clock =
     _h24: true,
     _utc: false,
     _gps: true,
+    _local: false,
     _doy: false,
     _utc_gps_offset: 0,
 
@@ -65,12 +66,19 @@ const Clock =
         if (this._gps) {
             this._gps = false
             this._utc = true
+            this._local = false
         } else if (this._utc) {
             this._gps = false
             this._utc = false
+            this._local = true
+        } else if (this._local) {
+            this._gps = true
+            this._utc = false
+            this._local = false
         } else {
             this._gps = true
             this._utc = false
+            this._local = false
         }
     },
     toggleDOY() { this._doy = !this._doy },
@@ -87,10 +95,11 @@ const Clock =
             this._utc_gps_offset = data[data.length - 1][1]
         })
 
-        this._h24 = attrs.h24 !== undefined ? attrs.h24 : Clock._h24
-        this._utc = attrs.utc !== undefined ? attrs.utc : Clock._utc
-        this._gps = attrs.gps !== undefined ? attrs.gps : Clock._gps
-        this._doy = attrs.doy !== undefined ? attrs.doy : Clock._doy
+        this._h24   = attrs.h24   !== undefined ? attrs.h24   : Clock._h24
+        this._utc   = attrs.utc   !== undefined ? attrs.utc   : Clock._utc
+        this._gps   = attrs.gps   !== undefined ? attrs.gps   : Clock._gps
+        this._local = attrs.local !== undefined ? attrs.local : Clock._local
+        this._doy   = attrs.doy   !== undefined ? attrs.doy   : Clock._doy
         this.update()
     },
 
@@ -102,10 +111,11 @@ const Clock =
 
     view (vnode) {
         const opts = {
-            doy: this._doy,
-            h24: this._h24,
-            utc: this._utc,
-            gps: this._gps,
+            doy:   this._doy,
+            h24:   this._h24,
+            utc:   this._utc,
+            gps:   this._gps,
+            local: this._local,
             utc_gps_offset: this._utc_gps_offset
         }
 
@@ -117,7 +127,6 @@ const Clock =
         const date = format.date(datetime, opts)
         const time = format.time(datetime, opts)
         const tz   = format.tz  (datetime, opts)
-
 
         return m('ait-clock', vnode.attrs, [
             m('span.date', { onclick: Clock.toggleDOY.bind(this) }, date), ' ',

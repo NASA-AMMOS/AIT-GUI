@@ -37,12 +37,19 @@ describe('Clock object', function () {
         var clock = ait.gui.Clock
         clock._utc.should.equal(false)
         clock._gps.should.equal(true)
+        clock._local.should.equal(false)
         clock.toggleTimeFormat()
         clock._utc.should.equal(true)
         clock._gps.should.equal(false)
+        clock._local.should.equal(false)
         clock.toggleTimeFormat()
         clock._utc.should.equal(false)
         clock._gps.should.equal(false)
+        clock._local.should.equal(true)
+        clock.toggleTimeFormat()
+        clock._utc.should.equal(false)
+        clock._gps.should.equal(true)
+        clock._local.should.equal(false)
     })
 
     it('should allow for toggling Julian date to/from DOY', function() {

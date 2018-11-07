@@ -123,11 +123,13 @@ function time (obj, { h24 = true, gps = true, utc = false } = {}) {
 }
 
 
-function tz (obj, { utc = false, gps = true } = {}) {
+function tz (obj, { utc = false, gps = true, local = false } = {}) {
     if (gps) {
         return 'GPS'
     } else if (utc) {
-        return 'UTC'
+        return 'UTC' 
+    } else if (local) {
+        return 'Local Time'
     } else {
         return timezone(obj)
     }
