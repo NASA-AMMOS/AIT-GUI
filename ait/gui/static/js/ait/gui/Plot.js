@@ -353,7 +353,16 @@ const Plot =
      */
     processTag (vnode) {
         if (vnode.tag === 'ait-plotconfig') {
-            this._backend.handleOptionsOverride(this._options, JSON.parse(vnode.text))
+            try {
+                this._backend.handleOptionsOverride(this._options, JSON.parse(vnode.text))
+            }
+            catch(error) {
+                if (error instanceof SyntaxError) {
+                    console.error('Error parsing plot config. Printing trace back ' +
+                                  'and reverting to default options.')
+                }
+                console.error(error)
+            }
         }
         else if (vnode.tag === 'ait-plotseries') {
             this.processTagSeries(vnode)
