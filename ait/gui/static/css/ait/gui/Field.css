@@ -4,6 +4,10 @@ ait-field {
     cursor: pointer;
 }
 
+ait-field name {
+    font-weight: bold;
+}
+
 ait-field[disable-tlm-popover] {
     cursor: default;
 }
