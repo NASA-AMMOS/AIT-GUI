@@ -331,8 +331,9 @@ const Field =
                     value = Number(value).toFixed(5)
                 }
             }
+        }
 
-            if (this.hasLimitCheck()) {
+        if (this.hasLimitCheck()) {
                 // Limit checks should always be performed against a DN-to-EU
                 // converted value since limits are expected to be defined
                 // in EU values.
@@ -361,7 +362,6 @@ const Field =
                     ait.events.emit('field:limitIn', this._pname + '_' + this._fname)
                 }
             }
-        }
 
         return m('ait-field', vnode.attrs, value)
     }
