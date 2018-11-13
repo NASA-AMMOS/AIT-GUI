@@ -164,7 +164,6 @@ const Field =
     // Mithril lifecycle method
     oninit (vnode) {
         this._fname  = vnode.attrs.name
-        this._dname  = vnode.attrs.display_name
         this._pname  = vnode.attrs.packet
         this._raw    = vnode.attrs.raw === true
         this._cached = { packet: null, val: null }
@@ -364,7 +363,12 @@ const Field =
                 }
             }
 
-        return m('ait-field', vnode.attrs, [m('name', this._dname + ': '), 
+        let dname = ""
+        if (vnode.attrs.display_name) {
+            dname = vnode.attrs.display_name + ': '
+        }
+
+        return m('ait-field', vnode.attrs, [m('name', dname), 
                                             m('value', value)])
     }
 }
