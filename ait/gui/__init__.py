@@ -389,11 +389,11 @@ def enable_monitoring():
         for k, v in tlm.getDefaultDict().iteritems():
             packet_dict[v.uid] = v
 
+        notif_thrshld = cfg.AitConfig.get('notifications.options.threshold')
+
         log.info('Starting telemetry limit monitoring')
         try:
-            limit_trip_repeat = 0
-            prev_v = None
-            prev_defn = None
+            limit_trip_repeats = {}
             while True:
                 if len(session.telemetry) > 0:
                     p = session.telemetry.popleft()
@@ -404,34 +404,32 @@ def enable_monitoring():
                         for field, defn in limit_dict[packet.name].iteritems():
                             v = decoded._getattr(field)
 
-                            if type(v) is evr.EVRDefn:
-                                v = v.name
+                            if packet.name not in limit_trip_repeats.keys():
+                                limit_trip_repeats[packet.name] = {}
+
+                            if field not in limit_trip_repeats[packet.name].keys():
+                                limit_trip_repeats[packet.name][field] = 0
 
                             if defn.error(v):
                                 msg = 'Field {} error out of limit with value {}'.format(field, v)
                                 log.error(msg)
 
-                                if limit_trip_repeat < 30 and v == prev_v and defn == prev_defn:
-                                    limit_trip_repeat += 1
-                                else:
-                                    limit_trip_repeat = 0
-                                    notify.trigger_notification('limit-error', msg)
+                                limit_trip_repeats[packet.name][field] += 1
 
-                                prev_v = v
-                                prev_defn = defn
+                                if limit_trip_repeats[packet.name][field] == notif_thrshld:
+                                    notify.trigger_notification('limit-error', msg)
 
                             elif defn.warn(v):
                                 msg = 'Field {} warning out of limit with value {}'.format(field, v)
                                 log.warn(msg)
 
-                                if limit_trip_repeat < 30 and v == prev_v and defn == prev_defn:
-                                    limit_trip_repeat += 1
-                                else:
-                                    limit_trip_repeat = 0
+                                limit_trip_repeats[packet.name][field] += 1
+
+                                if limit_trip_repeats[packet.name][field] == notif_thrshld:
                                     notify.trigger_notification('limit-warn', msg)
 
-                                prev_v = v
-                                prev_defn = defn
+                            else:
+                                limit_trip_repeats[packet.name][field] = 0
 
                 gevent.sleep(0)
         finally:
