@@ -389,8 +389,11 @@ def enable_monitoring():
         for k, v in tlm.getDefaultDict().iteritems():
             packet_dict[v.uid] = v
 
-        notif_thrshld = cfg.AitConfig.get('notifications.options.threshold')
-        notif_freq = cfg.AitConfig.get('notifications.options.frequency')
+        notif_thrshld = cfg.AitConfig().get('notifications.options.threshold')
+        if cfg.AitConfig().get('notifications.options.frequency'):
+            notif_freq = cfg.AitConfig().get('notifications.options.frequency')
+        else:
+            notif_freq = float('inf')
 
         log.info('Starting telemetry limit monitoring')
         try:
@@ -417,8 +420,9 @@ def enable_monitoring():
 
                                 limit_trip_repeats[packet.name][field] += 1
 
-                                if limit_trip_repeats[packet.name][field] == notif_thrshld or
-                                   limit_trip_repeats[packet.name][field] % notif_freq == 0:
+                                if (limit_trip_repeats[packet.name][field] == notif_thrshld or
+                                    (limit_trip_repeats[packet.name][field] - notif_thrshld)
+                                     % notif_freq == 0):
                                     notify.trigger_notification('limit-error', msg)
 
                             elif defn.warn(v):
@@ -427,8 +431,9 @@ def enable_monitoring():
 
                                 limit_trip_repeats[packet.name][field] += 1
 
-                                if limit_trip_repeats[packet.name][field] == notif_thrshld or
-                                   limit_trip_repeats[packet.name][field] % notif_freq == 0:
+                                if (limit_trip_repeats[packet.name][field] == notif_thrshld or
+                                    (limit_trip_repeats[packet.name][field] - notif_thrshld)
+                                     % notif_freq == 0):
                                     notify.trigger_notification('limit-warn', msg)
 
                             else:
