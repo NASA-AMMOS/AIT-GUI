@@ -363,7 +363,13 @@ const Field =
                 }
             }
 
-        return m('ait-field', vnode.attrs, value)
+        let dname = ""
+        if (vnode.attrs.display_name) {
+            dname = vnode.attrs.display_name + ': '
+        }
+
+        return m('ait-field', vnode.attrs, [m('name', dname), 
+                                            m('value', value)])
     }
 }
 
