@@ -389,9 +389,9 @@ def enable_monitoring():
         for k, v in tlm.getDefaultDict().iteritems():
             packet_dict[v.uid] = v
 
-        notif_thrshld = cfg.AitConfig().get('notifications.options.threshold')
-        if cfg.AitConfig().get('notifications.options.frequency'):
-            notif_freq = cfg.AitConfig().get('notifications.options.frequency')
+        notif_thrshld = ait.config.get('notifications.options.threshold')
+        if ait.config.get('notifications.options.frequency'):
+            notif_freq = ait.config.get('notifications.options.frequency')
         else:
             notif_freq = float('inf')
 
@@ -419,10 +419,11 @@ def enable_monitoring():
                                 log.error(msg)
 
                                 limit_trip_repeats[packet.name][field] += 1
+                                repeats = limit_trip_repeats[packet.name][field]
 
-                                if (limit_trip_repeats[packet.name][field] == notif_thrshld or
-                                    (limit_trip_repeats[packet.name][field] - notif_thrshld)
-                                     % notif_freq == 0):
+                                if (repeats == notif_thrshld or
+                                    (repeats > notif_thrshld and
+                                    (repeats - notif_thrshld) % notif_freq == 0)):
                                     notify.trigger_notification('limit-error', msg)
 
                             elif defn.warn(v):
@@ -430,10 +431,11 @@ def enable_monitoring():
                                 log.warn(msg)
 
                                 limit_trip_repeats[packet.name][field] += 1
+                                repeats = limit_trip_repeats[packet.name][field]
 
-                                if (limit_trip_repeats[packet.name][field] == notif_thrshld or
-                                    (limit_trip_repeats[packet.name][field] - notif_thrshld)
-                                     % notif_freq == 0):
+                                if (repeats == notif_thrshld or
+                                    (repeats > notif_thrshld and
+                                    (repeats - notif_thrshld) % notif_freq == 0)):
                                     notify.trigger_notification('limit-warn', msg)
 
                             else:
