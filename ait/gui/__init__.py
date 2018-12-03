@@ -389,11 +389,8 @@ def enable_monitoring():
         for k, v in tlm.getDefaultDict().iteritems():
             packet_dict[v.uid] = v
 
-        notif_thrshld = ait.config.get('notifications.options.threshold')
-        if ait.config.get('notifications.options.frequency'):
-            notif_freq = ait.config.get('notifications.options.frequency')
-        else:
-            notif_freq = float('inf')
+        notif_thrshld = ait.config.get('notifications.options.threshold', 1)
+        notif_freq = ait.config.get('notifications.options.frequency', float('inf'))
 
         log.info('Starting telemetry limit monitoring')
         try:
