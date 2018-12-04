@@ -1,6 +1,7 @@
 import ait.gui
 import ait.core
 import mock
+import argparse
 from collections import defaultdict
 from time import sleep
 from ait.core import cfg, tlm, limits
@@ -12,10 +13,28 @@ wait up to 10 seconds for it to run, and then quit the process using Ctrl-C.
 """
 
 
+def main():
+    global pkt_defn, pkt, limit_dict, limit_defn
+    pkt_defn, pkt = get_packet_and_defn()
+    limit_dict = get_limit_dict()
+    limit_defn = limit_dict[pkt_defn.name]['Voltage_A']
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-default', action='store_true',
+                        help='flag for testing the default notif options')
+
+    args = parser.parse_args()
+    enable_monitoring_test(args.default)
+
+
 @mock.patch('ait.core.notify.trigger_notification')
-def enable_monitoring_test(mock_notify):
+def enable_monitoring_test(default, mock_notify):
     try:
-        set_notif_options(thrshld=3, freq=2)
+        if not default:
+            set_notif_options(thrshld=3, freq=2)
+            expected = 3
+        else:
+            expected = 1
         print_notif_options()
 
         ait.gui.init('localhost', 8080)
@@ -37,11 +56,11 @@ def enable_monitoring_test(mock_notify):
     # value 0 should notify 3 times (msg 3, 5, 7)
     call_list = [mock.mock.call(
                   'limit-error',
-                  'Field Voltage_A error out of limit with value 0')] * 3
+                  'Field Voltage_A error out of limit with value 0')] * expected
     # value 50 should notify 3 times (msg 3, 5, 7)
     call_list.extend([mock.mock.call(
                       'limit-error',
-                      'Field Voltage_A error out of limit with value 50')] * 3)
+                      'Field Voltage_A error out of limit with value 50')] * expected)
 
     print('Notification was triggered {} times.'
           .format(mock_notify.call_count))
@@ -108,9 +127,4 @@ def set_notif_options(thrshld=None, freq=None):
 
 
 if __name__ == "__main__":
-    global pkt_defn, pkt, limit_dict, limit_defn
-    pkt_defn, pkt = get_packet_and_defn()
-    limit_dict = get_limit_dict()
-    limit_defn = limit_dict[pkt_defn.name]['Voltage_A']
-
-    enable_monitoring_test()
+    main()
