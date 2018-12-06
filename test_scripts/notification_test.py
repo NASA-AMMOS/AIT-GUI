@@ -32,6 +32,7 @@ def enable_monitoring_test(default, mock_notify):
     try:
         if not default:
             set_notif_options(thrshld=3, freq=2)
+            # value should notify 3 times for 8 packets (msg 3, 5, 7)
             expected = 3
         else:
             expected = 1
@@ -53,11 +54,9 @@ def enable_monitoring_test(default, mock_notify):
         ait.core.log.error('AIT GUI error: %s' % str(e))
 
     # define expected calls
-    # value 0 should notify 3 times (msg 3, 5, 7)
     call_list = [mock.mock.call(
                   'limit-error',
                   'Field Voltage_A error out of limit with value 0')] * expected
-    # value 50 should notify 3 times (msg 3, 5, 7)
     call_list.extend([mock.mock.call(
                       'limit-error',
                       'Field Voltage_A error out of limit with value 50')] * expected)
