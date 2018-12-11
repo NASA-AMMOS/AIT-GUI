@@ -389,8 +389,12 @@ def enable_monitoring():
         for k, v in tlm.getDefaultDict().iteritems():
             packet_dict[v.uid] = v
 
+        notif_thrshld = ait.config.get('notifications.options.threshold', 1)
+        notif_freq = ait.config.get('notifications.options.frequency', float('inf'))
+
         log.info('Starting telemetry limit monitoring')
         try:
+            limit_trip_repeats = {}
             while True:
                 if len(session.telemetry) > 0:
                     p = session.telemetry.popleft()
@@ -401,17 +405,38 @@ def enable_monitoring():
                         for field, defn in limit_dict[packet.name].iteritems():
                             v = decoded._getattr(field)
 
-                            if type(v) is evr.EVRDefn:
-                                v = v.name
+                            if packet.name not in limit_trip_repeats.keys():
+                                limit_trip_repeats[packet.name] = {}
+
+                            if field not in limit_trip_repeats[packet.name].keys():
+                                limit_trip_repeats[packet.name][field] = 0
 
                             if defn.error(v):
                                 msg = 'Field {} error out of limit with value {}'.format(field, v)
                                 log.error(msg)
-                                notify.trigger_notification('limit-error', msg)
+
+                                limit_trip_repeats[packet.name][field] += 1
+                                repeats = limit_trip_repeats[packet.name][field]
+
+                                if (repeats == notif_thrshld or
+                                    (repeats > notif_thrshld and
+                                    (repeats - notif_thrshld) % notif_freq == 0)):
+                                    notify.trigger_notification('limit-error', msg)
+
                             elif defn.warn(v):
                                 msg = 'Field {} warning out of limit with value {}'.format(field, v)
                                 log.warn(msg)
-                                notify.trigger_notification('limit-warn', msg)
+
+                                limit_trip_repeats[packet.name][field] += 1
+                                repeats = limit_trip_repeats[packet.name][field]
+
+                                if (repeats == notif_thrshld or
+                                    (repeats > notif_thrshld and
+                                    (repeats - notif_thrshld) % notif_freq == 0)):
+                                    notify.trigger_notification('limit-warn', msg)
+
+                            else:
+                                limit_trip_repeats[packet.name][field] = 0
 
                 gevent.sleep(0)
         finally:
