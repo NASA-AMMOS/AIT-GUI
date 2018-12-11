@@ -4,7 +4,7 @@ import mock
 import argparse
 from collections import defaultdict
 from time import sleep
-from ait.core import cfg, tlm, limits
+from ait.core import cfg, tlm, limits, log
 
 """
 This script tests that notifications are triggered at the threshold
@@ -36,7 +36,7 @@ def enable_monitoring_test(default, mock_notify):
             expected = 3
         else:
             expected = 1
-        print_notif_options()
+        log_notif_options()
 
         ait.gui.init('localhost', 8080)
         ait.gui.enable_monitoring()
@@ -47,11 +47,11 @@ def enable_monitoring_test(default, mock_notify):
         ait.gui.cleanup()
 
     except KeyboardInterrupt:
-        ait.core.log.info('Received Ctrl-C.  Stopping AIT GUI.')
+        log.info('Received Ctrl-C.  Stopping AIT GUI.')
         ait.gui.cleanup()
 
     except Exception as e:
-        ait.core.log.error('AIT GUI error: %s' % str(e))
+        log.error('AIT GUI error: %s' % str(e))
 
     # define expected calls
     call_list = [mock.mock.call(
@@ -61,8 +61,8 @@ def enable_monitoring_test(default, mock_notify):
                       'limit-error',
                       'Field Voltage_A error out of limit with value 50')] * expected)
 
-    print('Notification was triggered {} times.'
-          .format(mock_notify.call_count))
+    log.info('Notification was triggered {} times.'
+            .format(mock_notify.call_count))
 
     assert mock_notify.call_args_list == call_list
 
@@ -105,21 +105,21 @@ def get_limit_dict():
     return limit_dict
 
 
-def print_notif_options():
+def log_notif_options():
     thrshld = ait.config.get('notifications.options.threshold')
     freq = ait.config.get('notifications.options.frequency')
-    print('Threshold and frequency are {} and {} respectively.'
-           .format(thrshld, freq))
+    log.info('Threshold and frequency are {} and {} respectively.'
+              .format(thrshld, freq))
 
 
 def set_notif_options(thrshld=None, freq=None):
     pathvars = {}
     if thrshld:
         pathvars['notifications.options.threshold'] = thrshld
-        print('Changing notif threshold to {}.'.format(thrshld))
+        log.info('Changing notif threshold to {}.'.format(thrshld))
     if freq:
         pathvars['notifications.options.frequency'] = freq
-        print('Changing notif freq to {}.'.format(freq))
+        log.info ('Changing notif freq to {}.'.format(freq))
 
     ait.config.addPathVariables(pathvars)
     ait.config.reload()
