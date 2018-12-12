@@ -1,5 +1,41 @@
 # Change Log
 
+## [1.4.0](https://github.com/NASA-AMMOS/AIT-GUI/tree/1.4.0) (2018-12-12)
+[Full Changelog](https://github.com/NASA-AMMOS/AIT-GUI/compare/1.3.0...1.4.0)
+
+**Implemented enhancements:**
+
+- Update limit monitoring with checks for lowering repeat notifications [\#92](https://github.com/NASA-AMMOS/AIT-GUI/issues/92)
+
+**Closed issues:**
+
+- Add example OpenMCT bridge code [\#88](https://github.com/NASA-AMMOS/AIT-GUI/issues/88)
+- Add option to bliss-field so field name is rendered [\#61](https://github.com/NASA-AMMOS/AIT-GUI/issues/61)
+
+**Merged pull requests:**
+
+- Issue \#61 - Adding tool tip to fieldname [\#97](https://github.com/NASA-AMMOS/AIT-GUI/pull/97) ([aywaldron](https://github.com/aywaldron))
+- Issue \#92: Update monitoring with notification throttling [\#93](https://github.com/NASA-AMMOS/AIT-GUI/pull/93) ([jordanpadams](https://github.com/jordanpadams))
+- Issue \#88 - Add support for integration with OpenMCT [\#89](https://github.com/NASA-AMMOS/AIT-GUI/pull/89) ([MJJoyce](https://github.com/MJJoyce))
+
+## [1.3.0](https://github.com/NASA-AMMOS/AIT-GUI/tree/1.3.0) (2018-11-09)
+[Full Changelog](https://github.com/NASA-AMMOS/AIT-GUI/compare/1.2.0...1.3.0)
+
+**Fixed bugs:**
+
+- Update limit monitoring to handle EVR monitoring [\#90](https://github.com/NASA-AMMOS/AIT-GUI/issues/90)
+
+**Closed issues:**
+
+- Clock format toggling doesn't rotate through options as expected [\#94](https://github.com/NASA-AMMOS/AIT-GUI/issues/94)
+- Bad ait-plot-config JSON object crashes the GUI [\#72](https://github.com/NASA-AMMOS/AIT-GUI/issues/72)
+
+**Merged pull requests:**
+
+- Issue \#72 - Adding try/catch for errors in parsing plot config element [\#96](https://github.com/NASA-AMMOS/AIT-GUI/pull/96) ([aywaldron](https://github.com/aywaldron))
+- Issue \#94 - Clock format toggling doesn't rotate through options as expected [\#95](https://github.com/NASA-AMMOS/AIT-GUI/pull/95) ([aywaldron](https://github.com/aywaldron))
+- Issue \#90: EVR handling for limit monitoring [\#91](https://github.com/NASA-AMMOS/AIT-GUI/pull/91) ([jordanpadams](https://github.com/jordanpadams))
+
 ## [1.2.0](https://github.com/NASA-AMMOS/AIT-GUI/tree/1.2.0) (2018-09-11)
 [Full Changelog](https://github.com/NASA-AMMOS/AIT-GUI/compare/1.1.0...1.2.0)
 
