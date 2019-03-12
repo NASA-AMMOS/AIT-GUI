@@ -1,6 +1,6 @@
 # Change Log
 
-## [1.4.0](https://github.com/NASA-AMMOS/AIT-GUI/tree/1.4.0) (2018-12-12)
+## [1.4.0](https://github.com/NASA-AMMOS/AIT-GUI/tree/1.4.0) (2019-03-12)
 [Full Changelog](https://github.com/NASA-AMMOS/AIT-GUI/compare/1.3.0...1.4.0)
 
 **Implemented enhancements:**
@@ -9,11 +9,13 @@
 
 **Closed issues:**
 
+- Issues with Fsevents and tests failing on a clean install [\#102](https://github.com/NASA-AMMOS/AIT-GUI/issues/102)
 - Add example OpenMCT bridge code [\#88](https://github.com/NASA-AMMOS/AIT-GUI/issues/88)
 - Add option to bliss-field so field name is rendered [\#61](https://github.com/NASA-AMMOS/AIT-GUI/issues/61)
 
 **Merged pull requests:**
 
+- Issue \#102 - Remove fsevents dependency and fix mithril-query version [\#103](https://github.com/NASA-AMMOS/AIT-GUI/pull/103) ([MJJoyce](https://github.com/MJJoyce))
 - Issue \#61 - Adding tool tip to fieldname [\#97](https://github.com/NASA-AMMOS/AIT-GUI/pull/97) ([aywaldron](https://github.com/aywaldron))
 - Issue \#92: Update monitoring with notification throttling [\#93](https://github.com/NASA-AMMOS/AIT-GUI/pull/93) ([jordanpadams](https://github.com/jordanpadams))
 - Issue \#88 - Add support for integration with OpenMCT [\#89](https://github.com/NASA-AMMOS/AIT-GUI/pull/89) ([MJJoyce](https://github.com/MJJoyce))
