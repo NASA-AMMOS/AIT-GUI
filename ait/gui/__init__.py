@@ -1,42 +1,3 @@
-# Advanced Multi-Mission Operations System (AMMOS) Instrument Toolkit (AIT)
-# Bespoke Link to Instruments and Small Satellites (BLISS)
-#
-# Copyright 2015, by the California Institute of Technology. ALL RIGHTS
-# RESERVED. United States Government Sponsorship acknowledged. Any
-# commercial use must be negotiated with the Office of Technology Transfer
-# at the California Institute of Technology.
-#
-# This software may be subject to U.S. export control laws. By accepting
-# this software, the user agrees to comply with all applicable U.S. export
-# laws and regulations. User has the responsibility to obtain export licenses,
-# or other export authority as may be required before exporting such
-# information to foreign countries or providing access to foreign persons.
-# U.S. Government Sponsorship acknowledged.
-
-"""
-AIT GUI
-
-The ait.gui module provides the web-based (HTML5/CSS/Javascript)
-AIT Graphical User Interface (GUI).
-"""
-
-
-# Gevent Monkey Patching
-#
-# From http://www.gevent.org/intro.html:
-#
-#     The functions in gevent.monkey carefully replace functions and
-#     classes in the standard socket module with their cooperative
-#     counterparts. That way even the modules that are unaware of
-#     gevent can benefit from running in a multi-greenlet environment.
-#
-# And:
-#
-#     When monkey patching, it is recommended to do so as early as
-#     possible in the lifetime of the process. If possible, monkey
-#     patching should be the first lines executed.
-#
-
 import gevent
 import gevent.event
 import gevent.util
@@ -46,69 +7,26 @@ import geventwebsocket
 
 import bdb
 from collections import defaultdict
-import copy
-import datetime
 import importlib
 import json
 import os
-import socket
 import struct
 import sys
 import time
 import urllib
 import webbrowser
+import re
 
 import bottle
 import pkg_resources
-import requests
 
 import ait.core
-
-from ait.core import api, ccsds, cfg, cmd, db, dmc, evr, gds, limits, log, notify, pcap, tlm
-from ait.core import util
-
-
-_RUNNING_SCRIPT = None
-_RUNNING_SEQ = None
-CMD_API = ait.core.api.CmdAPI(ait.config.get('command.port', ait.DEFAULT_CMD_PORT))
-
-class HTMLRoot:
-    Static = pkg_resources.resource_filename('ait.gui', 'static/')
-    User   = ait.config.get('gui.html.directory', Static)
-
-SEQRoot = ait.config.get('sequence.directory', None)
-if SEQRoot and not os.path.isdir(SEQRoot):
-    msg = 'sequence.directory does not exist. Sequence loads may fail.'
-    ait.core.log.warn(msg)
-
-ScriptRoot = ait.config.get('script.directory', None)
-if ScriptRoot and not os.path.isdir(ScriptRoot):
-    msg = (
-        'script.directory points to a directory that does not exist. '
-        'Script loads may fail.'
-    )
-    ait.core.log.warn(msg)
-
-App     = bottle.Bottle()
-Servers = [ ]
-Greenlets = []
-
-bottle.debug(True)
-bottle.TEMPLATE_PATH.append(HTMLRoot.User)
-
-try:
-    with open(os.path.join(HTMLRoot.Static, 'package.json')) as infile:
-        package_data = json.loads(infile.read())
-    VERSION = 'AIT GUI v{}'.format(package_data['version'])
-    log.info('Running {}'.format(VERSION))
-except:
-    VERSION = ''
-    log.warn('Unable to determine which AIT GUI Version is running')
+from ait.core import api, cmd, dmc, evr, limits, log, notify, pcap, tlm, gds, util
+from ait.core.server.plugin import Plugin
 
 
 class Session (object):
     """Session
-
     A Session manages the state for a single GUI client connection.
     Sessions are managed through a SessionStore and may be used as a
     Python context.
@@ -132,7 +50,6 @@ class Session (object):
 
     def __exit__ (self, exc_type, exc_value, traceback):
         """Ends a Session context / connection.
-
         If no more active connections exist, the Session is deleted
         from its SessionStore.
         """
@@ -149,10 +66,8 @@ class Session (object):
         return str( id(self) )
 
 
-
 class SessionStore (dict):
     """SessionStore
-
     A SessionStore manages one or more Sessions.  SessionStores
     associate a Session with a GUI clients through an HTTP cookie.
     """
@@ -204,286 +119,350 @@ class SessionStore (dict):
         del self[session.id]
 
 
-class UdpSysLogServer (gevent.server.DatagramServer):
-    def __init__ (self, *args, **kwargs):
-        gevent.server.DatagramServer.__init__(self, *args, **kwargs)
-
-    def start (self):
-        values = self.server_host, self.server_port
-        log.info('Listening for Syslog messages on %s:%d (UDP)' % values)
-        super(UdpSysLogServer, self).start()
-
-    def handle (self, data, address):
-        msg = log.parseSyslog(data)
-        Sessions.addMessage(msg)
+Sessions = SessionStore()
 
 
-class UdpCcsdsTelemetryServer(gevent.server.DatagramServer):
-    """A UdpCcsdsTelemetryServer listens for CCSDS telemetry packets on
-    the given (hostname, port) and forwards those packets to the GUI
-    client with minimal sanity checking.
-    """
+_RUNNING_SCRIPT = None
+_RUNNING_SEQ = None
+CMD_API = ait.core.api.CmdAPI(ait.config.get('command.port', ait.DEFAULT_CMD_PORT))
 
-    def __init__ (self, listener):
-        super(UdpCcsdsTelemetryServer, self).__init__(listener)
+class HTMLRoot:
+    Static = pkg_resources.resource_filename('ait.gui', 'static/')
+    User   = ait.config.get('gui.html.directory', Static)
 
-    def start (self):
-        values = self.server_host, self.server_port
-        log.info('Listening for CCSDS telemetry on %s:%d (UDP)' % values)
-        super(UdpCcsdsTelemetryServer, self).start()
+SEQRoot = ait.config.get('sequence.directory', None)
+if SEQRoot and not os.path.isdir(SEQRoot):
+    msg = 'sequence.directory does not exist. Sequence loads may fail.'
+    ait.core.log.warn(msg)
 
-    def handle (self, data, address):
-        if len(data) > ccsds.CcsdsHeader.Definition.nbytes:
-            header = ccsds.CcsdsHeader(data)
-            Sessions.addTelemetry(header.apid, data)
+ScriptRoot = ait.config.get('script.directory', None)
+if ScriptRoot and not os.path.isdir(ScriptRoot):
+    msg = (
+        'script.directory points to a directory that does not exist. '
+        'Script loads may fail.'
+    )
+    ait.core.log.warn(msg)
+
+App     = bottle.Bottle()
+Servers = [ ]
+Greenlets = []
+
+bottle.debug(True)
+bottle.TEMPLATE_PATH.append(HTMLRoot.User)
+
+try:
+    with open(os.path.join(HTMLRoot.Static, 'package.json')) as infile:
+        package_data = json.loads(infile.read())
+    VERSION = 'AIT GUI v{}'.format(package_data['version'])
+    log.info('Running {}'.format(VERSION))
+except:
+    VERSION = ''
+    log.warn('Unable to determine which AIT GUI Version is running')
+
+
+class AITGUIPlugin(Plugin):
+
+    def __init__(self, inputs, outputs, zmq_args=None, **kwargs):
+        super(AITGUIPlugin, self).__init__(inputs, outputs, zmq_args, **kwargs)
+
+        gevent.spawn(self.init)
+
+    def process(self, input_data, topic=None):
+        # msg is going to be a tuple from the ait_packet_handler
+        # (packet_uid, packet)
+        # need to handle log/telem messages differently based on topic
+        # Sessions.addMessage vs Sessions.addTelemetry
+        if topic == "telem_stream":
+            self.process_telem_msg(input_data)
+        elif topic == "log_stream":
+            self.process_log_msg(input_data)
+
+    def process_telem_msg(self, msg):
+        split = re.split(r'\((\d),(\'.*\')\)', msg)
+        Sessions.addTelemetry(int(split[1]), split[2])
+
+    def process_log_msg(self, msg):
+        parsed = log.parseSyslog(msg)
+        Sessions.addMessage(parsed)
+
+    def getBrowserName(self, browser):
+        return getattr(browser, 'name', getattr(browser, '_name', '(none)'))
+
+    def init(self, host=None, port=8080):
+
+        # The /cmd endpoint requires access to the AITGUIPlugin object so it
+        # can publish commands via the Plugin interface. It's defined here with
+        # the static file routes so that things are grouped semi-neatly.
+        @App.route('/cmd', method='POST')
+        def handle():
+            """Send a given command
+            :formparam command: The command that should be sent. If arguments
+                                are to be included they should be separated via
+                                whitespace.
+            **Example command format**
+            .. sourcecode:
+               myExampleCommand argumentOne argumentTwo
+            """
+            with Sessions.current() as session:
+                command = bottle.request.forms.get('command').strip()
+
+                args = command.split()
+                if args:
+                    name = args[0].upper()
+                    args = [util.toNumber(t, t) for t in args[1:]]
+
+                    if self.send(name, *args):
+                        Sessions.addEvent('cmd:hist', command)
+                        bottle.response.status = 200
+                    else:
+                        bottle.response.status = 400
+                else:
+                    bottle.response.status = 400
+
+        @App.route('/ait/gui/static/<pathname:path>')
+        def handle(pathname):
+            return bottle.static_file(pathname, root=HTMLRoot.Static)
+
+        @App.route('/<pathname:path>')
+        def handle(pathname):
+            return bottle.static_file(pathname, root=HTMLRoot.User)
+
+        if host is None:
+            host = 'localhost'
+
+        streams = ait.config.get('gui.telemetry')
+
+        # if streams is None:
+        #     msg  = cfg.AitConfigMissing('gui.telemetry').args[0]
+        #     msg += '  No telemetry will be received (or displayed).'
+        #     log.error(msg)
+        # else:
+        #     nstreams = 0
+
+        #     for index, s in enumerate(streams):
+        #         param  = 'gui.telemetry[%d].stream' % index
+        #         stream = cfg.AitConfig(config=s).get('stream')
+
+        #         if stream is None:
+        #             msg = cfg.AitConfigMissing(param).args[0]
+        #             log.warn(msg + '  Skipping stream.')
+        #             continue
+
+        #         name  = stream.get('name', '<unnamed>')
+        #         type  = stream.get('type', 'raw').lower()
+        #         tport = stream.get('port', None)
+
+        #         if tport is None:
+        #             msg = cfg.AitConfigMissing(param + '.port').args[0]
+        #             log.warn(msg + '  Skipping stream.')
+        #             continue
+
+        #         if type == 'ccsds':
+        #             # Servers.append( UdpCcsdsTelemetryServer(tport) )
+        #             nstreams += 1
+        #         else:
+        #             defn = tlm.getDefaultDict().get(name, None)
+
+        #             if defn is None:
+        #                 values = (name, param)
+        #                 msg    = 'Packet name "%s" not found (%s.name).' % values
+        #                 log.warn(msg + '  Skipping stream.')
+        #                 continue
+
+        #             nstreams += 1
+
+        if streams and nstreams == 0:
+            msg  = 'No valid telemetry stream configurations found.'
+            msg += '  No telemetry will be received (or displayed).'
+            log.error(msg)
+
+        # Servers.append(
+        #     UdpSysLogServer(':%d' % ait.config.get('logging.port', 2514))
+        # )
+
+        Servers.append( gevent.pywsgi.WSGIServer(
+            ('0.0.0.0', port),
+            App,
+            handler_class = geventwebsocket.handler.WebSocketHandler)
+        )
+
+        for s in Servers:
+            s.start()
+
+    def cleanup(self):
+        global Servers
+
+        for s in Servers:
+            s.stop()
+
+        gevent.killall(Greenlets)
+
+    def startBrowser(self, url, name=None):
+        browser = None
+
+        if name is not None and name.lower() == 'none':
+            log.info('Will not start any browser since --browser=none')
+            return
+
+        try:
+            browser = webbrowser.get(name)
+        except webbrowser.Error:
+            old     = name or 'default'
+            msg     = 'Could not find browser: %s.  Will use: %s.'
+            browser = webbrowser.get()
+            log.warn(msg, name, self.getBrowserName(browser))
+
+        if type(browser) is webbrowser.GenericBrowser:
+            msg = 'Will not start text-based browser: %s.'
+            log.info(msg % self.getBrowserName(browser))
+        elif browser is not None:
+            log.info('Starting browser: %s' % self.getBrowserName(browser))
+            browser.open_new(url)
+
+    def wait(self):
+        if len(Greenlets) > 0:
+            done = gevent.joinall(Greenlets, raise_error=True, count=1)
+            for d in done:
+                if issubclass(type(d.value), KeyboardInterrupt):
+                    raise d.value
         else:
-            values = len(data), self.server_host, self.server_port
-            msg    = 'Ignoring %d byte packet fragment on %s:%d (UDP)'
-            log.warn(msg % values)
+            gevent.wait()
 
+    def enable_monitoring(self):
+        def telem_handler(session):
+            limit_dict = defaultdict(dict)
+            for k, v in limits.getDefaultDict().iteritems():
+                packet, field = k.split('.')
+                limit_dict[packet][field] = v
 
+            packet_dict = defaultdict(dict)
+            for k, v in tlm.getDefaultDict().iteritems():
+                packet_dict[v.uid] = v
 
-class UdpRawTelemetryServer(gevent.server.DatagramServer):
-    def __init__ (self, listener, defn):
-        super(UdpRawTelemetryServer, self).__init__(listener)
-        self._defn = defn
+            notif_thrshld = ait.config.get('notifications.options.threshold', 1)
+            notif_freq = ait.config.get('notifications.options.frequency', float('inf'))
 
-    def start (self):
-        values = self._defn.name, self.server_host, self.server_port
-        log.info('Listening for %s telemetry on %s:%d (UDP)' % values)
-        super(UdpRawTelemetryServer, self).start()
+            log.info('Starting telemetry limit monitoring')
+            try:
+                limit_trip_repeats = {}
+                while True:
+                    if len(session.telemetry) > 0:
+                        p = session.telemetry.popleft()
+                        packet = packet_dict[p[0]]
+                        decoded = tlm.Packet(packet, data=bytearray(p[1]))
 
-    def handle (self, packet, address):
-        Sessions.addTelemetry(self._defn.uid, packet)
+                        if packet.name in limit_dict:
+                            for field, defn in limit_dict[packet.name].iteritems():
+                                v = decoded._getattr(field)
 
+                                if packet.name not in limit_trip_repeats.keys():
+                                    limit_trip_repeats[packet.name] = {}
 
-def getBrowserName(browser):
-    return getattr(browser, 'name', getattr(browser, '_name', '(none)'))
+                                if field not in limit_trip_repeats[packet.name].keys():
+                                    limit_trip_repeats[packet.name][field] = 0
 
+                                if defn.error(v):
+                                    msg = 'Field {} error out of limit with value {}'.format(field, v)
+                                    log.error(msg)
 
-def init(host=None, port=8080):
-    global Servers
+                                    limit_trip_repeats[packet.name][field] += 1
+                                    repeats = limit_trip_repeats[packet.name][field]
 
-    @App.route('/ait/gui/static/<pathname:path>')
-    def handle(pathname):
-        return bottle.static_file(pathname, root=HTMLRoot.Static)
+                                    if (repeats == notif_thrshld or
+                                        (repeats > notif_thrshld and
+                                        (repeats - notif_thrshld) % notif_freq == 0)):
+                                        notify.trigger_notification('limit-error', msg)
 
-    @App.route('/<pathname:path>')
-    def handle(pathname):
-        return bottle.static_file(pathname, root=HTMLRoot.User)
+                                elif defn.warn(v):
+                                    msg = 'Field {} warning out of limit with value {}'.format(field, v)
+                                    log.warn(msg)
 
-    if host is None:
-        host = 'localhost'
+                                    limit_trip_repeats[packet.name][field] += 1
+                                    repeats = limit_trip_repeats[packet.name][field]
 
-    streams = ait.config.get('gui.telemetry')
+                                    if (repeats == notif_thrshld or
+                                        (repeats > notif_thrshld and
+                                        (repeats - notif_thrshld) % notif_freq == 0)):
+                                        notify.trigger_notification('limit-warn', msg)
 
-    if streams is None:
-        msg  = cfg.AitConfigMissing('gui.telemetry').args[0]
-        msg += '  No telemetry will be received (or displayed).'
-        log.error(msg)
-    else:
-        nstreams = 0
+                                else:
+                                    limit_trip_repeats[packet.name][field] = 0
 
-        for index, s in enumerate(streams):
-            param  = 'gui.telemetry[%d].stream' % index
-            stream = cfg.AitConfig(config=s).get('stream')
+                    gevent.sleep(0)
+            finally:
+                log.info('Telemetry limit monitoring terminated')
 
-            if stream is None:
-                msg = cfg.AitConfigMissing(param).args[0]
-                log.warn(msg + '  Skipping stream.')
-                continue
+        s = ait.gui.Sessions.create()
+        telem_handler = gevent.util.wrap_errors(KeyboardInterrupt, telem_handler)
+        Greenlets.append(gevent.spawn(telem_handler, s))
 
-            name  = stream.get('name', '<unnamed>')
-            type  = stream.get('type', 'raw').lower()
-            tport = stream.get('port', None)
-
-            if tport is None:
-                msg = cfg.AitConfigMissing(param + '.port').args[0]
-                log.warn(msg + '  Skipping stream.')
-                continue
-
-            if type == 'ccsds':
-                Servers.append( UdpCcsdsTelemetryServer(tport) )
-                nstreams += 1
-            else:
-                defn = tlm.getDefaultDict().get(name, None)
-
-                if defn is None:
-                    values = (name, param)
-                    msg    = 'Packet name "%s" not found (%s.name).' % values
-                    log.warn(msg + '  Skipping stream.')
-                    continue
-
-                Servers.append( UdpRawTelemetryServer(tport, defn) )
-                nstreams += 1
-
-    if streams and nstreams == 0:
-        msg  = 'No valid telemetry stream configurations found.'
-        msg += '  No telemetry will be received (or displayed).'
-        log.error(msg)
-
-    Servers.append(
-        UdpSysLogServer(':%d' % ait.config.get('logging.port', 2514))
-    )
-
-    Servers.append( gevent.pywsgi.WSGIServer(
-        ('0.0.0.0', port),
-        App,
-        handler_class = geventwebsocket.handler.WebSocketHandler)
-    )
-
-    for s in Servers:
-        s.start()
-
-
-def cleanup():
-    global Servers
-
-    for s in Servers:
-        s.stop()
-
-    gevent.killall(Greenlets)
-
-
-def startBrowser(url, name=None):
-    browser = None
-
-    if name is not None and name.lower() == 'none':
-        log.info('Will not start any browser since --browser=none')
-        return
-
-    try:
-        browser = webbrowser.get(name)
-    except webbrowser.Error:
-        old     = name or 'default'
-        msg     = 'Could not find browser: %s.  Will use: %s.'
-        browser = webbrowser.get()
-        log.warn(msg, name, getBrowserName(browser))
-
-    if type(browser) is webbrowser.GenericBrowser:
-        msg = 'Will not start text-based browser: %s.'
-        log.info(msg % getBrowserName(browser))
-    elif browser is not None:
-        log.info('Starting browser: %s' % getBrowserName(browser))
-        browser.open_new(url)
-
-
-def wait():
-    if len(Greenlets) > 0:
-        done = gevent.joinall(Greenlets, raise_error=True, count=1)
-        for d in done:
-            if issubclass(type(d.value), KeyboardInterrupt):
-                raise d.value
-    else:
-        gevent.wait()
-
-
-def enable_monitoring():
-    def telem_handler(session):
-        limit_dict = defaultdict(dict)
-        for k, v in limits.getDefaultDict().iteritems():
-            packet, field = k.split('.')
-            limit_dict[packet][field] = v
-
+    def enable_data_archiving(self, datastore='ait.core.db.InfluxDBBackend', **kwargs):
         packet_dict = defaultdict(dict)
         for k, v in tlm.getDefaultDict().iteritems():
             packet_dict[v.uid] = v
 
-        notif_thrshld = ait.config.get('notifications.options.threshold', 1)
-        notif_freq = ait.config.get('notifications.options.frequency', float('inf'))
-
-        log.info('Starting telemetry limit monitoring')
         try:
-            limit_trip_repeats = {}
-            while True:
-                if len(session.telemetry) > 0:
-                    p = session.telemetry.popleft()
-                    packet = packet_dict[p[0]]
-                    decoded = tlm.Packet(packet, data=bytearray(p[1]))
+            mod, cls = datastore.rsplit('.', 1)
+            dbconn = getattr(importlib.import_module(mod), cls)()
+            dbconn.connect(**kwargs)
+        except ImportError:
+            log.error("Could not import specified datastore {}".format(datastore))
+            return
+        except Exception as e:
+            log.error("Unable to connect to InfluxDB backend. Disabling data archive ...")
+            return
 
-                    if packet.name in limit_dict:
-                        for field, defn in limit_dict[packet.name].iteritems():
-                            v = decoded._getattr(field)
+        def data_archiver(session):
+            try:
+                log.info('Starting telemetry data archiving')
+                while True:
+                    if len(session.telemetry) > 0:
+                        p = session.telemetry.popleft()
+                        packet = packet_dict[p[0]]
+                        decoded = tlm.Packet(packet, data=bytearray(p[1]))
+                        dbconn.insert(decoded, **kwargs)
 
-                            if packet.name not in limit_trip_repeats.keys():
-                                limit_trip_repeats[packet.name] = {}
+                    gevent.sleep(0)
+            finally:
+                dbconn.close()
+                log.info('Telemetry data archiving terminated')
 
-                            if field not in limit_trip_repeats[packet.name].keys():
-                                limit_trip_repeats[packet.name][field] = 0
+        s = ait.gui.Sessions.create()
+        data_archiver = gevent.util.wrap_errors(KeyboardInterrupt, data_archiver)
+        Greenlets.append(gevent.spawn(data_archiver, s))
 
-                            if defn.error(v):
-                                msg = 'Field {} error out of limit with value {}'.format(field, v)
-                                log.error(msg)
+    def send(self, command, *args, **kwargs):
+        """Creates, validates, and sends the given command as a UDP
+        packet to the destination (host, port) specified when this
+        CmdAPI was created.
+        Returns True if the command was created, valid, and sent,
+        False otherwise.
+        """
+        status   = False
+        cmdobj   = CMD_API._cmddict.create(command, *args, **kwargs)
+        messages = []
 
-                                limit_trip_repeats[packet.name][field] += 1
-                                repeats = limit_trip_repeats[packet.name][field]
+        if not cmdobj.validate(messages):
+            for msg in messages:
+                log.error(msg)
+        else:
+            encoded = cmdobj.encode()
 
-                                if (repeats == notif_thrshld or
-                                    (repeats > notif_thrshld and
-                                    (repeats - notif_thrshld) % notif_freq == 0)):
-                                    notify.trigger_notification('limit-error', msg)
+            if CMD_API._verbose:
+                size = len(cmdobj.name)
+                pad  = (size - len(cmdobj.name) + 1) * ' '
+                gds.hexdump(encoded, preamble=cmdobj.name + ':' + pad)
 
-                            elif defn.warn(v):
-                                msg = 'Field {} warning out of limit with value {}'.format(field, v)
-                                log.warn(msg)
+            try:
+                self.publish(encoded)
+                status = True
 
-                                limit_trip_repeats[packet.name][field] += 1
-                                repeats = limit_trip_repeats[packet.name][field]
+                with pcap.open(CMD_API.CMD_HIST_FILE, 'a') as output:
+                    output.write(str(cmdobj))
+            except IOError as e:
+                log.error(e.message)
 
-                                if (repeats == notif_thrshld or
-                                    (repeats > notif_thrshld and
-                                    (repeats - notif_thrshld) % notif_freq == 0)):
-                                    notify.trigger_notification('limit-warn', msg)
-
-                            else:
-                                limit_trip_repeats[packet.name][field] = 0
-
-                gevent.sleep(0)
-        finally:
-            log.info('Telemetry limit monitoring terminated')
-
-    s = ait.gui.Sessions.create()
-    telem_handler = gevent.util.wrap_errors(KeyboardInterrupt, telem_handler)
-    Greenlets.append(gevent.spawn(telem_handler, s))
-
-
-def enable_data_archiving(datastore='ait.core.db.InfluxDBBackend', **kwargs):
-    packet_dict = defaultdict(dict)
-    for k, v in tlm.getDefaultDict().iteritems():
-        packet_dict[v.uid] = v
-
-    try:
-        mod, cls = datastore.rsplit('.', 1)
-        dbconn = getattr(importlib.import_module(mod), cls)()
-        dbconn.connect(**kwargs)
-    except ImportError:
-        log.error("Could not import specified datastore {}".format(datastore))
-        return
-    except Exception as e:
-        log.error("Unable to connect to InfluxDB backend. Disabling data archive ...")
-        return
-
-    def data_archiver(session):
-        try:
-            log.info('Starting telemetry data archiving')
-            while True:
-                if len(session.telemetry) > 0:
-                    p = session.telemetry.popleft()
-                    packet = packet_dict[p[0]]
-                    decoded = tlm.Packet(packet, data=bytearray(p[1]))
-                    dbconn.insert(decoded, **kwargs)
-
-                gevent.sleep(0)
-        finally:
-            dbconn.close()
-            log.info('Telemetry data archiving terminated')
-
-    s = ait.gui.Sessions.create()
-    data_archiver = gevent.util.wrap_errors(KeyboardInterrupt, data_archiver)
-    Greenlets.append(gevent.spawn(data_archiver, s))
-
-
-Sessions = SessionStore()
+        return status
 
 
 def __setResponseToEventStream():
@@ -521,7 +500,6 @@ def handle ():
 @App.route('/events', method='POST')
 def handle():
     """Add an event to the event stream
-
     :jsonparam name: The name of the event to add.
     :jsonparam data: The data to include with the event.
     """
@@ -540,7 +518,6 @@ def handle():
 @App.route('/messages', method='POST')
 def handle():
     """ Log a message via core library logging utilities
-
     :jsonparam severity: The log message severity
     :jsonparam message: The message to be sent
     """
@@ -570,11 +547,8 @@ def handle():
 @App.route('/tlm/dict', method='GET')
 def handle():
     """Return JSON Telemetry dictionary
-
     **Example Response**:
-
     .. sourcecode: json
-
        {
            ExaplePacket1: {
                uid: 1,
@@ -604,11 +578,8 @@ def handle():
 @App.route('/cmd/dict', method='GET')
 def handle():
     """Return JSON Command dictionary
-
     **Example Response**:
-
     .. sourcecode: json
-
        {
            NO_OP: {
                subsystem: "CORE",
@@ -643,23 +614,16 @@ def handle():
 @App.route('/cmd/hist.json', method='GET')
 def handle():
     """Return sent command history
-
     **Example Response**:
-
     .. sourcecode: json
-
        [
            "NO_OP",
            "SEQ_START 3423"
        ]
-
     If you set the **detailed** query string flag the JSON
     returned will include timestamp information.
-
     **Example Detailed Response**
-
     .. sourcecode: json
-
         [
             {
                 "timestamp": "2017-08-01 15:41:13.117805",
@@ -689,35 +653,6 @@ def handle():
                 return json.dumps(list(set(cmds)))
     except IOError:
         pass
-
-
-@App.route('/cmd', method='POST')
-def handle():
-    """Send a given command
-
-    :formparam command: The command that should be sent. If arguments
-                        are to be included they should be separated via
-                        whitespace.
-
-    **Example command format**
-
-    .. sourcecode:
-
-       myExampleCommand argumentOne argumentTwo
-
-    """
-    with Sessions.current() as session:
-        command = bottle.request.forms.get('command').strip()
-
-        args = command.split()
-        name = args[0].upper()
-        args = [util.toNumber(t, t) for t in args[1:]]
-
-        if CMD_API.send(name, *args):
-            Sessions.addEvent('cmd:hist', command)
-            bottle.response.status = 200
-        else:
-            bottle.response.status = 400
 
 
 @App.route('/cmd/validate', method='POST')
@@ -892,11 +827,8 @@ def handle():
 @App.route('/leapseconds', method='GET')
 def handle():
     """Return UTC-GPS Leapsecond data
-
     **Example Response**:
-
     .. sourcecode: json
-
        [
            ["1981-07-01 00:00:00", 1],
            ["1982-07-01 00:00:00", 2],
@@ -909,11 +841,8 @@ def handle():
 @App.route('/seq', method='GET')
 def handle():
     """Return a JSON array of filenames in the SEQRoot directory
-
     **Example Response**:
-
     .. sourcecode: json
-
        [
             sequenceOne.txt,
             sequenceTwo.txt
@@ -930,7 +859,6 @@ def handle():
 @App.route('/seq', method='POST')
 def handle():
     """Run requested sequence file
-
     :formparam seqfile: The sequence filename located in SEQRoot to execute
     """
     global _RUNNING_SEQ
@@ -983,7 +911,6 @@ script_exec_lock = gevent.lock.Semaphore(1)
 @App.route('/scripts', method='GET')
 def handle():
     """ Return a JSON array of script filenames
-
     Scripts are located via the script.directory configuration parameter.
     """
     with Sessions.current() as session:
@@ -998,18 +925,12 @@ def handle():
 @App.route('/scripts/load/<name>', method='GET')
 def handle(name):
     """ Return the text of a script
-
     Scripts are located via the script.directory configuration parameter.
-
     :param name: The name of the script to load. Should be one of the values
                  returned by **/scripts**.
-
     :statuscode 400: When the script name cannot be located
-
     **Example Response**:
-
     .. sourcecode: json
-
        {
            script_text: "This is the example content of a fake script"
        }
@@ -1028,12 +949,9 @@ def handle(name):
 @App.route('/script/run', method='POST')
 def handle():
     """ Run a script
-
     Scripts are located via the script.directory configuration parameter.
-
     :formparam scriptPath: The name of the script to load. This should be one
                            of the values returned by **/scripts**.
-
     :statuscode 400: When the script name cannot be located
     """
     global _RUNNING_SCRIPT
