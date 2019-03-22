@@ -381,11 +381,12 @@ class TelemetryStream
 
 
     onMessage (event) {
-        if ( !(event.data instanceof ArrayBuffer) ) return
+        if ( !(typeof event.data == "string") ) return
 
-        let uid  = new DataView(event.data, 1, 4).getUint32(0)
-        let data = new DataView(event.data, 5)
-        let defn = this._dict[uid]
+        let now = Date.now()
+        let data = JSON.parse(event.data)
+        let packet_name = data['packet']
+        let delta = data['data']
 
         // Since WebSockets can stay open indefinitely, the AIT GUI
         // server will occasionally probe for dropped client
@@ -399,16 +400,15 @@ class TelemetryStream
         // It's also possible that the packet UID is not in the client
         // telemetry dictionary (defn === undefined).  Without a
         // packet definition, the packet cannot be processed further.
-        if ((uid == 0 && data.byteLength == 0) || !defn) return
-
-        let packet = Packet.create(defn, data)
 
         clearInterval(this._interval)
         this._stale    = 0
         this._interval = setInterval(this.onStale.bind(this), 5000)
 
-        ait.packets.insert(defn.name, packet)
-        this._emit('packet', packet)
+        console.log(packet_name)
+        console.log(delta)
+        ait.packets.insert(packet_name, delta)
+        this._emit('packet', data)
     }
 
 
