@@ -78,13 +78,14 @@ class DygraphsBackend
         }
     }
 
-    plot (packet) {
-        const pname = packet._defn.name
+    plot (data) {
+        const pname = data['packet']
+        let delta = data['data']
         const names = this._plot._packets[pname]
 
         if (!names) return
 
-        let row = [ this._plot._time.get(packet) ]
+        let row = [ this._plot._time.get(delta) ]
 
         // For each series of data, if it's in the current packet
         // that we're updating, add the associated point. Otherwise,
@@ -92,7 +93,7 @@ class DygraphsBackend
         // to the plot maintains the same "shape" as the labels.
         this._series.forEach((id) => {
             if (id.startsWith(pname)) {
-                row.push(packet.__get__(id.split('.')[1]))
+                row.push(delta[id.split('.')[1]])
             } else {
                 row.push(null)
             }
@@ -207,8 +208,8 @@ class HighchartsBackend
         Object.assign(options, overrides)
     }
 
-    plot(packet) {
-        const pname = packet._defn.name
+    plot(delta) {
+        const pname = delta['packet']
         const names = this._plot._packets[pname]
         if (!names) return
 
@@ -354,10 +355,10 @@ class HighchartsBackend
 const Plot =
 {
     /**
-     * Plots data from the given packet.
+     * Plots data from the given delta.
      */
-    plot (packet) {
-        this._backend.plot(packet)
+    plot (delta) {
+        this._backend.plot(delta)
     },
 
 

@@ -83,7 +83,7 @@ const Field =
      * retrieving the packet value.
      */
     getValue (packet, raw=false) {
-        return packet && packet.__get__(this._fname, raw)
+        return packet && packet[this._fname]
     },
 
 

@@ -696,10 +696,23 @@ def handle():
             bottle.abort(400, 'Expected WebSocket request.')
 
         try:
+            tlmdict = ait.core.tlm.getDefaultDict()
             while not wsock.closed:
                 try:
                     uid, data = session.telemetry.popleft(timeout=30)
-                    wsock.send(pad + struct.pack('>I', uid) + data)
+                    pkt_defn = None
+                    for k, v in tlmdict.iteritems():
+                        if v.uid == uid:
+                            pkt_defn = v
+                            break
+                    else:
+                        continue
+
+                    wsock.send(json.dumps({
+                        'packet': pkt_defn.name,
+                        'data': ait.core.tlm.Packet(pkt_defn, data=data).toJSON()
+                    }))
+
                 except IndexError:
                     # If no telemetry has been received by the GUI
                     # server after timeout seconds, "probe" the client
