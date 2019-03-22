@@ -208,8 +208,9 @@ class HighchartsBackend
         Object.assign(options, overrides)
     }
 
-    plot(delta) {
-        const pname = delta['packet']
+    plot(data) {
+        const pname = data['packet']
+        let delta = data['data']
         const names = this._plot._packets[pname]
         if (!names) return
 
@@ -217,8 +218,8 @@ class HighchartsBackend
             const series = this._plot._chart.get(pname + '.' + name)
 
             if (series) {
-                const x = this._plot._time.get(packet).getTime()
-                const y = packet.__get__(name)
+                const x = this._plot._time.get(delta).getTime()
+                const y = delta[name]
 
                 series.addPoint([x, y], false)
 
