@@ -659,8 +659,6 @@ def handle():
                     if v.uid == uid:
                         pkt_defn = v
                         break
-                else:
-                    continue
 
                 wsock.send(json.dumps({
                     'packet': pkt_defn.name,
@@ -704,8 +702,6 @@ def handle():
                         if v.uid == uid:
                             pkt_defn = v
                             break
-                    else:
-                        continue
 
                     wsock.send(json.dumps({
                         'packet': pkt_defn.name,
