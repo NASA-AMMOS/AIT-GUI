@@ -177,11 +177,33 @@ class AITGUIPlugin(Plugin):
         # msg is going to be a tuple from the ait_packet_handler
         # (packet_uid, packet)
         # need to handle log/telem messages differently based on topic
-        # Sessions.addMessage vs Sessions.addTelemetry
-        if topic == "telem_stream":
-            self.process_telem_msg(input_data)
-        elif topic == "log_stream":
-            self.process_log_msg(input_data)
+        # Look for topic in list of stream log and telem stream names first.
+        # If those lists don't exist or topic not in them, try matching text
+        # in topic name.
+
+        processed = False
+
+        if hasattr(self, 'log_stream_names'):
+            if topic in self.log_stream_names:
+                self.process_log_msg(input_data)
+                processed = True
+
+        if hasattr(self, 'telem_stream_names'):
+            if topic in self.telem_stream_names:
+               self.process_telem_msg(input_data)
+               processed = True
+
+        if not processed:
+            if "telem_stream" in topic:
+                self.process_telem_msg(input_data)
+                processed = True
+
+            elif topic == "log_stream":
+                self.process_log_msg(input_data)
+                processed = True
+
+        if not processed: 
+            raise ValueError('Topic of received message not recognized as telem or log stream.')
 
     def process_telem_msg(self, msg):
         msg = pickle.loads(msg)
