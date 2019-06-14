@@ -1,11 +1,8 @@
 AIT GUI
 =======
 
-The AIT GUI provides an easily customizable and extendible interface for monitoring and displaying telemetry data, controlling EGSE simulators, as well as commanding and sequencing controls. You can view the AIT GUI by running the **ait-gui** bin script and pointing your browser to **http://localhost:8080**.
+The AIT GUI provides an easily customizable and extendible interface for monitoring and displaying telemetry data, controlling EGSE simulators, as well as commanding and sequencing controls. You can view the AIT GUI by configuring it as a plugin for :ref:`AIT Core's server <https://ait-core.readthedocs.io/en/master/server_architecture.html#plugins>` and pointing your browser to **http://localhost:8080**.
 
-.. code-block:: bash
-
-   $ ait-gui
 
 GUI Customization
 -----------------
