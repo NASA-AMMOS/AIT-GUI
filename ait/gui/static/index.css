@@ -30,6 +30,7 @@
 @import "./css/ait/gui/Command.css";
 @import "./css/ait/gui/Field.css";
 @import "./css/ait/gui/Messages.css";
+@import "css/ait/gui/Playback.css";
 @import "./css/ait/gui/Plot.css";
 @import "./css/ait/gui/Query.css";
 @import "./css/ait/gui/Script.css";

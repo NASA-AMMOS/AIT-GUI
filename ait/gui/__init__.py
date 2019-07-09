@@ -22,9 +22,10 @@ import bottle
 import pkg_resources
 
 import ait.core
-from ait.core import api, cmd, dmc, evr, limits, log, notify, pcap, tlm, gds, util
+from ait.core import api, cmd, db, dmc, evr, limits, log, notify, pcap, tlm, gds, util
 from ait.core.server.plugin import Plugin
-
+import copy
+from datetime import datetime
 
 class Session (object):
     """Session
@@ -983,6 +984,169 @@ def handle():
     with Sessions.current() as session:
         Sessions.addEvent('prompt:done', None)
         PromptResponse = json.loads(bottle.request.body.read())
+
+
+def playback_connect():
+
+    # Get datastore from config
+    plugins = ait.config.get('server.plugins')
+    datastore = ''
+    other_args = {}
+    for i in range(len(plugins)):
+        if plugins[i]['plugin']['name'] == 'ait.core.server.plugin.DataArchive':
+            datastore = plugins[i]['plugin']['datastore']
+            other_args = copy.deepcopy(plugins[i]['plugin'])
+            other_args.pop('name')
+            other_args.pop('inputs', None)
+            other_args.pop('outputs', None)
+            other_args.pop('datastore', None)
+            break
+    mod, cls = datastore.rsplit('.', 1)
+
+    # Connect to database
+    dbconn = getattr(importlib.import_module(mod), cls)()
+    dbconn.connect(**other_args)
+
+    return dbconn
+
+
+@App.route('/playback/range', method='GET')
+def handle():
+    dbconn = playback_connect()
+
+    # List of [packet_name, start_time, end_time] to return
+    ranges = []
+
+    # Loop through packet
+    packets = list(dbconn.query('SHOW MEASUREMENTS').get_points())
+    for i in range(len(packets)):
+
+        # Add packet name to ranges
+        packet_name = packets[i]['name']
+        ranges.append([packet_name])
+
+        # Add start time and end time to ranges
+        point_query = 'SELECT * FROM "{}"'.format(packet_name)
+        points = list(dbconn.query(point_query).get_points())
+        start_time = points[0]['time']
+        ranges[i].append(start_time)
+        end_time = points[len(points) - 1]['time']
+        ranges[i].append(end_time)
+
+    return json.dumps(ranges)
+
+
+def playback_query(packet, start_time, end_time):
+    dbconn = playback_connect()
+
+    # Query from database
+    point_query = 'SELECT * FROM "{}" WHERE time >= \'{}\' AND time <= \'{}\''.format(packet, start_time, end_time)
+    points = list(dbconn.query(point_query).get_points())
+
+    # Sort points
+    sorted_points = []
+    tlm_dict = tlm.getDefaultDict()
+    pkt = tlm_dict[packet]
+    fields = pkt.fields
+    key_names = ["time"]
+    for i in range(len(fields)):
+        key_names.append(fields[i].name)
+    for i in range(len(points)):
+        sorted_points.append([])
+        for j in range(len(key_names)):
+            sorted_points[i].append(points[i][key_names[j]])
+
+    return sorted_points
+
+
+@App.route('/playback/query', method='POST')
+def handle():
+    packet = bottle.request.forms.get('packet')
+    start_time = bottle.request.forms.get('startTime')
+    end_time = bottle.request.forms.get('endTime')
+    bottle.response.set_cookie('form', (packet, start_time, end_time), secret='secretkey')
+
+    # points = playback_query(packet, start_time, end_time)
+
+    d1 = datetime.strptime(start_time, '%Y-%m-%dT%H:%M:%SZ')
+    d2 = datetime.strptime(end_time, '%Y-%m-%dT%H:%M:%SZ')
+    query_range = (d2 - d1).total_seconds()
+
+    return json.dumps(query_range)
+
+
+playback_wsock = None
+playback_paused = False
+
+
+@App.route('/playback/playback')
+def handle():
+    global playback_wsock
+    global playback_paused
+    playback_paused = False
+    form = bottle.request.get_cookie('form', secret='secretkey')
+    packet = form[0]
+    start_time = form[1]
+    end_time = form[2]
+    points = playback_query(packet, start_time, end_time)
+    uid = tlm.getDefaultDict()[packet].uid
+
+
+    # Playback query as if it were realtime to client
+    # A null-byte pad ensures wsock is treated as binary.
+    pad = bytearray(1)
+    playback_wsock = bottle.request.environ.get('wsgi.websocket')
+
+    if not playback_wsock:
+        bottle.abort(400, 'Expected WebSocket request.')
+
+    # List of time intervals to wait
+    wait_intervals = []
+    d_start = datetime.strptime(start_time, '%Y-%m-%dT%H:%M:%SZ')
+    d_first = datetime.strptime(points[0][0], '%Y-%m-%dT%H:%M:%S.%fZ')
+    wait_intervals.append((d_first - d_start).total_seconds())
+    for i in range(len(points) - 1):
+        d1 = datetime.strptime(points[i][0], '%Y-%m-%dT%H:%M:%S.%fZ')
+        d2 = datetime.strptime(points[i + 1][0], '%Y-%m-%dT%H:%M:%S.%fZ')
+        wait_intervals.append((d2 - d1).total_seconds())
+    d_last = datetime.strptime(points[len(points) - 1][0], '%Y-%m-%dT%H:%M:%S.%fZ')
+    d_end = datetime.strptime(end_time, '%Y-%m-%dT%H:%M:%SZ')
+    wait_intervals.append((d_end - d_last).total_seconds())
+
+    # Send data to socket
+    time.sleep(wait_intervals[0])
+    for i in range(len(points)):
+        # Check if playback is paused at 100ms intervals
+        while playback_paused:
+            time.sleep(0.100)
+
+        data = ''
+        for j in range(1, len(points[i])):
+            data += struct.pack('>H', points[i][j])
+        try:
+            playback_wsock.send(pad + struct.pack('>I', uid) + data)
+        except geventwebsocket.WebSocketError:
+            pass
+        time.sleep(wait_intervals[i + 1])
+    playback_wsock.closed = True
+
+
+@App.route('/playback/play', method='PUT')
+def handle():
+    global playback_paused
+    playback_paused = False
+
+
+@App.route('/playback/pause', method='PUT')
+def handle():
+    global playback_paused
+    playback_paused = True
+
+
+@App.route('/playback/abort', method='PUT')
+def handle():
+    global playback_wsock
+    playback_wsock.closed = True
 
 
 class UIAbortException(Exception):

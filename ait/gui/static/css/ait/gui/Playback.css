@@ -1,0 +1,40 @@
+.timeline {
+    width: 80%;
+    position: relative;
+    margin: 50px 10% 50px 10%;
+}
+
+.timeline-line {
+    width: 100%;
+    height: 6px;
+    border-bottom: 3px solid grey;
+    position: absolute;
+}
+
+.timeline-dot {
+    height: 15px;
+    width: 15px;
+    background-color: blue;
+    border-radius: 50%;
+    position: absolute;
+    left: 0;
+    animation-name: move-dot;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+}
+
+.timeline-start {
+    position: absolute;
+    top: 20px;
+}
+
+.timeline-end {
+    position:absolute;
+    top: 20px;
+    right: 0px;
+}
+
+@keyframes move-dot {
+  from {left: 0;}
+  to {left: 100%;}
+}
