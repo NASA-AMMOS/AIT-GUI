@@ -13,6 +13,8 @@ const Playback = {
     _play: null,
     _pause: null,
     _abort: null,
+    _slider: null,
+    _timer: null,
 
     oninit(vnode) {
         m.request({
@@ -21,6 +23,8 @@ const Playback = {
         }).then((r) => {
             this._range = r
         })
+
+        this._slider = m('input', {class: 'slider', type: 'range', min: '0', max: '1', value: '0'})
     },
 
     view(vnode) {
@@ -82,17 +86,22 @@ const Playback = {
         this._timeline =
             m('div', {class:'timeline', style:'display:none'},
                 [
-                    m('div', {class:'timeline-line'}),
-                    m('div', {class:'timeline-dot'}),
+                    this._slider,
                     m('div', {class:'timeline-start'}, this._start_time),
                     m('div', {class:'timeline-end'}, this._end_time)
                 ])
 
+        function move_right() {
+            ++vnode.dom.getElementsByClassName('slider')[0].value
+        }
+
         this._play =
             m('button',
                 {class: 'btn btn-success pull-right',
-                    onclick: function() {
-                        vnode.dom.getElementsByClassName('timeline-dot')[0].style.animationPlayState = 'running'
+                    onclick: (e) => {
+                        if (!this._timer)
+                            this._timer = setInterval(move_right, 1000)
+
                         m.request({
                             url: '/playback/play',
                             method: 'PUT'
@@ -106,8 +115,10 @@ const Playback = {
         this._pause =
             m('button',
                 {class: 'btn btn-success pull-right',
-                    onclick: function() {
-                        vnode.dom.getElementsByClassName('timeline-dot')[0].style.animationPlayState = 'paused'
+                    onclick: (e) => {
+                        clearInterval(this._timer)
+                        this._timer = null
+
                         m.request({
                             url: '/playback/pause',
                             method: 'PUT'
@@ -121,12 +132,11 @@ const Playback = {
         this._abort =
             m('button',
                 {class: 'btn btn-success pull-right',
-                    onclick: function() {
-                        m.request({
-                            url: '/playback/abort',
-                            method: 'PUT'
-                        })
+                    onclick: (e) => {
                         vnode.dom.getElementsByClassName('timeline')[0].style.display = 'none'
+                        clearInterval(this._timer)
+                        this._timer = null
+
                         let buttons = vnode.dom.getElementsByClassName('btn btn-success pull-right')
                         for (var i = 0; i < buttons.length; ++i) {
                             if (buttons[i].id == 'playback-control')
@@ -134,6 +144,10 @@ const Playback = {
                             if (buttons[i].id == 'playback-query')
                                 buttons[i].style.display = 'block'
                         }
+                        m.request({
+                            url: '/playback/abort',
+                            method: 'PUT'
+                        })
                     },
                     style: 'display:none',
                     id: 'playback-control'
@@ -157,6 +171,21 @@ const Playback = {
                 data.append('startTime', this._start_time)
                 data.append('endTime', this._end_time)
 
+                vnode.dom.getElementsByClassName('slider')[0].min = Date.parse(this._start_time) / 1000
+                vnode.dom.getElementsByClassName('slider')[0].max = Date.parse(this._end_time) / 1000
+                vnode.dom.getElementsByClassName('slider')[0].value = 0
+                vnode.dom.getElementsByClassName('timeline')[0].style.display = 'block'
+                if (!this._timer)
+                    this._timer = setInterval(move_right, 1000)
+
+                let buttons = vnode.dom.getElementsByClassName('btn btn-success pull-right')
+                for (var i = 0; i < buttons.length; ++i) {
+                    if (buttons[i].id == 'playback-control')
+                        buttons[i].style.display = 'block'
+                    if (buttons[i].id == 'playback-query')
+                        buttons[i].style.display = 'none'
+                }
+
                 m.request({
                     url: '/playback/query',
                     method: 'POST',
@@ -176,16 +205,6 @@ const Playback = {
                             m.redraw()
                         })
                     })
-
-                    vnode.dom.getElementsByClassName('timeline-dot')[0].style.animationDuration = `${q}s`
-                    vnode.dom.getElementsByClassName('timeline')[0].style.display = 'block'
-                    let buttons = vnode.dom.getElementsByClassName('btn btn-success pull-right')
-                    for (var i = 0; i < buttons.length; ++i) {
-                        if (buttons[i].id == 'playback-control')
-                            buttons[i].style.display = 'block'
-                        if (buttons[i].id == 'playback-query')
-                            buttons[i].style.display = 'none'
-                    }
                 })
             },
         }, [
@@ -196,9 +215,8 @@ const Playback = {
             queryBtn,
         ])
 
-
         return m('ait-playback', vnode.attrs, [
-            range, form, this._timeline, m('br'), m('br'), m('br'), this._abort, this._pause, this._play
+            range, form, this._timeline, this._abort, this._pause, this._play
         ])
     },
 
@@ -208,7 +226,7 @@ const Playback = {
         if (form.elements['packet'].selectedIndex === 0) {
             this._validation_errors['packet'] = true
         }
-        let datetimeRegex = /\d{4}-(0[1-9]|1[012])-(0[1-9]|[12]\d|3[01])T([01]\d|2[0-3]):[0-5]\d:[0-5]\dZ/
+        let datetimeRegex = /^\d{4}-(0[1-9]|1[012])-(0[1-9]|[12]\d|3[01])T([01]\d|2[0-3]):[0-5]\d:[0-5]\dZ$/
         if (!datetimeRegex.test(form.elements['startTime'].value)) {
             this._validation_errors['startTime'] = true
         }
