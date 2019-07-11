@@ -26,6 +26,7 @@ from ait.core import api, cmd, db, dmc, evr, limits, log, notify, pcap, tlm, gds
 from ait.core.server.plugin import Plugin
 import copy
 from datetime import datetime
+from Queue import Queue
 
 class Session (object):
     """Session
@@ -986,6 +987,12 @@ def handle():
         PromptResponse = json.loads(bottle.request.body.read())
 
 
+# Global variables for playback
+playback_query = {}
+playback_queue = Queue()
+playback_wsock = None
+
+
 def playback_connect():
 
     # Get datastore from config
@@ -1036,111 +1043,69 @@ def handle():
     return json.dumps(ranges)
 
 
-def playback_query(packet, start_time, end_time):
+@App.route('/playback/query', method='POST')
+def handle():
+    global playback_query
+    global playback_queue
+    playback_query = {}
+    playback_queue = Queue()
     dbconn = playback_connect()
+    tlm_dict = tlm.getDefaultDict()
+
+    # Get values from form
+    packet = bottle.request.forms.get('packet')
+    start_time = bottle.request.forms.get('startTime')
+    end_time = bottle.request.forms.get('endTime')
+    uid = tlm_dict[packet].uid
 
     # Query from database
     point_query = 'SELECT * FROM "{}" WHERE time >= \'{}\' AND time <= \'{}\''.format(packet, start_time, end_time)
     points = list(dbconn.query(point_query).get_points())
 
-    # Sort points
-    sorted_points = []
-    tlm_dict = tlm.getDefaultDict()
+    # Put query into {timestamp: data} and sort according to tlm dictionary
     pkt = tlm_dict[packet]
     fields = pkt.fields
-    key_names = ["time"]
+    field_names = []
     for i in range(len(fields)):
-        key_names.append(fields[i].name)
+        field_names.append(fields[i].name)
     for i in range(len(points)):
-        sorted_points.append([])
-        for j in range(len(key_names)):
-            sorted_points[i].append(points[i][key_names[j]])
+        timestamp = str(points[i]['time'][:21])
+        data = bytearray(1) + struct.pack('>I', uid)
+        for j in range(len(field_names)):
+            data += struct.pack('>H', points[i][field_names[j]])
+        if playback_query.has_key(timestamp):
+            playback_query[timestamp].append(data)
+        else:
+            playback_query[timestamp] = [data]
 
-    return sorted_points
 
-
-@App.route('/playback/query', method='POST')
+@App.route('/playback/send', method='POST')
 def handle():
-    packet = bottle.request.forms.get('packet')
-    start_time = bottle.request.forms.get('startTime')
-    end_time = bottle.request.forms.get('endTime')
-    bottle.response.set_cookie('form', (packet, start_time, end_time), secret='secretkey')
-
-    # points = playback_query(packet, start_time, end_time)
-
-    d1 = datetime.strptime(start_time, '%Y-%m-%dT%H:%M:%SZ')
-    d2 = datetime.strptime(end_time, '%Y-%m-%dT%H:%M:%SZ')
-    query_range = (d2 - d1).total_seconds()
-
-    return json.dumps(query_range)
-
-
-playback_wsock = None
-playback_paused = False
+    global playback_query
+    global playback_queue
+    timestamp = bottle.request.forms.get('timestamp')
+    if (playback_query.has_key(timestamp)):
+        playback_queue.put(timestamp)
 
 
 @App.route('/playback/playback')
 def handle():
+    global playback_query
+    global playback_queue
     global playback_wsock
-    global playback_paused
-    playback_paused = False
-    form = bottle.request.get_cookie('form', secret='secretkey')
-    packet = form[0]
-    start_time = form[1]
-    end_time = form[2]
-    points = playback_query(packet, start_time, end_time)
-    uid = tlm.getDefaultDict()[packet].uid
 
-
-    # Playback query as if it were realtime to client
-    # A null-byte pad ensures wsock is treated as binary.
-    pad = bytearray(1)
     playback_wsock = bottle.request.environ.get('wsgi.websocket')
 
     if not playback_wsock:
         bottle.abort(400, 'Expected WebSocket request.')
 
-    # List of time intervals to wait
-    wait_intervals = []
-    d_start = datetime.strptime(start_time, '%Y-%m-%dT%H:%M:%SZ')
-    d_first = datetime.strptime(points[0][0], '%Y-%m-%dT%H:%M:%S.%fZ')
-    wait_intervals.append((d_first - d_start).total_seconds())
-    for i in range(len(points) - 1):
-        d1 = datetime.strptime(points[i][0], '%Y-%m-%dT%H:%M:%S.%fZ')
-        d2 = datetime.strptime(points[i + 1][0], '%Y-%m-%dT%H:%M:%S.%fZ')
-        wait_intervals.append((d2 - d1).total_seconds())
-    d_last = datetime.strptime(points[len(points) - 1][0], '%Y-%m-%dT%H:%M:%S.%fZ')
-    d_end = datetime.strptime(end_time, '%Y-%m-%dT%H:%M:%SZ')
-    wait_intervals.append((d_end - d_last).total_seconds())
-
-    # Send data to socket
-    time.sleep(wait_intervals[0])
-    for i in range(len(points)):
-        # Check if playback is paused at 100ms intervals
-        while playback_paused:
-            time.sleep(0.100)
-
-        data = ''
-        for j in range(1, len(points[i])):
-            data += struct.pack('>H', points[i][j])
-        try:
-            playback_wsock.send(pad + struct.pack('>I', uid) + data)
-        except geventwebsocket.WebSocketError:
-            pass
-        time.sleep(wait_intervals[i + 1])
-    playback_wsock.closed = True
-
-
-@App.route('/playback/play', method='PUT')
-def handle():
-    global playback_paused
-    playback_paused = False
-
-
-@App.route('/playback/pause', method='PUT')
-def handle():
-    global playback_paused
-    playback_paused = True
+    # Send data from queue to socket
+    while playback_wsock.closed == False:
+        timestamp = playback_queue.get()
+        if (timestamp != None):
+            data_list = playback_query[timestamp]
+            for i in range(len(data_list)):
+                playback_wsock.send(data_list[i])
 
 
 @App.route('/playback/abort', method='PUT')

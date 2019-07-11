@@ -10,10 +10,10 @@ const Playback = {
     _end_time: null,
     _validation_errors: {},
     _timeline: null,
+    _slider: null,
     _play: null,
     _pause: null,
     _abort: null,
-    _slider: null,
     _timer: null,
 
     oninit(vnode) {
@@ -91,21 +91,11 @@ const Playback = {
                     m('div', {class:'timeline-end'}, this._end_time)
                 ])
 
-        function move_right() {
-            ++vnode.dom.getElementsByClassName('slider')[0].value
-        }
-
         this._play =
             m('button',
                 {class: 'btn btn-success pull-right',
                     onclick: (e) => {
-                        if (!this._timer)
-                            this._timer = setInterval(move_right, 1000)
-
-                        m.request({
-                            url: '/playback/play',
-                            method: 'PUT'
-                        })
+                        this.start_slider(vnode)
                     },
                     style: 'display:none',
                     id: 'playback-control'
@@ -116,13 +106,7 @@ const Playback = {
             m('button',
                 {class: 'btn btn-success pull-right',
                     onclick: (e) => {
-                        clearInterval(this._timer)
-                        this._timer = null
-
-                        m.request({
-                            url: '/playback/pause',
-                            method: 'PUT'
-                        })
+                        this.stop_slider()
                     },
                     style: 'display:none',
                     id: 'playback-control'
@@ -134,11 +118,10 @@ const Playback = {
                 {class: 'btn btn-success pull-right',
                     onclick: (e) => {
                         vnode.dom.getElementsByClassName('timeline')[0].style.display = 'none'
-                        clearInterval(this._timer)
-                        this._timer = null
+                        this.stop_slider()
 
                         let buttons = vnode.dom.getElementsByClassName('btn btn-success pull-right')
-                        for (var i = 0; i < buttons.length; ++i) {
+                        for (let i = 0; i < buttons.length; ++i) {
                             if (buttons[i].id == 'playback-control')
                                 buttons[i].style.display = 'none'
                             if (buttons[i].id == 'playback-query')
@@ -171,41 +154,38 @@ const Playback = {
                 data.append('startTime', this._start_time)
                 data.append('endTime', this._end_time)
 
-                vnode.dom.getElementsByClassName('slider')[0].min = Date.parse(this._start_time) / 1000
-                vnode.dom.getElementsByClassName('slider')[0].max = Date.parse(this._end_time) / 1000
+                m.request({
+                    url: '/playback/query',
+                    method: 'POST',
+                    data: data
+                })
+
+                ait.tlm = {dict: {}}
+                ait.tlm.promise = m.request({ url: '/tlm/dict' })
+                ait.tlm.promise.then((dict) => {
+                    const proto = location.protocol === 'https:' ? 'wss' : 'ws'
+                    const url = proto + '://' + location.host + '/playback/playback'
+
+                    ait.tlm.dict   = TelemetryDictionary.parse(dict)
+                    ait.tlm.stream = new TelemetryStream(url, ait.tlm.dict)
+
+                    ait.events.on('ait:tlm:packet', () => {
+                        m.redraw()
+                    })
+                })
+
+                vnode.dom.getElementsByClassName('slider')[0].min = Date.parse(this._start_time) / 100
+                vnode.dom.getElementsByClassName('slider')[0].max = Date.parse(this._end_time) / 100
                 vnode.dom.getElementsByClassName('slider')[0].value = 0
                 vnode.dom.getElementsByClassName('timeline')[0].style.display = 'block'
-                if (!this._timer)
-                    this._timer = setInterval(move_right, 1000)
 
                 let buttons = vnode.dom.getElementsByClassName('btn btn-success pull-right')
-                for (var i = 0; i < buttons.length; ++i) {
+                for (let i = 0; i < buttons.length; ++i) {
                     if (buttons[i].id == 'playback-control')
                         buttons[i].style.display = 'block'
                     if (buttons[i].id == 'playback-query')
                         buttons[i].style.display = 'none'
                 }
-
-                m.request({
-                    url: '/playback/query',
-                    method: 'POST',
-                    data: data
-                }).then((q) => {
-
-                    ait.tlm = {dict: {}}
-                    ait.tlm.promise = m.request({ url: '/tlm/dict' })
-                    ait.tlm.promise.then((dict) => {
-                        const proto = location.protocol === 'https:' ? 'wss' : 'ws'
-                        const url = proto + '://' + location.host + '/playback/playback'
-
-                        ait.tlm.dict   = TelemetryDictionary.parse(dict)
-                        ait.tlm.stream = new TelemetryStream(url, ait.tlm.dict)
-
-                        ait.events.on('ait:tlm:packet', () => {
-                            m.redraw()
-                        })
-                    })
-                })
             },
         }, [
             m('h3', 'Query data from database'),
@@ -218,6 +198,33 @@ const Playback = {
         return m('ait-playback', vnode.attrs, [
             range, form, this._timeline, this._abort, this._pause, this._play
         ])
+    },
+
+    start_slider(vnode) {
+        if (this._timer) return
+        let start = Date.now()
+        let difference = 0
+
+         this._timer = setInterval(function() {
+            let delta = Math.floor((Date.now() - start) / 100)
+            if (delta > difference) {
+                difference = delta
+                let current_time = ++vnode.dom.getElementsByClassName('slider')[0].value
+                let formatted_time = new Date(current_time * 100).toISOString().substring(0, 21)
+                let data = new FormData()
+                data.append('timestamp', formatted_time)
+                m.request({
+                    url: '/playback/send',
+                    method: 'POST',
+                    data: data
+                })
+            }
+        },10)
+    },
+
+    stop_slider() {
+        clearInterval(this._timer)
+        this._timer = null
     },
 
     _validate_form(form) {
