@@ -14,9 +14,14 @@
 }
 
 .timeline-end {
-    position:absolute;
+    position: absolute;
     top: 20px;
     right: 0px;
+}
+
+.timeline-current {
+    position: absolute;
+    top: 40px;
 }
 
 @keyframes move-dot {

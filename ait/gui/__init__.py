@@ -1069,7 +1069,7 @@ def handle():
     for i in range(len(fields)):
         field_names.append(fields[i].name)
     for i in range(len(points)):
-        timestamp = str(points[i]['time'][:21])
+        timestamp = str(points[i]['time'][:21] + 'Z')
         data = bytearray(1) + struct.pack('>I', uid)
         for j in range(len(field_names)):
             data += struct.pack('>H', points[i][field_names[j]])

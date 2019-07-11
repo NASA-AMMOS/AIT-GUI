@@ -9,11 +9,8 @@ const Playback = {
     _start_time: null,
     _end_time: null,
     _validation_errors: {},
-    _timeline: null,
     _slider: null,
-    _play: null,
-    _pause: null,
-    _abort: null,
+    _current_time: null,
     _timer: null,
 
     oninit(vnode) {
@@ -24,7 +21,13 @@ const Playback = {
             this._range = r
         })
 
-        this._slider = m('input', {class: 'slider', type: 'range', min: '0', max: '1', value: '0'})
+        this._slider = m('input', {class: 'slider', type: 'range', min: '0', max: '1', value: '0',
+            oninput: (e) => {
+                let current_value = vnode.dom.getElementsByClassName('slider')[0].value
+                let formatted_time = new Date(current_value * 100).toISOString().substring(0, 21) + 'Z'
+                this._current_time = m('div', {class: 'timeline-current'}, 'Current time: ' + formatted_time)
+            }
+        })
     },
 
     view(vnode) {
@@ -83,26 +86,27 @@ const Playback = {
         let queryBtn = m('button',
             {class: 'btn btn-success pull-right', type: 'submit', id: 'playback-query'}, 'Query')
 
-        this._timeline =
+        let timeline =
             m('div', {class:'timeline', style:'display:none'},
                 [
                     this._slider,
                     m('div', {class:'timeline-start'}, this._start_time),
-                    m('div', {class:'timeline-end'}, this._end_time)
+                    m('div', {class:'timeline-end'}, this._end_time),
+                    this._current_time,
                 ])
 
-        this._play =
+        let playBtn =
             m('button',
                 {class: 'btn btn-success pull-right',
                     onclick: (e) => {
-                        this.start_slider(vnode)
+                        this.start_slider(vnode, this._end_time)
                     },
                     style: 'display:none',
                     id: 'playback-control'
                 }, 'Play'
             )
 
-        this._pause =
+        let pauseBtn =
             m('button',
                 {class: 'btn btn-success pull-right',
                     onclick: (e) => {
@@ -113,7 +117,7 @@ const Playback = {
                 }, 'Pause'
             )
 
-        this._abort =
+        let abortBtn =
             m('button',
                 {class: 'btn btn-success pull-right',
                     onclick: (e) => {
@@ -148,8 +152,8 @@ const Playback = {
                 }
 
                 this._packet = form.elements['packet'].value
-                this._start_time = form.elements['startTime'].value
-                this._end_time = form.elements['endTime'].value
+                this._start_time = form.elements['startTime'].value.substr(0, 19) + '.0' + 'Z'
+                this._end_time = form.elements['endTime'].value.substr(0, 19) + '.0' + 'Z'
                 data.append('packet', this._packet)
                 data.append('startTime', this._start_time)
                 data.append('endTime', this._end_time)
@@ -178,6 +182,7 @@ const Playback = {
                 vnode.dom.getElementsByClassName('slider')[0].max = Date.parse(this._end_time) / 100
                 vnode.dom.getElementsByClassName('slider')[0].value = 0
                 vnode.dom.getElementsByClassName('timeline')[0].style.display = 'block'
+                this._current_time = m('div', {class: 'timeline-current'}, 'Current time: ' + this._start_time)
 
                 let buttons = vnode.dom.getElementsByClassName('btn btn-success pull-right')
                 for (let i = 0; i < buttons.length; ++i) {
@@ -196,11 +201,11 @@ const Playback = {
         ])
 
         return m('ait-playback', vnode.attrs, [
-            range, form, this._timeline, this._abort, this._pause, this._play
+            range, form, timeline, abortBtn, pauseBtn, playBtn
         ])
     },
 
-    start_slider(vnode) {
+    start_slider(vnode, end_time) {
         if (this._timer) return
         let start = Date.now()
         let difference = 0
@@ -209,15 +214,19 @@ const Playback = {
             let delta = Math.floor((Date.now() - start) / 100)
             if (delta > difference) {
                 difference = delta
-                let current_time = ++vnode.dom.getElementsByClassName('slider')[0].value
-                let formatted_time = new Date(current_time * 100).toISOString().substring(0, 21)
-                let data = new FormData()
-                data.append('timestamp', formatted_time)
-                m.request({
-                    url: '/playback/send',
-                    method: 'POST',
-                    data: data
-                })
+                let current_value = ++vnode.dom.getElementsByClassName('slider')[0].value
+                let formatted_time = new Date(current_value * 100).toISOString().substring(0, 21) + 'Z'
+
+                if (formatted_time <= end_time) {
+                    vnode.dom.getElementsByClassName('timeline-current')[0].innerHTML = 'Current time: ' + formatted_time
+                    let data = new FormData()
+                    data.append('timestamp', formatted_time)
+                    m.request({
+                        url: '/playback/send',
+                        method: 'POST',
+                        data: data
+                    })
+                }
             }
         },10)
     },
