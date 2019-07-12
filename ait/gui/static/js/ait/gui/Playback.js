@@ -14,13 +14,6 @@ const Playback = {
     _timer: null,
 
     oninit(vnode) {
-        m.request({
-            method: 'GET',
-            url: '/playback/range'
-        }).then((r) => {
-            this._range = r
-        })
-
         this._slider = m('input', {class: 'slider', type: 'range', min: '0', max: '1', value: '0',
             oninput: (e) => {
                 let current_value = vnode.dom.getElementsByClassName('slider')[0].value
@@ -31,6 +24,13 @@ const Playback = {
     },
 
     view(vnode) {
+
+        m.request({
+            method: 'GET',
+            url: '/playback/range'
+        }).then((r) => {
+            this._range = r
+        })
 
         let range = m('div', {class: 'form-group'}, [
             m('label', 'Time ranges available'),
@@ -105,6 +105,8 @@ const Playback = {
                     data: data
                 })
 
+                ait.events.emit('ait:playback:on')
+
                 ait.tlm = {dict: {}}
                 ait.tlm.promise = m.request({ url: '/tlm/dict' })
                 ait.tlm.promise.then((dict) => {
@@ -113,10 +115,6 @@ const Playback = {
 
                     ait.tlm.dict   = TelemetryDictionary.parse(dict)
                     ait.tlm.stream = new TelemetryStream(url, ait.tlm.dict)
-
-                    ait.events.on('ait:tlm:packet', () => {
-                        m.redraw()
-                    })
                 })
 
                 vnode.dom.getElementsByClassName('slider')[0].min = Date.parse(this._start_time) / 100
@@ -130,6 +128,7 @@ const Playback = {
                 for (let i = 0; i < buttons.length; ++i) {
                     buttons[i].style.display = 'block'
                 }
+
             }}, [
                 packets,
                 startTime,
@@ -182,6 +181,22 @@ const Playback = {
                         m.request({
                             url: '/playback/abort',
                             method: 'PUT'
+                        })
+
+                        ait.events.emit('ait:playback:off')
+
+                        ait.tlm = {dict: {}}
+                        ait.tlm.promise = m.request({ url: '/tlm/dict' })
+                        ait.tlm.promise.then((dict) => {
+                            const proto = location.protocol === 'https:' ? 'wss' : 'ws'
+                            const url = proto + '://' + location.host + '/tlm/realtime'
+
+                            ait.tlm.dict   = TelemetryDictionary.parse(dict)
+                            ait.tlm.stream = new TelemetryStream(url, ait.tlm.dict)
+
+                            ait.events.on('ait:tlm:packet', () => {
+                                m.redraw()
+                            })
                         })
                     },
                     style: 'display:none'

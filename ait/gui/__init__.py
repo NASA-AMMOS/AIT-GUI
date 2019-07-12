@@ -625,22 +625,26 @@ def handle():
         pass
 
 
+global realtime_wsock
+
+
 @App.route('/tlm/realtime')
 def handle():
+    global realtime_wsock
     """Return telemetry packets in realtime to client"""
     with Sessions.current() as session:
         # A null-byte pad ensures wsock is treated as binary.
         pad   = bytearray(1)
-        wsock = bottle.request.environ.get('wsgi.websocket')
+        realtime_wsock = bottle.request.environ.get('wsgi.websocket')
 
-        if not wsock:
+        if not realtime_wsock:
             bottle.abort(400, 'Expected WebSocket request.')
 
         try:
-            while not wsock.closed:
+            while not realtime_wsock.closed:
                 try:
                     uid, data = session.telemetry.popleft(timeout=30)
-                    wsock.send(pad + struct.pack('>I', uid) + data)
+                    realtime_wsock.send(pad + struct.pack('>I', uid) + data)
                 except IndexError:
                     # If no telemetry has been received by the GUI
                     # server after timeout seconds, "probe" the client
@@ -651,10 +655,11 @@ def handle():
                     # data is ignored by AIT GUI client-side
                     # Javascript code.
 
-                    if not wsock.closed:
-                        wsock.send(pad + struct.pack('>I', 0))
+                    if not realtime_wsock.closed:
+                        realtime_wsock.send(pad + struct.pack('>I', 0))
         except geventwebsocket.WebSocketError:
             pass
+
 
 @App.route('/tlm/query', method='POST')
 def handle():
@@ -1097,6 +1102,9 @@ def handle():
     global playback_query
     global playback_queue
     global playback_wsock
+    global realtime_wsock
+
+    realtime_wsock.closed = True
 
     playback_wsock = bottle.request.environ.get('wsgi.websocket')
 
@@ -1104,7 +1112,7 @@ def handle():
         bottle.abort(400, 'Expected WebSocket request.')
 
     # Send data from queue to socket
-    while playback_wsock.closed == False:
+    while not playback_wsock.closed:
         timestamp = playback_queue.get()
         if (timestamp != None):
             data_list = playback_query[timestamp]
@@ -1116,6 +1124,8 @@ def handle():
 def handle():
     global playback_wsock
     playback_wsock.closed = True
+    with Sessions.current() as session:
+        session.telemetry.clear()
 
 
 class UIAbortException(Exception):
