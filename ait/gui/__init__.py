@@ -25,7 +25,7 @@ import ait.core
 from ait.core import api, cmd, db, dmc, evr, limits, log, notify, pcap, tlm, gds, util
 from ait.core.server.plugin import Plugin
 import copy
-from datetime import datetime
+from datetime import datetime, timedelta
 from Queue import Queue
 
 class Session (object):
@@ -1035,9 +1035,13 @@ def handle():
         # Add start time and end time to ranges
         point_query = 'SELECT * FROM "{}"'.format(packet_name)
         points = list(dbconn.query(point_query).get_points())
-        start_time = points[0]['time']
+        start_time = points[0]['time'][:19] + 'Z'
         ranges[i].append(start_time)
         end_time = points[len(points) - 1]['time']
+        dt = datetime.strptime(end_time, '%Y-%m-%dT%H:%M:%S.%fZ')
+        if dt.microsecond != 0:
+            dt += timedelta(0, 1)
+        end_time = dt.strftime('%Y-%m-%dT%H:%M:%SZ')
         ranges[i].append(end_time)
 
     return json.dumps(ranges)

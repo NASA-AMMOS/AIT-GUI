@@ -32,20 +32,15 @@ const Playback = {
 
     view(vnode) {
 
-        let range = [
-            m('h3', 'Time ranges available in database'),
-            m('ul',
-                this._range.map(function(i) {
-                    return m('li', [m('div', 'Telemetry packet: ' + i[0]),
-                        m('div', 'Start time: ' + i[1]),
-                        m('div', 'End time: ' + i[2])]
-                    )
-                })
-            )
-        ]
+        let range = m('div', {class: 'form-group'}, [
+            m('label', 'Time ranges available'),
+            this._range.map(function(i) {
+                return m('div', i[0] + ': ' + i[1] + ' to ' + i[2])
+            })
+        ])
 
-        let packets = m('div', {class: 'form-group'}, [
-            m('label', 'Telemetry packet'),
+        let packets = m('div', {class: 'form-group col-xs-3'}, [
+            m('label', 'Telemetry packet:'),
             m('select', {
                 class: 'form-control',
                     name: 'packet',
@@ -53,95 +48,41 @@ const Playback = {
                 [m('option', {
                     disabled: 'disabled',
                     selected: 'selected'
-                }, 'Select an option ...')].concat(
-                    map(this._range, (k) => {
-                        return m('option', {value: k[0]}, k[0])
+                }, 'Select an option')].concat(
+                    map(this._range, (i) => {
+                        return m('option', {value: i[0]}, i[0])
                     })
                 )
-            ),
-            m('p', {class: 'help-block'}, 'Telemetry packet from database')
+            )
         ])
         if (this._validation_errors['packet']) {
             packets.attrs.className += ' has-error'
         }
 
-        let startTime = m('div', {class: 'form-group'}, [
-            m('label', 'Start time'),
-            m('input', {class: 'form-control', placeholder: 'Start time YYYY-MM-DDTHH:MM:SSZ', name: 'startTime'}),
-            m('p', {class: 'help-block'}, 'Start time for data query. Expected format: YYYY-MM-DDTHH:MM:SSZ')
+        let startTime = m('div', {class: 'form-group col-xs-3'}, [
+            m('label', 'Start time:'),
+            m('input', {class: 'form-control', placeholder: 'YYYY-MM-DDTHH:MM:SSZ', name: 'startTime'})
         ])
         if (this._validation_errors['startTime']) {
             startTime.attrs.className += ' has-error'
         }
 
-        let endTime = m('div', {class: 'form-group'}, [
-            m('label', 'End time'),
-            m('input', {class: 'form-control', placeholder: 'End time YYYY-MM-DDTHH:MM:SSZ', name: 'endTime'}),
-            m('p', {class: 'help-block'}, 'End time for data query. Expected format: YYYY-MM-DDTHH:MM:SSZ')
+        let endTime = m('div', {class: 'form-group col-xs-3'}, [
+            m('label', 'End time:'),
+            m('input', {class: 'form-control', placeholder: 'YYYY-MM-DDTHH:MM:SSZ', name: 'endTime'})
         ])
         if (this._validation_errors['endTime']) {
             endTime.attrs.className += ' has-error'
         }
 
-        let queryBtn = m('button',
-            {class: 'btn btn-success pull-right', type: 'submit', id: 'playback-query'}, 'Query')
-
-        let timeline =
-            m('div', {class:'timeline', style:'display:none'},
-                [
-                    this._slider,
-                    m('div', {class:'timeline-start'}, this._start_time),
-                    m('div', {class:'timeline-end'}, this._end_time),
-                    this._current_time,
-                ])
-
-        let playBtn =
-            m('button',
-                {class: 'btn btn-success pull-right',
-                    onclick: (e) => {
-                        this.start_slider(vnode, this._end_time)
-                    },
-                    style: 'display:none',
-                    id: 'playback-control'
-                }, 'Play'
-            )
-
-        let pauseBtn =
-            m('button',
-                {class: 'btn btn-success pull-right',
-                    onclick: (e) => {
-                        this.stop_slider()
-                    },
-                    style: 'display:none',
-                    id: 'playback-control'
-                }, 'Pause'
-            )
-
-        let abortBtn =
-            m('button',
-                {class: 'btn btn-success pull-right',
-                    onclick: (e) => {
-                        vnode.dom.getElementsByClassName('timeline')[0].style.display = 'none'
-                        this.stop_slider()
-
-                        let buttons = vnode.dom.getElementsByClassName('btn btn-success pull-right')
-                        for (let i = 0; i < buttons.length; ++i) {
-                            if (buttons[i].id == 'playback-control')
-                                buttons[i].style.display = 'none'
-                            if (buttons[i].id == 'playback-query')
-                                buttons[i].style.display = 'block'
-                        }
-                        m.request({
-                            url: '/playback/abort',
-                            method: 'PUT'
-                        })
-                    },
-                    style: 'display:none',
-                    id: 'playback-control'
-                }, 'Abort'
-            )
+        let queryBtn = m('div', {class: 'form-group col-xs-3'}, [
+            m('div', {style: 'height: 25px'}),
+            m('button', {class: 'btn btn-success', type: 'submit'}, 'Query')
+            ]
+        )
 
         let form = m('form', {
+            class: 'form-row',
             onsubmit: (e) => {
                 e.preventDefault()
                 let form = e.currentTarget
@@ -184,24 +125,73 @@ const Playback = {
                 vnode.dom.getElementsByClassName('timeline')[0].style.display = 'block'
                 this._current_time = m('div', {class: 'timeline-current'}, 'Current time: ' + this._start_time)
 
+                vnode.dom.getElementsByClassName('btn btn-success')[0].style.display = 'none'
                 let buttons = vnode.dom.getElementsByClassName('btn btn-success pull-right')
                 for (let i = 0; i < buttons.length; ++i) {
-                    if (buttons[i].id == 'playback-control')
-                        buttons[i].style.display = 'block'
-                    if (buttons[i].id == 'playback-query')
-                        buttons[i].style.display = 'none'
+                    buttons[i].style.display = 'block'
                 }
-            },
-        }, [
-            m('h3', 'Query data from database'),
-            packets,
-            startTime,
-            endTime,
-            queryBtn,
-        ])
+            }}, [
+                packets,
+                startTime,
+                endTime,
+                queryBtn,
+            ]
+        )
+
+        let timeline =
+            m('div', {class:'timeline', style:'display:none'},
+                [
+                    this._slider,
+                    m('div', {class:'timeline-start'}, this._start_time),
+                    m('div', {class:'timeline-end'}, this._end_time),
+                    this._current_time,
+                ])
+
+        let playBtn =
+            m('button',
+                {class: 'btn btn-success pull-right',
+                    onclick: (e) => {
+                        this.start_slider(vnode, this._end_time)
+                    },
+                    style: 'display:none'
+                }, 'Play'
+            )
+
+        let pauseBtn =
+            m('button',
+                {class: 'btn btn-success pull-right',
+                    onclick: (e) => {
+                        this.stop_slider()
+                    },
+                    style: 'display:none'
+                }, 'Pause'
+            )
+
+        let abortBtn =
+            m('button',
+                {class: 'btn btn-success pull-right',
+                    onclick: (e) => {
+                        this.stop_slider()
+                        vnode.dom.getElementsByClassName('timeline')[0].style.display = 'none'
+                        vnode.dom.getElementsByClassName('btn btn-success')[0].style.display = 'inline-block'
+                        let buttons = vnode.dom.getElementsByClassName('btn btn-success pull-right')
+                        for (let i = 0; i < buttons.length; ++i) {
+                            buttons[i].style.display = 'none'
+                        }
+
+                        m.request({
+                            url: '/playback/abort',
+                            method: 'PUT'
+                        })
+                    },
+                    style: 'display:none'
+                }, 'Abort'
+            )
+
+        let controls = [abortBtn, pauseBtn, playBtn]
 
         return m('ait-playback', vnode.attrs, [
-            range, form, timeline, abortBtn, pauseBtn, playBtn
+            range, form, timeline, controls
         ])
     },
 
