@@ -24,3 +24,11 @@ ait-playback .timeline-current {
     position: absolute;
     top: 40px;
 }
+
+ait-playback .controls {
+    text-align: center
+}
+
+ait-playback .col-xs-3 {
+    padding-left: 0;
+}

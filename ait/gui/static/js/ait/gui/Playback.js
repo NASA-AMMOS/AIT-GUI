@@ -83,7 +83,7 @@ const Playback = {
         // Query button
         let queryBtn = m('div', {class: 'form-group col-xs-3'}, [
             m('div', {style: 'height: 25px'}),
-            m('button', {class: 'btn btn-success', type: 'submit'}, 'Query')
+            m('button', {class: 'btn btn-success query', type: 'submit'}, 'Query')
         ])
 
         // Form created when query button is clicked
@@ -134,12 +134,11 @@ const Playback = {
                 this._current_time = m('div', {class: 'timeline-current'}, 'Current time: ' + this._start_time)
                 vnode.dom.getElementsByClassName('timeline')[0].style.display = 'block'
 
-                // Display control buttons and hide timeline buttons
-                let buttons = vnode.dom.getElementsByClassName('btn btn-success pull-right')
-                for (let i = 0; i < buttons.length; ++i) {
-                    buttons[i].style.display = 'block'
-                }
-                vnode.dom.getElementsByClassName('btn btn-success')[0].style.display = 'none'
+                // Display controls and hide query button
+                vnode.dom.getElementsByClassName('controls')[0].style.display = 'block'
+                vnode.dom.getElementsByClassName('play')[0].style.display = 'inline-block'
+                vnode.dom.getElementsByClassName('pause')[0].style.display = 'none'
+                vnode.dom.getElementsByClassName('query')[0].style.display = 'none'
             }
         }, [packets, startTime, endTime, queryBtn,])
 
@@ -155,36 +154,35 @@ const Playback = {
         // Button to start playback
         let playBtn =
             m('button', {
-                class: 'btn btn-success pull-right',
+                class: 'btn btn-success play', style: 'display: none',
                 onclick: (e) => {
                     this.start_slider(vnode, this._end_time)
+                    vnode.dom.getElementsByClassName('play')[0].style.display = 'none'
+                    vnode.dom.getElementsByClassName('pause')[0].style.display = 'inline-block'
                 },
-                style: 'display:none'
             }, 'Play')
 
         // Button to pause playback
         let pauseBtn =
             m('button', {
-                class: 'btn btn-success pull-right',
+                class: 'btn btn-success pause', style: 'display: none',
                 onclick: (e) => {
                     this.stop_slider()
+                    vnode.dom.getElementsByClassName('pause')[0].style.display = 'none'
+                    vnode.dom.getElementsByClassName('play')[0].style.display = 'inline-block'
                 },
-                style: 'display:none'
             }, 'Pause')
 
         // Button to abort playback and return to realtime
         let abortBtn =
             m('button', {
-                class: 'btn btn-success pull-right',
+                class: 'btn btn-danger', style: 'display: inline-block',
                 onclick: (e) => {
                     this.stop_slider()
-                    // Hide timeline and control buttons and display query button
+                    // Hide timeline and controls and display query button
                     vnode.dom.getElementsByClassName('timeline')[0].style.display = 'none'
-                    let buttons = vnode.dom.getElementsByClassName('btn btn-success pull-right')
-                    for (let i = 0; i < buttons.length; ++i) {
-                        buttons[i].style.display = 'none'
-                    }
-                    vnode.dom.getElementsByClassName('btn btn-success')[0].style.display = 'inline-block'
+                    vnode.dom.getElementsByClassName('controls')[0].style.display = 'none'
+                    vnode.dom.getElementsByClassName('query')[0].style.display = 'inline-block'
 
                     // Abort playback on backend
                     m.request({
@@ -206,11 +204,10 @@ const Playback = {
                         ait.tlm.stream = new TelemetryStream(url, ait.tlm.dict)
                     })
                 },
-                style: 'display:none'
             }, 'Abort')
 
         // Button controls
-        let controls = [abortBtn, pauseBtn, playBtn]
+        let controls = m('div', {class: 'controls', style: 'display: none'}, [playBtn, pauseBtn, abortBtn])
 
         return m('ait-playback', vnode.attrs, [
             range, form, timeline, controls
