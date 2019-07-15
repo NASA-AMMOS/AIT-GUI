@@ -24,8 +24,3 @@ ait-playback .timeline-current {
     position: absolute;
     top: 40px;
 }
-
-ait-playback @keyframes move-dot {
-  from {left: 0;}
-  to {left: 100%;}
-}

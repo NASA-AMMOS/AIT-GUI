@@ -26,7 +26,7 @@ from ait.core import api, cmd, db, dmc, evr, limits, log, notify, pcap, tlm, gds
 from ait.core.server.plugin import Plugin
 import copy
 from datetime import datetime, timedelta
-from Queue import Queue
+
 
 class Session (object):
     """Session
@@ -625,13 +625,14 @@ def handle():
         pass
 
 
+# Global variable for realtime socket
 global realtime_wsock
 
 
 @App.route('/tlm/realtime')
 def handle():
-    global realtime_wsock
     """Return telemetry packets in realtime to client"""
+    global realtime_wsock
     with Sessions.current() as session:
         # A null-byte pad ensures wsock is treated as binary.
         pad   = bytearray(1)
@@ -992,56 +993,90 @@ def handle():
         PromptResponse = json.loads(bottle.request.body.read())
 
 
-# Global variables for playback
-playback_query = {}
-playback_queue = Queue()
-playback_wsock = None
+class Playback(object):
+    """Playback
+    A Playback manages the state for the playback component.
+    playback.dbconn: connection to database
+    playback.query: time query map of {timestamp: data} from database
+    playback.queue: deque of timestamps to be sent to the socket
+    playback.wsock: connection to socket
+    """
+
+    def __init__(self):
+        """Creates a new Playback"""
+        self._db_connect()
+        self.query = {}
+        self.queue = api.GeventDeque()
+        self.wsock = None
+
+    def _db_connect(self):
+        """Connect to database"""
+
+        # Get datastore from config
+        plugins = ait.config.get('server.plugins')
+        datastore = ''
+        other_args = {}
+        for i in range(len(plugins)):
+            if plugins[i]['plugin']['name'] == 'ait.core.server.plugin.DataArchive':
+                datastore = plugins[i]['plugin']['datastore']
+                other_args = copy.deepcopy(plugins[i]['plugin'])
+                other_args.pop('name')
+                other_args.pop('inputs', None)
+                other_args.pop('outputs', None)
+                other_args.pop('datastore', None)
+                break
+        mod, cls = datastore.rsplit('.', 1)
+
+        # Connect to database
+        self.dbconn = getattr(importlib.import_module(mod), cls)()
+        self.dbconn.connect(**other_args)
+
+    def wsock_connect(self):
+        """Connect to socket"""
+        self.wsock = bottle.request.environ.get('wsgi.websocket')
+        if not self.wsock:
+            bottle.abort(400, 'Expected WebSocket request.')
+
+    def reset(self):
+        """Reset fields"""
+        self.query.clear()
+        self.queue.clear()
+        playback.wsock.closed = True
 
 
-def playback_connect():
-
-    # Get datastore from config
-    plugins = ait.config.get('server.plugins')
-    datastore = ''
-    other_args = {}
-    for i in range(len(plugins)):
-        if plugins[i]['plugin']['name'] == 'ait.core.server.plugin.DataArchive':
-            datastore = plugins[i]['plugin']['datastore']
-            other_args = copy.deepcopy(plugins[i]['plugin'])
-            other_args.pop('name')
-            other_args.pop('inputs', None)
-            other_args.pop('outputs', None)
-            other_args.pop('datastore', None)
-            break
-    mod, cls = datastore.rsplit('.', 1)
-
-    # Connect to database
-    dbconn = getattr(importlib.import_module(mod), cls)()
-    dbconn.connect(**other_args)
-
-    return dbconn
+# Global playback variable
+playback = Playback()
 
 
 @App.route('/playback/range', method='GET')
 def handle():
-    dbconn = playback_connect()
-
-    # List of [packet_name, start_time, end_time] to return
+    """Return a JSON array of [packet_name, start_time, end_time] to represent the time range
+    of each packet in the database
+        **Example Response**:
+        .. sourcecode: json
+            [
+                ["1553_HS_Packet", "2019-07-15T18:10:00.0", "2019-07-15T18:12:00.0"],
+                ["Ethernet_HS_Packet", "2019-07-15T19:25:16.0", "2019-07-15T19:28:50.0"],
+            ]
+    """
+    global playback
     ranges = []
 
-    # Loop through packet
-    packets = list(dbconn.query('SHOW MEASUREMENTS').get_points())
+    # Loop through each packet from database
+    packets = list(playback.dbconn.query('SHOW MEASUREMENTS').get_points())
     for i in range(len(packets)):
 
-        # Add packet name to ranges
+        # Add packet name
         packet_name = packets[i]['name']
         ranges.append([packet_name])
 
-        # Add start time and end time to ranges
+        # Add start time and end time
         point_query = 'SELECT * FROM "{}"'.format(packet_name)
-        points = list(dbconn.query(point_query).get_points())
+        points = list(playback.dbconn.query(point_query).get_points())
+        # Round start time down to nearest second
         start_time = points[0]['time'][:19] + 'Z'
         ranges[i].append(start_time)
+        # Round end time up to nearest second
         end_time = points[len(points) - 1]['time']
         dt = datetime.strptime(end_time, '%Y-%m-%dT%H:%M:%S.%fZ')
         if dt.microsecond != 0:
@@ -1054,11 +1089,8 @@ def handle():
 
 @App.route('/playback/query', method='POST')
 def handle():
-    global playback_query
-    global playback_queue
-    playback_query = {}
-    playback_queue = Queue()
-    dbconn = playback_connect()
+    """Set playback query with packet name, start time, and end time from form"""
+    global playback
     tlm_dict = tlm.getDefaultDict()
 
     # Get values from form
@@ -1067,63 +1099,68 @@ def handle():
     end_time = bottle.request.forms.get('endTime')
     uid = tlm_dict[packet].uid
 
-    # Query from database
+    # Query packet and time range from database
     point_query = 'SELECT * FROM "{}" WHERE time >= \'{}\' AND time <= \'{}\''.format(packet, start_time, end_time)
-    points = list(dbconn.query(point_query).get_points())
+    points = list(playback.dbconn.query(point_query).get_points())
 
-    # Put query into {timestamp: data} and sort according to tlm dictionary
+    # Sort data of query according to fields in tlm dictionary
     pkt = tlm_dict[packet]
     fields = pkt.fields
     field_names = []
     for i in range(len(fields)):
         field_names.append(fields[i].name)
+    # Put query into a map of {timestamp: data}
     for i in range(len(points)):
+        # Round time down to nearest 0.1 second
         timestamp = str(points[i]['time'][:21] + 'Z')
         data = bytearray(1) + struct.pack('>I', uid)
         for j in range(len(field_names)):
             data += struct.pack('>H', points[i][field_names[j]])
-        if playback_query.has_key(timestamp):
-            playback_query[timestamp].append(data)
+        if playback.query.has_key(timestamp):
+            playback.query[timestamp].append(data)
         else:
-            playback_query[timestamp] = [data]
+            playback.query[timestamp] = [data]
 
 
 @App.route('/playback/send', method='POST')
 def handle():
-    global playback_query
-    global playback_queue
+    """Send timestamp to be put into playback queue if in database"""
+    global playback
     timestamp = bottle.request.forms.get('timestamp')
-    if (playback_query.has_key(timestamp)):
-        playback_queue.put(timestamp)
+    if playback.query.has_key(timestamp):
+        playback.queue.append(timestamp)
 
 
 @App.route('/playback/playback')
 def handle():
-    global playback_query
-    global playback_queue
-    global playback_wsock
+    """Return historical telemetry packets as if it were realtime to client"""
+    global playback
     global realtime_wsock
 
+    # Close realtime socket
     realtime_wsock.closed = True
-
-    playback_wsock = bottle.request.environ.get('wsgi.websocket')
-
-    if not playback_wsock:
-        bottle.abort(400, 'Expected WebSocket request.')
+    # Open playback socket
+    playback.wsock_connect()
 
     # Send data from queue to socket
-    while not playback_wsock.closed:
-        timestamp = playback_queue.get()
-        if (timestamp != None):
-            data_list = playback_query[timestamp]
+    try:
+        while not playback.wsock.closed:
+            timestamp = playback.queue.popleft()
+            data_list = playback.query[timestamp]
             for i in range(len(data_list)):
-                playback_wsock.send(data_list[i])
+                playback.wsock.send(data_list[i])
+    except geventwebsocket.WebSocketError:
+        pass
 
 
 @App.route('/playback/abort', method='PUT')
 def handle():
-    global playback_wsock
-    playback_wsock.closed = True
+    """Abort playback and return to realtime"""
+    global playback
+
+    # Clear playback
+    playback.reset()
+    # Clear realtime telemetry received while in playback
     with Sessions.current() as session:
         session.telemetry.clear()
 
