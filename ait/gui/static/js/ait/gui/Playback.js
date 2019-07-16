@@ -20,6 +20,14 @@ const Playback = {
     _timer: null,
 
     oninit(vnode) {
+        // Get time ranges for each packet from database
+        m.request({
+            method: 'GET',
+            url: '/playback/range'
+        }).then((r) => {
+            this._range = r
+        })
+
         // Initalize slider
         this._slider = m('input', {class: 'slider', type: 'range', min: '0', max: '1', value: '0',
             oninput: (e) => {
@@ -31,12 +39,15 @@ const Playback = {
     },
 
     view(vnode) {
-        // Get time ranges for each packet from database
-        m.request({
-            method: 'GET',
-            url: '/playback/range'
-        }).then((r) => {
-            this._range = r
+
+        // Update time ranges every time a packet is sent
+        ait.events.on('ait:tlm:packet', () => {
+            m.request({
+                method: 'GET',
+                url: '/playback/range'
+            }).then((r) => {
+                this._range = r
+            })
         })
 
         // Display time ranges available
@@ -220,7 +231,7 @@ const Playback = {
         let start = Date.now()
         let difference = 0
 
-        // Timer that updates every 0.05 seconds
+        // Timer that updates every 0.01 seconds
          this._timer = setInterval(function() {
             let delta = Math.floor((Date.now() - start) / 100)
             if (delta > difference) {
@@ -240,7 +251,7 @@ const Playback = {
                     })
                 }
             }
-        },50)
+        },10)
     },
 
     stop_slider() {
