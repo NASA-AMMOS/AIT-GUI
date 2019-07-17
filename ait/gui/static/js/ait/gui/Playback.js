@@ -18,6 +18,7 @@ const Playback = {
     _slider: null,
     _current_time: null,
     _timer: null,
+    _first_click: true,
 
     oninit(vnode) {
         // Get time ranges for each packet from database
@@ -124,20 +125,6 @@ const Playback = {
                     data: data
                 })
 
-                // Emit event that playback is on
-                ait.events.emit('ait:playback:on')
-
-                // Start endpoint on backend to playback historical packets received
-                ait.tlm = {dict: {}}
-                ait.tlm.promise = m.request({ url: '/tlm/dict' })
-                ait.tlm.promise.then((dict) => {
-                    const proto = location.protocol === 'https:' ? 'wss' : 'ws'
-                    const url = proto + '://' + location.host + '/playback/playback'
-
-                    ait.tlm.dict   = TelemetryDictionary.parse(dict)
-                    ait.tlm.stream = new TelemetryStream(url, ait.tlm.dict)
-                })
-
                 // Set timeline values and display timeline
                 vnode.dom.getElementsByClassName('slider')[0].min = Date.parse(this._start_time) / 100
                 vnode.dom.getElementsByClassName('slider')[0].max = Date.parse(this._end_time) / 100
@@ -150,6 +137,8 @@ const Playback = {
                 vnode.dom.getElementsByClassName('play')[0].style.display = 'inline-block'
                 vnode.dom.getElementsByClassName('pause')[0].style.display = 'none'
                 vnode.dom.getElementsByClassName('query')[0].style.display = 'none'
+
+                this._first_click = true
             }
         }, [packets, startTime, endTime, queryBtn,])
 
@@ -167,6 +156,26 @@ const Playback = {
             m('button', {
                 class: 'btn btn-success play', style: 'display: none',
                 onclick: (e) => {
+
+                    // Run when play button clicked for first time
+                    if (this._first_click) {
+                        // Emit event that playback is on
+                         ait.events.emit('ait:playback:on')
+
+                        // Start endpoint on backend to playback historical packets received
+                        ait.tlm = {dict: {}}
+                        ait.tlm.promise = m.request({ url: '/tlm/dict' })
+                        ait.tlm.promise.then((dict) => {
+                            const proto = location.protocol === 'https:' ? 'wss' : 'ws'
+                            const url = proto + '://' + location.host + '/playback/playback'
+
+                            ait.tlm.dict   = TelemetryDictionary.parse(dict)
+                            ait.tlm.stream = new TelemetryStream(url, ait.tlm.dict)
+                        })
+
+                        this._first_click = false
+                    }
+
                     this.start_slider(vnode, this._end_time)
                     vnode.dom.getElementsByClassName('play')[0].style.display = 'none'
                     vnode.dom.getElementsByClassName('pause')[0].style.display = 'inline-block'
@@ -189,31 +198,36 @@ const Playback = {
             m('button', {
                 class: 'btn btn-danger', style: 'display: inline-block',
                 onclick: (e) => {
-                    this.stop_slider()
+
                     // Hide timeline and controls and display query button
                     vnode.dom.getElementsByClassName('timeline')[0].style.display = 'none'
                     vnode.dom.getElementsByClassName('controls')[0].style.display = 'none'
                     vnode.dom.getElementsByClassName('query')[0].style.display = 'inline-block'
 
-                    // Abort playback on backend
-                    m.request({
-                        url: '/playback/abort',
-                        method: 'PUT'
-                    })
+                    // Only run if play button was clicked
+                    if (this._first_click == false) {
+                        // Emit event that playback is off
+                        ait.events.emit('ait:playback:off')
 
-                    // Emit event that playback is off
-                    ait.events.emit('ait:playback:off')
+                        this.stop_slider()
 
-                    // Restart endpoints on backend to play realtime packets received
-                    ait.tlm = {dict: {}}
-                    ait.tlm.promise = m.request({ url: '/tlm/dict' })
-                    ait.tlm.promise.then((dict) => {
-                        const proto = location.protocol === 'https:' ? 'wss' : 'ws'
-                        const url = proto + '://' + location.host + '/tlm/realtime'
+                        // Abort playback on backend
+                        m.request({
+                            url: '/playback/abort',
+                            method: 'PUT'
+                        })
 
-                        ait.tlm.dict   = TelemetryDictionary.parse(dict)
-                        ait.tlm.stream = new TelemetryStream(url, ait.tlm.dict)
-                    })
+                        // Restart endpoints on backend to play realtime packets received
+                        ait.tlm = {dict: {}}
+                        ait.tlm.promise = m.request({url: '/tlm/dict'})
+                        ait.tlm.promise.then((dict) => {
+                            const proto = location.protocol === 'https:' ? 'wss' : 'ws'
+                            const url = proto + '://' + location.host + '/tlm/realtime'
+
+                            ait.tlm.dict = TelemetryDictionary.parse(dict)
+                            ait.tlm.stream = new TelemetryStream(url, ait.tlm.dict)
+                        })
+                    }
                 },
             }, 'Abort')
 
