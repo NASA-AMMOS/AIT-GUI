@@ -210,12 +210,13 @@ class Playback(object):
 
         return ranges
 
-    def influx_query(self, tuple_query, packet, uid):
+    def influx_query(self, tuple_query, packet):
 
         # Query packet and time range from database
         tuples = list(self.dbconn.query(tuple_query).get_points())
 
         pkt = tlm.getDefaultDict()[packet]
+        uid = pkt.uid
         fields = pkt.fields
         # Build field names list from tlm dictionary for sorting data query
         field_names = []
@@ -237,12 +238,13 @@ class Playback(object):
             else:
                 self.query[timestamp] = [(uid, data)]
 
-    def sqlite_query(self, tuple_query, packet, uid):
+    def sqlite_query(self, tuple_query, packet):
 
         # Query packet and time range from database
         tuples = self.dbconn.query(tuple_query)
 
         pkt = tlm.getDefaultDict()[packet]
+        uid = pkt.uid
         fields = pkt.fields
         # Build field types list from tlm dictionary for packing data
         field_formats = []
@@ -1154,7 +1156,7 @@ def handle():
     for i in range(len(ranges)):
         # Round start time down to nearest second
         ranges[i][1] = ranges[i][1][:19] + 'Z'
-        # Round start time down to nearest second
+        # Round end time down to nearest second
         dt = datetime.strptime(ranges[i][2], '%Y-%m-%dT%H:%M:%S.%fZ')
         if dt.microsecond != 0:
             dt += timedelta(0, 1)
@@ -1169,16 +1171,16 @@ def handle():
     global playback
 
     # Get values from form
-    packet = bottle.request.forms.get('packet')
-    start_time = bottle.request.forms.get('startTime')
-    end_time = bottle.request.forms.get('endTime')
-    uid = tlm.getDefaultDict()[packet].uid
+    packets = json.loads(bottle.request.forms.get('packet'))
+    start_times = json.loads(bottle.request.forms.get('startTime'))
+    end_times = json.loads(bottle.request.forms.get('endTime'))
 
-    tuple_query = 'SELECT * FROM "{}" WHERE time >= \'{}\' AND time <= \'{}\''.format(packet, start_time, end_time)
-    if playback.database == 'InfluxDBBackend':
-        playback.influx_query(tuple_query, packet, uid)
-    elif playback.database == 'SQLiteBackend':
-        playback.sqlite_query(tuple_query, packet, uid)
+    for i in range(len(packets)):
+        tuple_query = 'SELECT * FROM "{}" WHERE time >= \'{}\' AND time <= \'{}\''.format(packets[i], start_times[i], end_times[i])
+        if playback.database == 'InfluxDBBackend':
+            playback.influx_query(tuple_query, packets[i])
+        elif playback.database == 'SQLiteBackend':
+            playback.sqlite_query(tuple_query, packets[i])
 
 
 @App.route('/playback/on', method='PUT')

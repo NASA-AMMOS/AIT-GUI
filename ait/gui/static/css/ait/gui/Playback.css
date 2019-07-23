@@ -1,34 +1,47 @@
 ait-playback {
     display: block;
-    height: 300px;
+    height: 600px;
+}
+
+ait-playback .col-xs-4 {
+    padding-left: 0;
+}
+
+ait-playback .add-packet {
+    margin-right: 10px;
+}
+
+ait-playback .query {
+    margin-right: 17px;
 }
 
 ait-playback .timeline {
     width: 80%;
     position: relative;
-    margin: 100px 10% 50px 10%;
+    margin: 10px 10% 0px 10%;
 }
 
 ait-playback .timeline-start {
-    position: absolute;
+    float: left;
     top: 20px;
 }
 
 ait-playback .timeline-end {
-    position: absolute;
+    float: right;
     top: 20px;
-    right: 0px;
 }
 
 ait-playback .timeline-current {
-    position: absolute;
+    clear: both;
     top: 40px;
 }
 
 ait-playback .controls {
-    text-align: center
+    text-align: center;
+    padding-bottom: 20px;
 }
 
-ait-playback .col-xs-3 {
-    padding-left: 0;
+ait-playback .play, ait-playback .pause, ait-playback .abort {
+    margin-left: 5px;
+    margin-right: 5px;
 }
