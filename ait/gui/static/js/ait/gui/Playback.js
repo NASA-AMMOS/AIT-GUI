@@ -160,17 +160,10 @@ const Playback = {
                     // Run when play button clicked for first time
                     if (this._first_click) {
                         // Emit event that playback is on
-                         ait.events.emit('ait:playback:on')
-
-                        // Start endpoint on backend to playback historical packets received
-                        ait.tlm = {dict: {}}
-                        ait.tlm.promise = m.request({ url: '/tlm/dict' })
-                        ait.tlm.promise.then((dict) => {
-                            const proto = location.protocol === 'https:' ? 'wss' : 'ws'
-                            const url = proto + '://' + location.host + '/playback/playback'
-
-                            ait.tlm.dict   = TelemetryDictionary.parse(dict)
-                            ait.tlm.stream = new TelemetryStream(url, ait.tlm.dict)
+                        ait.events.emit('ait:playback:on')
+                        m.request({
+                            url: '/playback/on',
+                            method: 'PUT'
                         })
 
                         this._first_click = false
@@ -215,17 +208,6 @@ const Playback = {
                         m.request({
                             url: '/playback/abort',
                             method: 'PUT'
-                        })
-
-                        // Restart endpoints on backend to play realtime packets received
-                        ait.tlm = {dict: {}}
-                        ait.tlm.promise = m.request({url: '/tlm/dict'})
-                        ait.tlm.promise.then((dict) => {
-                            const proto = location.protocol === 'https:' ? 'wss' : 'ws'
-                            const url = proto + '://' + location.host + '/tlm/realtime'
-
-                            ait.tlm.dict = TelemetryDictionary.parse(dict)
-                            ait.tlm.stream = new TelemetryStream(url, ait.tlm.dict)
                         })
                     }
                 },

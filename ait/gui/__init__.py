@@ -122,7 +122,50 @@ class SessionStore (dict):
         del self[session.id]
 
 
+class Playback(object):
+    """Playback
+    A Playback manages the state for the playback component.
+    playback.dbconn: connection to database
+    playback.query: time query map of {timestamp: list of (uid, data)} from database
+    playback.on: true if gui is currently in playback mode
+    """
+
+    def __init__(self):
+        """Creates a new Playback"""
+        self._db_connect()
+        self.query = {}
+        self.on = False
+
+    def _db_connect(self):
+        """Connect to database"""
+
+        # Get datastore from config
+        plugins = ait.config.get('server.plugins')
+        datastore = ''
+        other_args = {}
+        for i in range(len(plugins)):
+            if plugins[i]['plugin']['name'] == 'ait.core.server.plugin.DataArchive':
+                datastore = plugins[i]['plugin']['datastore']
+                other_args = copy.deepcopy(plugins[i]['plugin'])
+                other_args.pop('name')
+                other_args.pop('inputs', None)
+                other_args.pop('outputs', None)
+                other_args.pop('datastore', None)
+                break
+        mod, cls = datastore.rsplit('.', 1)
+
+        # Connect to database
+        self.dbconn = getattr(importlib.import_module(mod), cls)()
+        self.dbconn.connect(**other_args)
+
+    def reset(self):
+        """Reset fields"""
+        self.query.clear()
+        self.on = False
+
+
 Sessions = SessionStore()
+playback = Playback()
 
 _RUNNING_SCRIPT = None
 _RUNNING_SEQ = None
@@ -162,6 +205,7 @@ except:
 
 
 class AITGUIPlugin(Plugin):
+    global playback
 
     def __init__(self, inputs, outputs, zmq_args=None, **kwargs):
         super(AITGUIPlugin, self).__init__(inputs, outputs, zmq_args, **kwargs)
@@ -209,7 +253,8 @@ class AITGUIPlugin(Plugin):
 
     def process_telem_msg(self, msg):
         msg = pickle.loads(msg)
-        Sessions.addTelemetry(msg[0], msg[1])
+        if playback.on == False:
+            Sessions.addTelemetry(msg[0], msg[1])
 
     def process_log_msg(self, msg):
         parsed = log.parseSyslog(msg)
@@ -625,27 +670,22 @@ def handle():
         pass
 
 
-# Global variable for realtime socket
-global realtime_wsock
-
-
 @App.route('/tlm/realtime')
 def handle():
     """Return telemetry packets in realtime to client"""
-    global realtime_wsock
     with Sessions.current() as session:
         # A null-byte pad ensures wsock is treated as binary.
         pad   = bytearray(1)
-        realtime_wsock = bottle.request.environ.get('wsgi.websocket')
+        wsock = bottle.request.environ.get('wsgi.websocket')
 
-        if not realtime_wsock:
+        if not wsock:
             bottle.abort(400, 'Expected WebSocket request.')
 
         try:
-            while not realtime_wsock.closed:
+            while not wsock.closed:
                 try:
                     uid, data = session.telemetry.popleft(timeout=30)
-                    realtime_wsock.send(pad + struct.pack('>I', uid) + data)
+                    wsock.send(pad + struct.pack('>I', uid) + data)
                 except IndexError:
                     # If no telemetry has been received by the GUI
                     # server after timeout seconds, "probe" the client
@@ -656,8 +696,8 @@ def handle():
                     # data is ignored by AIT GUI client-side
                     # Javascript code.
 
-                    if not realtime_wsock.closed:
-                        realtime_wsock.send(pad + struct.pack('>I', 0))
+                    if not wsock.closed:
+                        wsock.send(pad + struct.pack('>I', 0))
         except geventwebsocket.WebSocketError:
             pass
 
@@ -993,61 +1033,6 @@ def handle():
         PromptResponse = json.loads(bottle.request.body.read())
 
 
-class Playback(object):
-    """Playback
-    A Playback manages the state for the playback component.
-    playback.dbconn: connection to database
-    playback.query: time query map of {timestamp: data} from database
-    playback.queue: deque of timestamps to be sent to the socket
-    playback.wsock: connection to socket
-    """
-
-    def __init__(self):
-        """Creates a new Playback"""
-        self._db_connect()
-        self.query = {}
-        self.queue = api.GeventDeque()
-        self.wsock = None
-
-    def _db_connect(self):
-        """Connect to database"""
-
-        # Get datastore from config
-        plugins = ait.config.get('server.plugins')
-        datastore = ''
-        other_args = {}
-        for i in range(len(plugins)):
-            if plugins[i]['plugin']['name'] == 'ait.core.server.plugin.DataArchive':
-                datastore = plugins[i]['plugin']['datastore']
-                other_args = copy.deepcopy(plugins[i]['plugin'])
-                other_args.pop('name')
-                other_args.pop('inputs', None)
-                other_args.pop('outputs', None)
-                other_args.pop('datastore', None)
-                break
-        mod, cls = datastore.rsplit('.', 1)
-
-        # Connect to database
-        self.dbconn = getattr(importlib.import_module(mod), cls)()
-        self.dbconn.connect(**other_args)
-
-    def wsock_connect(self):
-        """Connect to socket"""
-        self.wsock = bottle.request.environ.get('wsgi.websocket')
-        if not self.wsock:
-            bottle.abort(400, 'Expected WebSocket request.')
-
-    def reset(self):
-        """Reset fields"""
-        self.query.clear()
-        self.queue.clear()
-        playback.wsock.closed = True
-
-
-# Global playback variable
-playback = Playback()
-
-
 @App.route('/playback/range', method='GET')
 def handle():
     """Return a JSON array of [packet_name, start_time, end_time] to represent the time range
@@ -1109,17 +1094,24 @@ def handle():
     field_names = []
     for i in range(len(fields)):
         field_names.append(fields[i].name)
-    # Put query into a map of {timestamp: data}
+    # Put query into a map of {timestamp: list of (uid, data)}
     for i in range(len(points)):
         # Round time down to nearest 0.1 second
         timestamp = str(points[i]['time'][:21] + 'Z')
-        data = bytearray(1) + struct.pack('>I', uid)
+        data = ''
         for j in range(len(field_names)):
             data += struct.pack('>H', points[i][field_names[j]])
         if playback.query.has_key(timestamp):
-            playback.query[timestamp].append(data)
+            playback.query[timestamp].append((uid, data))
         else:
-            playback.query[timestamp] = [data]
+            playback.query[timestamp] = [(uid, data)]
+
+
+@App.route('/playback/on', method='PUT')
+def handle():
+    """Indicate that playback is on"""
+    global playback
+    playback.on = True
 
 
 @App.route('/playback/send', method='POST')
@@ -1127,30 +1119,11 @@ def handle():
     """Send timestamp to be put into playback queue if in database"""
     global playback
     timestamp = bottle.request.forms.get('timestamp')
+
     if playback.query.has_key(timestamp):
-        playback.queue.append(timestamp)
-
-
-@App.route('/playback/playback')
-def handle():
-    """Return historical telemetry packets as if it were realtime to client"""
-    global playback
-    global realtime_wsock
-
-    # Close realtime socket
-    realtime_wsock.closed = True
-    # Open playback socket
-    playback.wsock_connect()
-
-    # Send data from queue to socket
-    try:
-        while not playback.wsock.closed:
-            timestamp = playback.queue.popleft()
-            data_list = playback.query[timestamp]
-            for i in range(len(data_list)):
-                playback.wsock.send(data_list[i])
-    except geventwebsocket.WebSocketError:
-        pass
+        query_list = playback.query[timestamp]
+        for i in range(len(query_list)):
+            Sessions.addTelemetry(query_list[i][0], query_list[i][1])
 
 
 @App.route('/playback/abort', method='PUT')
