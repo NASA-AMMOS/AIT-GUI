@@ -22,7 +22,7 @@ import bottle
 import pkg_resources
 
 import ait.core
-from ait.core import api, cmd, db, dmc, evr, limits, log, notify, pcap, tlm, gds, util
+from ait.core import api, cmd, db, dtype, dmc, evr, limits, log, notify, pcap, tlm, gds, util
 from ait.core.server.plugin import Plugin
 import copy
 from datetime import datetime, timedelta
@@ -1088,19 +1088,23 @@ def handle():
     point_query = 'SELECT * FROM "{}" WHERE time >= \'{}\' AND time <= \'{}\''.format(packet, start_time, end_time)
     points = list(playback.dbconn.query(point_query).get_points())
 
-    # Sort data of query according to fields in tlm dictionary
     pkt = tlm_dict[packet]
     fields = pkt.fields
+    # Build field names list from tlm dictionary for sorting data query
     field_names = []
+    # Build field types list from tlm dictionary for packing data
+    field_formats = []
     for i in range(len(fields)):
         field_names.append(fields[i].name)
+        field_type = str(fields[i].type).split("'")[1]
+        field_formats.append(dtype.get(field_type).format)
     # Put query into a map of {timestamp: list of (uid, data)}
     for i in range(len(points)):
         # Round time down to nearest 0.1 second
         timestamp = str(points[i]['time'][:21] + 'Z')
         data = ''
         for j in range(len(field_names)):
-            data += struct.pack('>H', points[i][field_names[j]])
+            data += struct.pack(field_formats[j], points[i][field_names[j]])
         if playback.query.has_key(timestamp):
             playback.query[timestamp].append((uid, data))
         else:
