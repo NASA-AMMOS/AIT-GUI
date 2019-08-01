@@ -1,5 +1,8 @@
 import m from 'mithril'
 import map from 'lodash/map'
+import 'jquery-ui/ui/widgets/datepicker'
+import 'jquery-ui/ui/widgets/slider'
+import 'jquery-ui-timepicker-addon'
 
 
 /**
@@ -34,8 +37,8 @@ const Playback = {
         this._slider = m('input', {class: 'slider', type: 'range', min: '0', max: '1', value: '0',
             oninput: (e) => {
                 let current_value = vnode.dom.getElementsByClassName('slider')[0].value
-                let current_time = new Date(current_value * 100).toISOString().substring(0, 21) + 'Z'
-                this._current_time = 'Current time: ' + current_time
+                let current_time = new Date(current_value * 100)
+                this._current_time = 'Current time: ' + this.to_display(current_time)
             }
         })
     },
@@ -96,14 +99,22 @@ const Playback = {
                     let end_values = []
                     for (let i = 0; i < packet_list.length; ++i) {
                         packet_values.push(packet_list[i].value)
-                        start_values.push(start_list[i].value)
-                        end_values.push(end_list[i].value)
+                        start_values.push($(start_list[i]).datetimepicker('getDate'))
+                        end_values.push($(end_list[i]).datetimepicker('getDate'))
+                    }
+
+                    // Create iso value time lists
+                    let start_values_iso = []
+                    let end_values_iso = []
+                    for (let i = 0; i < start_values.length; ++i) {
+                        start_values_iso.push(this.to_iso_z(start_values[i]))
+                        end_values_iso.push(this.to_iso_z(end_values[i]))
                     }
 
                     // Append value lists to data
                     data.append('packet', JSON.stringify(packet_values))
-                    data.append('startTime', JSON.stringify(start_values))
-                    data.append('endTime', JSON.stringify(end_values))
+                    data.append('startTime', JSON.stringify(start_values_iso))
+                    data.append('endTime', JSON.stringify(end_values_iso))
                     // Send data to backend
                     m.request({
                         url: '/playback/query',
@@ -115,17 +126,18 @@ const Playback = {
                     this._start_time = start_values[0]
                     this._end_time = end_values[0]
                     for (let i = 1; i < start_values.length; ++i) {
-                        if (start_values[i] < this._start_time)
+                        if (start_values[i].getTime() < this._start_time.getTime())
                             this._start_time = start_values[i]
-                        if (end_values[i] > this._end_time)
+                        if (end_values[i].getTime() > this._end_time.getTime())
                             this._end_time = end_values[i]
                     }
-                    this._current_time = this._start_time
 
                     // Set timeline values and display timeline
-                    this._current_time = 'Current time: ' + this._start_time
-                    vnode.dom.getElementsByClassName('slider')[0].min = Date.parse(this._start_time) / 100
-                    vnode.dom.getElementsByClassName('slider')[0].max = Date.parse(this._end_time) / 100
+                    vnode.dom.getElementsByClassName('timeline-start')[0].innerHTML = this.to_display(this._start_time)
+                    vnode.dom.getElementsByClassName('timeline-end')[0].innerHTML = this.to_display(this._end_time)
+                    this._current_time = 'Current time: ' + this.to_display(this._start_time)
+                    vnode.dom.getElementsByClassName('slider')[0].min = Date.parse(this.to_iso_z(this._start_time)) / 100
+                    vnode.dom.getElementsByClassName('slider')[0].max = Date.parse(this.to_iso_z(this._end_time)) / 100
                     vnode.dom.getElementsByClassName('slider')[0].value = 0
                     vnode.dom.getElementsByClassName('timeline-label')[0].style.display = 'block'
                     vnode.dom.getElementsByClassName('timeline')[0].style.display = 'block'
@@ -147,8 +159,8 @@ const Playback = {
             m('label', {class: 'timeline-label', style:'display:none'}, 'Timeline: '),
             m('div', {class:'timeline', style:'display:none'}, [
                 this._slider,
-                m('div', {class:'timeline-start'}, this._start_time),
-                m('div', {class:'timeline-end'}, this._end_time),
+                m('div', {class:'timeline-start'}, ''),
+                m('div', {class:'timeline-end'}, ''),
                 m('div', {class: 'timeline-current'}, this._current_time)
             ])
         ]
@@ -226,6 +238,18 @@ const Playback = {
         ])
     },
 
+    to_iso(time) {
+        return time.toISOString().substr(0, 21) + 'Z'
+    },
+
+    to_iso_z(time) {
+        return time.toISOString().substr(0, 19) + '.0' + 'Z'
+    },
+
+    to_display(time) {
+        return time.toLocaleString('en-US', {timeZone: 'UTC', hour12: false}).replace(',', '')
+    },
+
     start_slider(vnode, end_time) {
         // Move the slider to the right every 0.1 seconds
         if (this._timer) return
@@ -238,15 +262,15 @@ const Playback = {
             if (delta > difference) {
                 difference = delta
                 let current_value = ++vnode.dom.getElementsByClassName('slider')[0].value
-                let current_time = new Date(current_value * 100).toISOString().substring(0, 21) + 'Z'
+                let current_time = new Date(current_value * 100)
 
                 // If 0.1 has have passed
-                if (current_time <= end_time) {
+                if (current_time.getTime() <= end_time.getTime()) {
                     // Update current time
-                    vnode.dom.getElementsByClassName('timeline-current')[0].innerHTML = 'Current time: ' + current_time
+                    vnode.dom.getElementsByClassName('timeline-current')[0].innerHTML = 'Current time: ' + Playback.to_display(current_time)
                     // Send timestamp to be evaluated by backend
                     let data = new FormData()
-                    data.append('timestamp', current_time)
+                    data.append('timestamp', Playback.to_iso(current_time))
                     m.request({
                         url: '/playback/send',
                         method: 'POST',
@@ -264,24 +288,37 @@ const Playback = {
     },
 
     _validate_form(packet_list, start_list, end_list) {
-        let datetimeRegex = /^\d{4}-(0[1-9]|1[012])-(0[1-9]|[12]\d|3[01])T([01]\d|2[0-3]):[0-5]\d:[0-5]\dZ$/
 
         // Check form for errors
         for (let i = 0; i < packet_list.length; ++i) {
             if (packet_list[i].selectedIndex == 0)
                 return false
-            if (!datetimeRegex.test(start_list[i].value)) {
+            let start_time = $(start_list[i]).datetimepicker('getDate')
+            if (!start_time)
                 return false
-            }
-            if (!datetimeRegex.test(end_list[i].value)) {
+            let end_time = $(end_list[i]).datetimepicker('getDate')
+            if (!end_time)
                 return false
-            }
         }
         return true
     }
 }
 
 const PacketBar = {
+
+    oncreate(vnode) {
+        // Initialize date and time picker for start and end time
+        $(vnode.dom.getElementsByClassName('start-time')[0]).datetimepicker({
+            timeFormat: 'HH:mm:ss',
+            timezone: -0,
+            timeInput: true
+        })
+        $(vnode.dom.getElementsByClassName('end-time')[0]).datetimepicker({
+            timeFormat: 'HH:mm:ss',
+            timezone: -0,
+            timeInput: true
+        })
+    },
 
     view(vnode) {
         // Packet select drop down menu
@@ -299,13 +336,13 @@ const PacketBar = {
         // Start time input
         let startTime = m('div', {class: 'form-group col-xs-4'}, [
             m('label', 'Start time:'),
-            m('input', {class: 'form-control start-time', placeholder: 'YYYY-MM-DDTHH:MM:SSZ'})
+            m('input', {class: 'form-control start-time'})
         ])
 
         // End time input
         let endTime = m('div', {class: 'form-group col-xs-4'}, [
             m('label', 'End time:'),
-            m('input', {class: 'form-control end-time', placeholder: 'YYYY-MM-DDTHH:MM:SSZ'})
+            m('input', {class: 'form-control end-time'})
         ])
 
         let form = m('div', {class: 'form-row'}, [packets, startTime, endTime])

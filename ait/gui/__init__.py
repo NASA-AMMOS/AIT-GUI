@@ -1154,13 +1154,14 @@ def handle():
         ranges = playback.sqlite_range()
 
     for i in range(len(ranges)):
-        # Round start time down to nearest second
-        ranges[i][1] = ranges[i][1][:19] + 'Z'
-        # Round end time down to nearest second
-        dt = datetime.strptime(ranges[i][2], '%Y-%m-%dT%H:%M:%S.%fZ')
-        if dt.microsecond != 0:
-            dt += timedelta(0, 1)
-        ranges[i][2] = dt.strftime('%Y-%m-%dT%H:%M:%SZ')
+        # Round start time down to nearest second and change format
+        start_time = datetime.strptime(ranges[i][1], '%Y-%m-%dT%H:%M:%S.%fZ')
+        ranges[i][1] = start_time.strftime('%m/%d/%Y %H:%M:%S')
+        # Round start time down to nearest second and change format
+        end_time = datetime.strptime(ranges[i][2], '%Y-%m-%dT%H:%M:%S.%fZ')
+        if end_time.microsecond != 0:
+            end_time += timedelta(0, 1)
+        ranges[i][2] = end_time.strftime('%m/%d/%Y %H:%M:%S')
 
     return json.dumps(ranges)
 
