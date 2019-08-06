@@ -216,7 +216,7 @@ class AITGUIPlugin(Plugin):
     def getBrowserName(self, browser):
         return getattr(browser, 'name', getattr(browser, '_name', '(none)'))
 
-    def init(self, host=None, port=8080):
+    def init(self, host=None, port=ait.config.get('gui.port', 8080)):
 
         # The /cmd endpoint requires access to the AITGUIPlugin object so it
         # can publish commands via the Plugin interface. It's defined here with
