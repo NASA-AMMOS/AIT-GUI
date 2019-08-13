@@ -258,17 +258,6 @@ class AITGUIPlugin(Plugin):
         if host is None:
             host = 'localhost'
 
-        streams = ait.config.get('gui.telemetry')
-
-        if streams and nstreams == 0:
-            msg  = 'No valid telemetry stream configurations found.'
-            msg += '  No telemetry will be received (or displayed).'
-            log.error(msg)
-
-        # Servers.append(
-        #     UdpSysLogServer(':%d' % ait.config.get('logging.port', 2514))
-        # )
-
         Servers.append( gevent.pywsgi.WSGIServer(
             ('0.0.0.0', port),
             App,
