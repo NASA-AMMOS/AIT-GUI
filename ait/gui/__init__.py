@@ -171,7 +171,11 @@ class AITGUIPlugin(Plugin):
 
         bottle.TEMPLATE_PATH.append(HTMLRoot.User)
 
-        gevent.spawn(self.init)
+        port = 8080
+        if 'port' in kwargs:
+            port = int(kwargs['port'])
+
+        gevent.spawn(self.init, port=port)
 
     def process(self, input_data, topic=None):
         # msg is going to be a tuple from the ait_packet_handler
@@ -216,7 +220,7 @@ class AITGUIPlugin(Plugin):
     def getBrowserName(self, browser):
         return getattr(browser, 'name', getattr(browser, '_name', '(none)'))
 
-    def init(self, host=None, port=ait.config.get('gui.port', 8080)):
+    def init(self, host=None, port=8080):
 
         # The /cmd endpoint requires access to the AITGUIPlugin object so it
         # can publish commands via the Plugin interface. It's defined here with
