@@ -127,21 +127,31 @@ class Playback(object):
     A Playback manages the state for the playback component.
     playback.dbconn: connection to database
     playback.query: time query map of {timestamp: list of (uid, data)} from database
-    playback.on: true if gui is currently in playback mode
+    playback.on: True if gui is currently in playback mode. Real-time telemetry will not
+        be sent to the frontend during this.
+    playback.enabled: True if historical data playback is enabled. This will be False
+        if a database connection cannot be made or if data playback is disabled for
+        some other reason. 
     """
 
     def __init__(self):
         """Creates a new Playback"""
-        self._db_connect()
+        self.enabled = False
         self.query = {}
         self.on = False
+        self.dbconn = None
+
+        self._db_connect()
+
+        if self.dbconn:
+            self.enabled = True
 
     def _db_connect(self):
         """Connect to database"""
 
         # Get datastore from config
         plugins = ait.config.get('server.plugins')
-        datastore = ''
+        datastore = None
         other_args = {}
         for i in range(len(plugins)):
             if plugins[i]['plugin']['name'] == 'ait.core.server.plugin.DataArchive':
@@ -152,11 +162,21 @@ class Playback(object):
                 other_args.pop('outputs', None)
                 other_args.pop('datastore', None)
                 break
-        mod, cls = datastore.rsplit('.', 1)
 
-        # Connect to database
-        self.dbconn = getattr(importlib.import_module(mod), cls)()
-        self.dbconn.connect(**other_args)
+        if datastore:
+            mod, cls = datastore.rsplit('.', 1)
+
+            # Connect to database
+            self.dbconn = getattr(importlib.import_module(mod), cls)()
+            self.dbconn.connect(**other_args)
+        else:
+            msg = (
+                '[GUI Playback Configuration]'
+                'Unable to locate DataArchive plugin configuration for '
+                'historical data queries. Historical telemetry playback '
+                'will be disabled in monitoring UI and server endpoints.'
+            )
+            log.warn(msg)
 
     def reset(self):
         """Reset fields"""
@@ -1047,6 +1067,9 @@ def handle():
     global playback
     ranges = []
 
+    if not playback.enabled:
+        return json.dumps([])
+
     # Loop through each packet from database
     packets = list(playback.dbconn.query('SHOW MEASUREMENTS').get_points())
     for i in range(len(packets)):
@@ -1076,6 +1099,10 @@ def handle():
 def handle():
     """Set playback query with packet name, start time, and end time from form"""
     global playback
+
+    if not playback.enabled:
+        return HttpResponse(status=404, body='Historic data playback is disabled')
+
     tlm_dict = tlm.getDefaultDict()
 
     # Get values from form
