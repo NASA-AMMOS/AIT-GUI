@@ -255,15 +255,8 @@ class AITGUIPlugin(Plugin):
         def handle(pathname):
             return bottle.static_file(pathname, root=HTMLRoot.User)
 
-        if hasattr(self, 'port'):
-            port = int(self.port)
-        else:
-            port = 8080
-
-        if hasattr(self, 'host'):
-            host = self.host
-        else:
-            host = 'localhost'
+        port = int(getattr(self, 'port', 8080)):
+        host = getattr(self, 'port', 'localhost'):
 
         streams = ait.config.get('gui.telemetry')
 
