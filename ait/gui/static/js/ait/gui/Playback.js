@@ -54,10 +54,19 @@ const Playback = {
         // Display time ranges available
         let range = m('div', {class: 'form-group'}, [
             m('label', 'Time ranges available'),
-            this._range.map(function(i) {
-                return m('div', i[0] + ': ' + i[1] + ' to ' + i[2])
-            })
+            m('div', {'class': 'alert alert-warning'},
+                'No time ranges found. Is your database connection configured?'
+            )
         ])
+
+        if (this._range.length > 0) {
+            range = m('div', {class: 'form-group'}, [
+                m('label', 'Time ranges available'),
+                this._range.map(function(i) {
+                    return m('div', i[0] + ': ' + i[1] + ' to ' + i[2])
+                })
+            ])
+        }
 
         // Packet select drop down menu
         let packets = m('div', {class: 'form-group col-xs-3'}, [
