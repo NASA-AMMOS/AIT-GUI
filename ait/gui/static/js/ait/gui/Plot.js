@@ -107,8 +107,12 @@ class DygraphsBackend
         }
 
         if (this._plot.shouldRedraw()) {
-            this._plot._chart.updateOptions( { 'file': this._plot._data } )
+            this.redraw()
         }
+    }
+
+    redraw() {
+        this._plot._chart.updateOptions( { 'file': this._plot._data })
     }
 }
 
@@ -230,8 +234,12 @@ class HighchartsBackend
             }
         })
         if (this._plot.shouldRedraw()) {
-            this._plot._chart.redraw()
+            this.redraw()
         }
+    }
+
+    redraw() {
+        this._plot._chart.redraw()
     }
 }
 
@@ -441,6 +449,8 @@ const Plot =
         }
 
         ait.events.on('ait:tlm:packet', (p) => this.plot(p))
+        ait.events.on('ait:playback:on', () => this.redraw())
+        ait.events.on('ait:playback:off', () => this.redraw())
     },
 
 
@@ -467,6 +477,11 @@ const Plot =
 
             return m('ait-plot', vnode.attrs, plot_contents)
         }
+    },
+
+    redraw() {
+        this._data = []
+        this._backend.redraw()
     }
 }
 

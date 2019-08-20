@@ -22,8 +22,10 @@ import bottle
 import pkg_resources
 
 import ait.core
-from ait.core import api, cmd, dmc, evr, limits, log, notify, pcap, tlm, gds, util
+from ait.core import api, cmd, db, dtype, dmc, evr, limits, log, notify, pcap, tlm, gds, util
 from ait.core.server.plugin import Plugin
+import copy
+from datetime import datetime, timedelta
 
 
 class Session (object):
@@ -120,7 +122,50 @@ class SessionStore (dict):
         del self[session.id]
 
 
+class Playback(object):
+    """Playback
+    A Playback manages the state for the playback component.
+    playback.dbconn: connection to database
+    playback.query: time query map of {timestamp: list of (uid, data)} from database
+    playback.on: true if gui is currently in playback mode
+    """
+
+    def __init__(self):
+        """Creates a new Playback"""
+        self._db_connect()
+        self.query = {}
+        self.on = False
+
+    def _db_connect(self):
+        """Connect to database"""
+
+        # Get datastore from config
+        plugins = ait.config.get('server.plugins')
+        datastore = ''
+        other_args = {}
+        for i in range(len(plugins)):
+            if plugins[i]['plugin']['name'] == 'ait.core.server.plugin.DataArchive':
+                datastore = plugins[i]['plugin']['datastore']
+                other_args = copy.deepcopy(plugins[i]['plugin'])
+                other_args.pop('name')
+                other_args.pop('inputs', None)
+                other_args.pop('outputs', None)
+                other_args.pop('datastore', None)
+                break
+        mod, cls = datastore.rsplit('.', 1)
+
+        # Connect to database
+        self.dbconn = getattr(importlib.import_module(mod), cls)()
+        self.dbconn.connect(**other_args)
+
+    def reset(self):
+        """Reset fields"""
+        self.query.clear()
+        self.on = False
+
+
 Sessions = SessionStore()
+playback = Playback()
 
 _RUNNING_SCRIPT = None
 _RUNNING_SEQ = None
@@ -160,6 +205,7 @@ except:
 
 
 class AITGUIPlugin(Plugin):
+    global playback
 
     def __init__(self, inputs, outputs, zmq_args=None, **kwargs):
         super(AITGUIPlugin, self).__init__(inputs, outputs, zmq_args, **kwargs)
@@ -207,7 +253,8 @@ class AITGUIPlugin(Plugin):
 
     def process_telem_msg(self, msg):
         msg = pickle.loads(msg)
-        Sessions.addTelemetry(msg[0], msg[1])
+        if playback.on == False:
+            Sessions.addTelemetry(msg[0], msg[1])
 
     def process_log_msg(self, msg):
         parsed = log.parseSyslog(msg)
@@ -654,6 +701,7 @@ def handle():
         except geventwebsocket.WebSocketError:
             pass
 
+
 @App.route('/tlm/query', method='POST')
 def handle():
     """"""
@@ -983,6 +1031,115 @@ def handle():
     with Sessions.current() as session:
         Sessions.addEvent('prompt:done', None)
         PromptResponse = json.loads(bottle.request.body.read())
+
+
+@App.route('/playback/range', method='GET')
+def handle():
+    """Return a JSON array of [packet_name, start_time, end_time] to represent the time range
+    of each packet in the database
+        **Example Response**:
+        .. sourcecode: json
+            [
+                ["1553_HS_Packet", "2019-07-15T18:10:00.0", "2019-07-15T18:12:00.0"],
+                ["Ethernet_HS_Packet", "2019-07-15T19:25:16.0", "2019-07-15T19:28:50.0"],
+            ]
+    """
+    global playback
+    ranges = []
+
+    # Loop through each packet from database
+    packets = list(playback.dbconn.query('SHOW MEASUREMENTS').get_points())
+    for i in range(len(packets)):
+
+        # Add packet name
+        packet_name = packets[i]['name']
+        ranges.append([packet_name])
+
+        # Add start time and end time
+        point_query = 'SELECT * FROM "{}"'.format(packet_name)
+        points = list(playback.dbconn.query(point_query).get_points())
+        # Round start time down to nearest second
+        start_time = points[0]['time'][:19] + 'Z'
+        ranges[i].append(start_time)
+        # Round end time up to nearest second
+        end_time = points[len(points) - 1]['time']
+        dt = datetime.strptime(end_time, '%Y-%m-%dT%H:%M:%S.%fZ')
+        if dt.microsecond != 0:
+            dt += timedelta(0, 1)
+        end_time = dt.strftime('%Y-%m-%dT%H:%M:%SZ')
+        ranges[i].append(end_time)
+
+    return json.dumps(ranges)
+
+
+@App.route('/playback/query', method='POST')
+def handle():
+    """Set playback query with packet name, start time, and end time from form"""
+    global playback
+    tlm_dict = tlm.getDefaultDict()
+
+    # Get values from form
+    packet = bottle.request.forms.get('packet')
+    start_time = bottle.request.forms.get('startTime')
+    end_time = bottle.request.forms.get('endTime')
+    uid = tlm_dict[packet].uid
+
+    # Query packet and time range from database
+    point_query = 'SELECT * FROM "{}" WHERE time >= \'{}\' AND time <= \'{}\''.format(packet, start_time, end_time)
+    points = list(playback.dbconn.query(point_query).get_points())
+
+    pkt = tlm_dict[packet]
+    fields = pkt.fields
+    # Build field names list from tlm dictionary for sorting data query
+    field_names = []
+    # Build field types list from tlm dictionary for packing data
+    field_formats = []
+    for i in range(len(fields)):
+        field_names.append(fields[i].name)
+        field_type = str(fields[i].type).split("'")[1]
+        field_formats.append(dtype.get(field_type).format)
+    # Put query into a map of {timestamp: list of (uid, data)}
+    for i in range(len(points)):
+        # Round time down to nearest 0.1 second
+        timestamp = str(points[i]['time'][:21] + 'Z')
+        data = ''
+        for j in range(len(field_names)):
+            data += struct.pack(field_formats[j], points[i][field_names[j]])
+        if playback.query.has_key(timestamp):
+            playback.query[timestamp].append((uid, data))
+        else:
+            playback.query[timestamp] = [(uid, data)]
+
+
+@App.route('/playback/on', method='PUT')
+def handle():
+    """Indicate that playback is on"""
+    global playback
+    playback.on = True
+
+
+@App.route('/playback/send', method='POST')
+def handle():
+    """Send timestamp to be put into playback queue if in database"""
+    global playback
+    timestamp = bottle.request.forms.get('timestamp')
+
+    if playback.query.has_key(timestamp):
+        query_list = playback.query[timestamp]
+        for i in range(len(query_list)):
+            Sessions.addTelemetry(query_list[i][0], query_list[i][1])
+
+
+@App.route('/playback/abort', method='PUT')
+def handle():
+    """Abort playback and return to realtime"""
+    global playback
+
+    # Clear playback
+    playback.reset()
+    # Clear realtime telemetry received while in playback
+    with Sessions.current() as session:
+        session.telemetry.clear()
 
 
 class UIAbortException(Exception):

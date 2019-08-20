@@ -1,0 +1,34 @@
+ait-playback {
+    display: block;
+    height: 300px;
+}
+
+ait-playback .timeline {
+    width: 80%;
+    position: relative;
+    margin: 100px 10% 50px 10%;
+}
+
+ait-playback .timeline-start {
+    position: absolute;
+    top: 20px;
+}
+
+ait-playback .timeline-end {
+    position: absolute;
+    top: 20px;
+    right: 0px;
+}
+
+ait-playback .timeline-current {
+    position: absolute;
+    top: 40px;
+}
+
+ait-playback .controls {
+    text-align: center
+}
+
+ait-playback .col-xs-3 {
+    padding-left: 0;
+}
