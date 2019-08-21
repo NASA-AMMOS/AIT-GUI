@@ -21,6 +21,12 @@
 @import "./node_modules/bootstrap/dist/css/bootstrap-theme.css";
 @import "./node_modules/codemirror/lib/codemirror.css";
 @import "./node_modules/dygraphs/dist/dygraph.css";
+@import "./node_modules/jquery-ui/themes/base/core.css";
+@import "./node_modules/jquery-ui/themes/base/menu.css";
+@import "./node_modules/jquery-ui/themes/base/theme.css";
+@import "./node_modules/jquery-ui/themes/base/datepicker.css";
+@import "./node_modules/jquery-ui/themes/base/slider.css";
+@import "./node_modules/jquery-ui-timepicker-addon/dist/jquery-ui-timepicker-addon.css";
 @import "./css/typeahead.css";
 
 /**
