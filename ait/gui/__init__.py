@@ -125,6 +125,7 @@ class SessionStore (dict):
 class Playback(object):
     """Playback
     A Playback manages the state for the playback component.
+    playback.database: database being used in DataArchive config
     playback.dbconn: connection to database
     playback.query: time query map of {timestamp: list of (uid, data)} from database
     playback.on: true if gui is currently in playback mode
@@ -152,16 +153,113 @@ class Playback(object):
                 other_args.pop('outputs', None)
                 other_args.pop('datastore', None)
                 break
-        mod, cls = datastore.rsplit('.', 1)
+        mod, self.database = datastore.rsplit('.', 1)
 
         # Connect to database
-        self.dbconn = getattr(importlib.import_module(mod), cls)()
+        self.dbconn = getattr(importlib.import_module(mod), self.database)()
         self.dbconn.connect(**other_args)
 
     def reset(self):
         """Reset fields"""
         self.query.clear()
         self.on = False
+
+    def influx_range(self):
+        """Return time ranges for InfluxDB database"""
+        ranges = []
+
+        # Loop through each packet from database
+        packets = list(self.dbconn.query('SHOW MEASUREMENTS').get_points())
+        for i in range(len(packets)):
+            # Get packet name
+            packet_name = packets[i]['name']
+
+            # Get start time and end time
+            tuple_query = 'SELECT * FROM "{}"'.format(packet_name)
+            tuples = list(self.dbconn.query(tuple_query).get_points())
+            start_time = tuples[0]['time']
+            end_time = tuples[len(tuples) - 1]['time']
+
+            # Add list of packet_name, start_time, end_time
+            ranges.append([packet_name, start_time, end_time])
+
+        return ranges
+
+    def sqlite_range(self):
+        """Return time ranges for SQLite database"""
+        ranges = []
+
+        # Loop through each packet from database
+        packets = self.dbconn.query('SELECT name FROM sqlite_master WHERE TYPE = "table"')
+        for packet in packets:
+
+            # Get packet name
+            packet_name = packet[0]
+
+            # Get start time and end time
+            tuple_query = 'SELECT time FROM "{}"'.format(packet_name)
+            tuples = self.dbconn.query(tuple_query).fetchall()
+
+            # Only add if there is data in the table
+            if len(tuples) > 0:
+                start_time = tuples[0][0]
+                end_time = tuples[len(tuples) - 1][0]
+
+                # Add list of packet_name, start_time, end_time
+                ranges.append([packet_name, start_time, end_time])
+
+        return ranges
+
+    def influx_query(self, tuple_query, packet, uid):
+
+        # Query packet and time range from database
+        tuples = list(self.dbconn.query(tuple_query).get_points())
+
+        pkt = tlm.getDefaultDict()[packet]
+        fields = pkt.fields
+        # Build field names list from tlm dictionary for sorting data query
+        field_names = []
+        # Build field types list from tlm dictionary for packing data
+        field_formats = []
+        for i in range(len(fields)):
+            field_names.append(fields[i].name)
+            field_type = str(fields[i].type).split("'")[1]
+            field_formats.append(dtype.get(field_type).format)
+        # Put query into a map of {timestamp: list of (uid, data)}
+        for i in range(len(tuples)):
+            # Round time down to nearest 0.1 second
+            timestamp = str(tuples[i]['time'][:21] + 'Z')
+            data = ''
+            for j in range(len(field_names)):
+                data += struct.pack(field_formats[j], tuples[i][field_names[j]])
+            if self.query.has_key(timestamp):
+                self.query[timestamp].append((uid, data))
+            else:
+                self.query[timestamp] = [(uid, data)]
+
+    def sqlite_query(self, tuple_query, packet, uid):
+
+        # Query packet and time range from database
+        tuples = self.dbconn.query(tuple_query)
+
+        pkt = tlm.getDefaultDict()[packet]
+        fields = pkt.fields
+        # Build field types list from tlm dictionary for packing data
+        field_formats = []
+        for i in range(len(fields)):
+            field_type = str(fields[i].type).split("'")[1]
+            field_formats.append(dtype.get(field_type).format)
+        # Put query into a map of {timestamp: list of (uid, data)}
+        for tuple in tuples:
+            # Round time down to nearest 0.1 second
+            timestamp = tuple[0][:21] + 'Z'
+            data = ''
+            for i in range(1, len(tuple)):
+                data += struct.pack(field_formats[i - 1], tuple[i])
+            if self.query.has_key(timestamp):
+                self.query[timestamp].append((uid, data))
+            else:
+                self.query[timestamp] = [(uid, data)]
 
 
 Sessions = SessionStore()
@@ -248,7 +346,7 @@ class AITGUIPlugin(Plugin):
                 self.process_log_msg(input_data)
                 processed = True
 
-        if not processed: 
+        if not processed:
             raise ValueError('Topic of received message not recognized as telem or log stream.')
 
     def process_telem_msg(self, msg):
@@ -1045,29 +1143,22 @@ def handle():
             ]
     """
     global playback
+
     ranges = []
 
-    # Loop through each packet from database
-    packets = list(playback.dbconn.query('SHOW MEASUREMENTS').get_points())
-    for i in range(len(packets)):
+    if playback.database == 'InfluxDBBackend':
+        ranges = playback.influx_range()
+    elif playback.database == 'SQLiteBackend':
+        ranges = playback.sqlite_range()
 
-        # Add packet name
-        packet_name = packets[i]['name']
-        ranges.append([packet_name])
-
-        # Add start time and end time
-        point_query = 'SELECT * FROM "{}"'.format(packet_name)
-        points = list(playback.dbconn.query(point_query).get_points())
+    for i in range(len(ranges)):
         # Round start time down to nearest second
-        start_time = points[0]['time'][:19] + 'Z'
-        ranges[i].append(start_time)
-        # Round end time up to nearest second
-        end_time = points[len(points) - 1]['time']
-        dt = datetime.strptime(end_time, '%Y-%m-%dT%H:%M:%S.%fZ')
+        ranges[i][1] = ranges[i][1][:19] + 'Z'
+        # Round start time down to nearest second
+        dt = datetime.strptime(ranges[i][2], '%Y-%m-%dT%H:%M:%S.%fZ')
         if dt.microsecond != 0:
             dt += timedelta(0, 1)
-        end_time = dt.strftime('%Y-%m-%dT%H:%M:%SZ')
-        ranges[i].append(end_time)
+        ranges[i][2] = dt.strftime('%Y-%m-%dT%H:%M:%SZ')
 
     return json.dumps(ranges)
 
@@ -1076,39 +1167,18 @@ def handle():
 def handle():
     """Set playback query with packet name, start time, and end time from form"""
     global playback
-    tlm_dict = tlm.getDefaultDict()
 
     # Get values from form
     packet = bottle.request.forms.get('packet')
     start_time = bottle.request.forms.get('startTime')
     end_time = bottle.request.forms.get('endTime')
-    uid = tlm_dict[packet].uid
+    uid = tlm.getDefaultDict()[packet].uid
 
-    # Query packet and time range from database
-    point_query = 'SELECT * FROM "{}" WHERE time >= \'{}\' AND time <= \'{}\''.format(packet, start_time, end_time)
-    points = list(playback.dbconn.query(point_query).get_points())
-
-    pkt = tlm_dict[packet]
-    fields = pkt.fields
-    # Build field names list from tlm dictionary for sorting data query
-    field_names = []
-    # Build field types list from tlm dictionary for packing data
-    field_formats = []
-    for i in range(len(fields)):
-        field_names.append(fields[i].name)
-        field_type = str(fields[i].type).split("'")[1]
-        field_formats.append(dtype.get(field_type).format)
-    # Put query into a map of {timestamp: list of (uid, data)}
-    for i in range(len(points)):
-        # Round time down to nearest 0.1 second
-        timestamp = str(points[i]['time'][:21] + 'Z')
-        data = ''
-        for j in range(len(field_names)):
-            data += struct.pack(field_formats[j], points[i][field_names[j]])
-        if playback.query.has_key(timestamp):
-            playback.query[timestamp].append((uid, data))
-        else:
-            playback.query[timestamp] = [(uid, data)]
+    tuple_query = 'SELECT * FROM "{}" WHERE time >= \'{}\' AND time <= \'{}\''.format(packet, start_time, end_time)
+    if playback.database == 'InfluxDBBackend':
+        playback.influx_query(tuple_query, packet, uid)
+    elif playback.database == 'SQLiteBackend':
+        playback.sqlite_query(tuple_query, packet, uid)
 
 
 @App.route('/playback/on', method='PUT')
