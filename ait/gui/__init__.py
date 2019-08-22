@@ -164,11 +164,15 @@ class Playback(object):
                 break
 
         if datastore:
-            mod, cls = datastore.rsplit('.', 1)
+            try:
+                mod, cls = datastore.rsplit('.', 1)
 
-            # Connect to database
-            self.dbconn = getattr(importlib.import_module(mod), cls)()
-            self.dbconn.connect(**other_args)
+                # Connect to database
+                self.dbconn = getattr(importlib.import_module(mod), cls)()
+                self.dbconn.connect(**other_args)
+            except Exception as e:
+                log.error('Error connecting to datastore {}: {}'.format(datastore, e))
+                log.warn('Disabling telemetry playback.')
         else:
             msg = (
                 '[GUI Playback Configuration]'
