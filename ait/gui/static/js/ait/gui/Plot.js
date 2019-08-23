@@ -298,6 +298,12 @@ class HighchartsBackend
  *   using Highcharts this attribute is required and would most commonly be
  *   set to **line**.
  *
+ * plot-range
+ *   The number of data points that should be stored and used for plotting.
+ *   Defaults to 600. Data received beyond this maximum causes the oldest
+ *   point to be removed from the queue. This is only used by the Dygraphs
+ *   backend.
+ *
  * .. code:: Javascript
  *
  *    <ait-plot-series packet="1553_HS_Packet" field="Voltage_A"></ait-plot-series>
