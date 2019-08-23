@@ -263,7 +263,7 @@ class AITGUIPlugin(Plugin):
     def getBrowserName(self, browser):
         return getattr(browser, 'name', getattr(browser, '_name', '(none)'))
 
-    def init(self, host=None, port=8080):
+    def init(self):
 
         # The /cmd endpoint requires access to the AITGUIPlugin object so it
         # can publish commands via the Plugin interface. It's defined here with
@@ -302,8 +302,8 @@ class AITGUIPlugin(Plugin):
         def handle(pathname):
             return bottle.static_file(pathname, root=HTMLRoot.User)
 
-        if host is None:
-            host = 'localhost'
+        port = int(getattr(self, 'port', 8080)):
+        host = getattr(self, 'host', 'localhost'):
 
         Servers.append( gevent.pywsgi.WSGIServer(
             ('0.0.0.0', port),
