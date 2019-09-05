@@ -104,7 +104,84 @@ information to foreign countries or providing access to foreign persons.
 <div class='site-container'>
   <div class='telemcontainer'>
     <ait-tabset class="nav-tabs">
-      <ait-tab title="Foo">
+      <ait-tab title="Welcome">
+        <div class="row">
+          <div class="col-sm-10 col-sm-offset-1">
+            <h1>Welcome to the AMMOS Instrument Toolkit Telemetry Monitoring Interface!</h1>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-sm-8 col-sm-offset-2">
+            <p>
+              The AMMOS Instrument Toolkit (AIT) UI provides a framework for building a custom website for realtime telemetry monitoring, commanding, and other MOS operations with only minimal HTML and configuration file changes. Built on top of the AIT Core libraries, AIT GUI provides web-development friendly access to the underlying telemetry, commanding, EVR, system logging, and other AIT Core functions in addition to a suite of pre-built UI Components and a REST API to handle common MOS use cases.
+            </p>
+            <p>
+              This example UI aims to give you a high level overview of some of the functionality that AIT provides through its telemetry monitoring interface. Much of the information presented here is described in further detail in the <a href="https://ait-gui.readthedocs.io/en/latest/">AIT GUI Documentation</a>.
+            </p>
+            <p>
+              The AIT UI is created from a number of <strong>components</strong>. These components are written in JavaScript and provided by the project to cover basic functionality needed in the user interface. Users can customize their interface by making minimal HTML or configuration file changes. If a user needs more control they can create their own components and include them in the interface.
+            </p>
+            <p>
+              The majority of the content that you're seeing is displayed in <strong>ait-tabset</strong> components. The tabset component helps keep our display split into logical blocks and displays additional status information to the user. 
+
+<pre>
+  &lt;ait-tabset&gt;
+    &lt;ait-tab title="tab1"&gt;
+      Content of Tab1
+    &lt;/ait-tab&gt;
+    &lt;ait-tab title="tab2"&gt;
+      Content of Tab2
+    &lt;/ait-tab&gt;
+  &lt;/ait-tabset&gt;
+</pre>
+            </p>
+            <p>When you're ready, click on the "AIT Field" tab above to continue</p>
+        </div>
+      </div>
+      </ait-tab>
+      <ait-tab title="AIT Field">
+        <div class="row">
+          <div class="col-sm-9 col-sm-offset-2">
+            <p>
+              <h1>The ait-field Component</h1>
+            </p>
+            <p>
+              The <strong>ait-field</strong> component handles the processing and display of data for a given field in an AIT Packet definition. The majority of your interface customization is likely to be focused around <strong>ait-field</strong> components.
+            </p>
+            <p>
+              An instance of <strong>ait-field</strong> is defined with the packet name, field name, and some optional parameters in HTML. Below is an example field defined for one of the data fields in the default Core telemetry dictionary. Below that is that same field defined in the interface.
+
+<pre>
+  &lt;ait-field packet="1553_HS_Packet" name="Voltage_A" display_name="Voltage_A"&gt;&lt;/ait-field&gt;
+</pre>
+
+              <ait-field packet="1553_HS_Packet" name="Voltage_A" display_name="Voltage_A"></ait-field>
+            </p>
+            <p>
+              Unfortunately you're not going to see anything interesting displayed here because there's no telemetry flowing to the user interface at the moment. AIT provides a command line program for generating fake telemetry and sending it to the user interface. Open your terminal and run <code>ait-example</code>. If your environment is configured properly you should see the above field displaying numbers incrementing by 1. You'll also notice that the display sometimes shows the field's value colored red or yellow. This indicates that the field is out of limit as defined by in our example <strong>limit.yaml</strong> dictionary. The tab that the field is displayed in will also reflect that it contains an out-of-limit field by displaying the same color. Click on the <strong>Voltage_A</strong> field's value to learn more about the telemetry field being displayed. This shows you the relevant chunk of the telemetry dictionary that defines the telemetry point.
+            </p>
+            <p>
+              Click to the "Additional Components" tab above to continue
+            </p>
+          </div>
+        </div>
+      </ait-tab>
+      <ait-tab title="Additional Components">
+        <div class="row">
+          <div class="col-sm-9 col-sm-offset-2">
+            <p>
+              <h1>Additional UI Components</h1>
+            </p>
+            <p>
+              AIT provides a number of components out of the box to cover common monitoring interface use cases. From the clock in the top-right corner, to the commanding and script execution controls in the bottom (or side) of your display, to the telemetry point plots shows on the "Telemetry" tab above, all of the functionality in the user interface is provided for you with minimal configuration and headache. All of the included components are defined on the <a href="https://ait-gui.readthedocs.io/en/latest/widgets.html">AIT GUI Widgets</a> page in the AIT documentation along with information on how to configure and add them to your display.
+            </p>
+            <p>
+              Be sure to click around the UI and explore the functionality provided. We do our best to document our toolkit and its features so please be sure to check out the <a href="https://ait-core.readthedocs.io/en/latest/">Core</a>, <a href="https://ait-gui.readthedocs.io/en/latest/">GUI</a>, and <a href="https://ait-dsn.readthedocs.io/en/latest/">DSN</a> documentation. We hope all of your questions will be answered there but we know that's not always possible. If you run into any problems or have any questions for the team feel free to reach out on the <a href="https://github.com/NASA-AMMOS/AIT-Core/wiki/Project-Structure-and-Governance#public-development-ait-devgooglegroupscom">project mailing lists</a>. If you find any bugs please open a ticket for us or let us know on our mailing lists. Bug reports and pull requests are always welcome!
+            </p>
+          </div>
+        </div>
+      </ait-tab>
+      <ait-tab title="Telemetry">
         <div class="col-sm-6">
           <h4 class="telem-group-title">1553 HS Voltages</h4>
           <table class="telem col2">
@@ -152,14 +229,6 @@ information to foreign countries or providing access to foreign persons.
             <ait-plot-series packet="1553_HS_Packet" name="Current_A"></ait-plot-series>
           </ait-plot>
         </div>
-      </ait-tab>
-      <ait-tab title="TlmQuery"><ait-telemetryquery></ait-telemetryquery></ait-tab>
-      <ait-tab title="Bar"> Bar </ait-tab>
-      <ait-tab title="Baz"> Baz </ait-tab>
-      <ait-tab title="Bop"> Bop </ait-tab>
-      <ait-tab title="Clock">
-        <h1>The current time</h1>
-        <ait-clock class="navbar-text" doy="true"></ait-clock>
       </ait-tab>
     </ait-tabset>
   </div>
