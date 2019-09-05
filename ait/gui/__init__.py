@@ -326,8 +326,8 @@ class AITGUIPlugin(Plugin):
         def handle(pathname):
             return bottle.static_file(pathname, root=HTMLRoot.User)
 
-        port = int(getattr(self, 'port', 8080)):
-        host = getattr(self, 'host', 'localhost'):
+        port = int(getattr(self, 'port', 8080))
+        host = getattr(self, 'host', 'localhost')
 
         Servers.append( gevent.pywsgi.WSGIServer(
             ('0.0.0.0', port),
