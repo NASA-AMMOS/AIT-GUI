@@ -4,6 +4,8 @@ formats:
     - none
 python:
     pip_install: true
+    install:
+      - requirements: doc/requirements.txt
     extra_requirements:
         - docs
         - tests
