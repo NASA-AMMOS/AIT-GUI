@@ -150,7 +150,7 @@ class Playback(object):
         """Connect to database"""
 
         # Get datastore from config
-        plugins = ait.config.get('server.plugins')
+        plugins = ait.config.get('server.plugins', [])
         datastore = None
         other_args = {}
         for i in range(len(plugins)):
