@@ -68,30 +68,31 @@ Now that we are depending on AIT GUI let's get a simple index page up and runnin
 Setup GUI Config Values
 -----------------------
 
-You'll want to add a GUI section to your **config.yaml** file to set various things. For this example we'll set two attributes, the relative path to the index file above and some default telemetry stream information. The **gui.html.directory** attribute tells the GUI where to look for HTML files for your web application. The **telemetry** object gives the GUI a list of telemetry streams on which it should listen for data. We'll leave this set to the default telemetry port.
-
-In your full application you'll want to set a number of other configuration values. You can read about the other configuration parameters in the documentation.
+You'll need to update your **server** configuration to enable the GUI Plugin. Add the plugin configuration below to the **server** section of your **config.yaml** file.
 
 .. code-block:: yaml
 
-   gui:
-       html:
-           directory: ./html
-       telemetry:
-          - stream:
-                name: MyExampleTelemetryStream
-                port: 3076
+   plugins:
+       - plugin:
+           name: ait.gui.AITGUIPlugin
+           inputs:
+               - log_stream
+               - telem_stream
+           outputs:
+               - command_stream
+
+The definitions for **log_stream**, **telem_stream**, and **command_stream** exist in the example Core **config.yaml** file.
 
 Run the GUI
 -----------
 
-You're all set to open your GUI for the first time. Startup the GUI process by running the following at a terminal:
+The GUI Plugin runs as part of the AIT Server. Bootup the server with:
 
 .. code-block:: bash
 
-   ait_gui.py
+   ait-server
 
-This should automatically open up a browser and point it to **localhost:8080**. If it doesn't, open up your browser of choice and point it at the URL. You should see something that looks like the following.
+Open up your browser of choice and point it at **localhost:8080**. You should see something that looks like the following.
 
 .. image:: _static/example_gui.png
 
