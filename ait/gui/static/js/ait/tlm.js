@@ -356,6 +356,7 @@ class TelemetryStream
         this._socket   = new WebSocket(url)
         this._stale    = 0
         this._url      = url
+        this._pkt_states = { }
 
         // Re-map telemetry dictionary to be keyed by a PacketDefinition
         // 'id' instead of 'name'.
@@ -388,6 +389,18 @@ class TelemetryStream
         let packet_name = data['packet']
         let delta = data['data']
 
+        // add delta to last full packet
+        // want full packet inserted in packet buffer & emitted as event
+        if ( Object.keys(delta).length !== 0 ) {
+            if ( packet_name in this._pkt_states ) {
+                for ( var field in delta ) {
+                    this._pkt_states[packet_name][field] = this._pkt_states[packet_name][field] + delta[field]
+                }
+            } else {
+                this._pkt_states[packet_name] = delta
+            }
+        }
+
         // Since WebSockets can stay open indefinitely, the AIT GUI
         // server will occasionally probe for dropped client
         // connections by sending empty packets (data.byteLength == 0)
@@ -405,10 +418,9 @@ class TelemetryStream
         this._stale    = 0
         this._interval = setInterval(this.onStale.bind(this), 5000)
 
-        console.log(packet_name)
-        console.log(delta)
-        ait.packets.insert(packet_name, delta)
-        this._emit('packet', data)
+        ait.packets.insert(packet_name, this._pkt_states[packet_name])
+        this._emit('packet', {'packet': packet_name,
+                              'data': this._pkt_states[packet_name]})
     }
 
 
