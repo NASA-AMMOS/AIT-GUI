@@ -7,7 +7,7 @@ import geventwebsocket
 
 import bdb
 from collections import defaultdict
-import cPickle as pickle
+import pickle
 import importlib
 import json
 import os
