@@ -682,31 +682,57 @@ def handle():
         pass
 
 
+def add_dntoeu_value(field, packet, dntoeus):
+    """
+    Returns dntoeu value of field from packet.
+
+    Params:
+        field: str name of field to evaluate
+        packet: AIT Packet
+        dntoeus: dict of dntoeu values to add to
+    """
+    field_defn = packet._defn.fieldmap[field]
+    if field_defn.dntoeu:
+        dntoeus[field] = field_defn.dntoeu.eval(packet)
+
+    return dntoeus
+
+
 last_packets = { }
 def get_packet_delta(pkt_defn, packet):
     """
     Keeps track of last packets recieved of all types recieved
-    and checks returns only fields that have changed since last
-    packet.
+    and returns only fields that have changed since last packet.
 
     Params:
         pkt_defn:  Packet definition
-        packet:    Packet in JSON format
+        packet:    Binary packet data
     Returns:
         delta:     JSON of packet fields that have changed
     """
+    ait_pkt = ait.core.tlm.Packet(pkt_defn, data=packet)
+    json_pkt = ait_pkt.toJSON()
+
+    # first packet of this type
     if pkt_defn.name not in last_packets:
-        last_packets[pkt_defn.name] = packet
-        delta = packet
+        last_packets[pkt_defn.name] = json_pkt
+        delta = json_pkt
+
+        dntoeus = {}
+        for field, value in json_pkt.items():
+            dntoeus = add_dntoeu_value(field, ait_pkt, dntoeus)
+
+    # previous packets of this type received
     else:
-        delta = { }
-        for field, new_value in packet.items():
+        delta, dntoeus = {}, {}
+        for field, new_value in json_pkt.items():
             last_value = last_packets[pkt_defn.name][field]
             if new_value != last_value:
                 delta[field] = new_value
                 last_packets[pkt_defn.name][field] = new_value
+                dntoeus = add_dntoeu_value(field, ait_pkt, dntoeus)
 
-    return delta
+    return delta, dntoeus
 
 
 @App.route('/tlm/realtime')
@@ -731,12 +757,12 @@ def handle():
                             pkt_defn = v
                             break
 
-                    json_pkt = ait.core.tlm.Packet(pkt_defn, data=data).toJSON()
-                    delta = get_packet_delta(pkt_defn, json_pkt)
+                    delta, dntoeus = get_packet_delta(pkt_defn, data)
 
                     wsock.send(json.dumps({
                         'packet': pkt_defn.name,
-                        'data': delta
+                        'data': delta,
+                        'dntoeus': dntoeus
                     }))
 
                 except IndexError:
