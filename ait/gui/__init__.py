@@ -781,6 +781,30 @@ def handle():
             pass
 
 
+@App.route('/tlm/latest', method='GET')
+def handle():
+    """Return latest telemetry packet to client"""
+    with Sessions.current() as session:
+        tlmdict = ait.core.tlm.getDefaultDict()
+        uid, data = session.telemetry.popleft(timeout=30)
+        pkt_defn = None
+        for k, v in tlmdict.iteritems():
+            if v.uid == uid:
+                pkt_defn = v
+                break
+
+        ait_pkt = ait.core.tlm.Packet(pkt_defn, data=data)
+        json_pkt = ait_pkt.toJSON()
+        for field, value in json_pkt.items():
+            dntoeus = add_dntoeu_value(field, ait_pkt, {})
+
+        return json.dumps({
+            'packet': pkt_defn.name,
+            'data': json_pkt,
+            'dntoeus': dntoeus
+        })
+
+
 @App.route('/tlm/query', method='POST')
 def handle():
     """"""
