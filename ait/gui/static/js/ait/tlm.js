@@ -388,17 +388,33 @@ class TelemetryStream
         let data = JSON.parse(event.data)
         let packet_name = data['packet']
         let delta = data['data']
+        let dntoeus = data['dntoeus']
+
+        console.log(this._pkt_states)
 
         // add delta to last full packet
         // want full packet inserted in packet buffer & emitted as event
-        if ( Object.keys(delta).length !== 0 ) {
-            if ( packet_name in this._pkt_states ) {
+        if ( packet_name in this._pkt_states ) {
+            if ( Object.keys(delta).length !== 0 ) {
                 for ( var field in delta ) {
                     this._pkt_states[packet_name][field] = this._pkt_states[packet_name][field] + delta[field]
                 }
-            } else {
-                this._pkt_states[packet_name] = delta
             }
+        } else {
+            console.log('name not in states')
+            // delta is empty - request full packet from backend
+            if ( Object.keys(delta).length == 0 ) {
+                m.request({ url: '/tlm/latest' }).then( (latest) => {
+                    packet_name = latest['packet']
+                    delta = latest['data']
+                    dntoeus = latest['dntoeus']
+                    console.log('here')
+                    console.log(delta)
+                })
+                console.log(delta)
+            } 
+
+            this._pkt_states[packet_name] = delta
         }
 
         // Since WebSockets can stay open indefinitely, the AIT GUI
