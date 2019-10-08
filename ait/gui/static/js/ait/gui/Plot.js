@@ -86,6 +86,7 @@ class DygraphsBackend
         if (!names) return
 
         let row = [ this._plot._time.get(packet) ]
+        console.log("Received by plotting:")
         console.log(packet)
         // For each series of data, if it's in the current packet
         // that we're updating, add the associated point. Otherwise,
