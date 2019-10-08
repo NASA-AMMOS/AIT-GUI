@@ -356,7 +356,12 @@ class TelemetryStream
         this._socket   = new WebSocket(url)
         this._stale    = 0
         this._url      = url
-        this._pkt_states = { }
+        m.request({ url: '/tlm/latest' }).then((latest) => {
+            this._pkt_states = latest
+            console.log('requested latest tlm from within stream')
+            console.log(ait.tlm.state)
+        })
+        console.log(this._pkt_states)
 
         // Re-map telemetry dictionary to be keyed by a PacketDefinition
         // 'id' instead of 'name'.
@@ -390,6 +395,7 @@ class TelemetryStream
         let delta = data['data']
         let dntoeus = data['dntoeus']
 
+        console.log('packet states:')
         console.log(this._pkt_states)
 
         // add delta to last full packet
@@ -405,13 +411,13 @@ class TelemetryStream
             // delta is empty - request full packet from backend
             if ( Object.keys(delta).length == 0 ) {
                 m.request({ url: '/tlm/latest' }).then( (latest) => {
-                    packet_name = latest['packet']
-                    delta = latest['data']
-                    dntoeus = latest['dntoeus']
-                    console.log('here')
-                    console.log(delta)
+                    console.log('requesting latest tlm')
+                    console.log(latest)
+                    //ait.tlm.state = latest
+                    //packet_name = latest['packet']
+                    //delta = latest['data']
+                    //dntoeus = latest['dntoeus']
                 })
-                console.log(delta)
             } 
 
             this._pkt_states[packet_name] = delta
