@@ -640,6 +640,7 @@ def handle():
             __setResponseToEventStream()
             yield 'data: %s\n\n' % json.dumps(msg)
 
+
 @App.route('/tlm/realtime/openmct')
 def handle():
     """Return telemetry packets in realtime to client"""
@@ -698,7 +699,7 @@ def add_dntoeu_value(field, packet, dntoeus):
     return dntoeus
 
 
-last_packets = { }
+packet_states = { }
 def get_packet_delta(pkt_defn, packet):
     """
     Keeps track of last packets recieved of all types recieved
@@ -714,8 +715,8 @@ def get_packet_delta(pkt_defn, packet):
     json_pkt = ait_pkt.toJSON()
 
     # first packet of this type
-    if pkt_defn.name not in last_packets:
-        last_packets[pkt_defn.name] = json_pkt
+    if pkt_defn.name not in packet_states:
+        packet_states[pkt_defn.name] = json_pkt
         delta = json_pkt
 
         dntoeus = {}
@@ -726,10 +727,10 @@ def get_packet_delta(pkt_defn, packet):
     else:
         delta, dntoeus = {}, {}
         for field, new_value in json_pkt.items():
-            last_value = last_packets[pkt_defn.name][field]
+            last_value = packet_states[pkt_defn.name][field]
             if new_value != last_value:
                 delta[field] = new_value
-                last_packets[pkt_defn.name][field] = new_value
+                packet_states[pkt_defn.name][field] = new_value
                 dntoeus = add_dntoeu_value(field, ait_pkt, dntoeus)
 
     return delta, dntoeus
@@ -784,25 +785,7 @@ def handle():
 @App.route('/tlm/latest', method='GET')
 def handle():
     """Return latest telemetry packet to client"""
-    with Sessions.current() as session:
-        tlmdict = ait.core.tlm.getDefaultDict()
-        uid, data = session.telemetry.popleft(timeout=30)
-        pkt_defn = None
-        for k, v in tlmdict.iteritems():
-            if v.uid == uid:
-                pkt_defn = v
-                break
-
-        ait_pkt = ait.core.tlm.Packet(pkt_defn, data=data)
-        json_pkt = ait_pkt.toJSON()
-        for field, value in json_pkt.items():
-            dntoeus = add_dntoeu_value(field, ait_pkt, {})
-
-        return json.dumps({
-            'packet': pkt_defn.name,
-            'data': json_pkt,
-            'dntoeus': dntoeus
-        })
+    return json.dumps(packet_states)
 
 
 @App.route('/tlm/query', method='POST')
