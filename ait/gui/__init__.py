@@ -591,13 +591,13 @@ def handle():
                 cmds = [
                     {
                         'timestamp': str(header.timestamp),
-                        'command': cmdname
+                        'command': cmdname.decode('utf-8')
                     }
                     for (header, cmdname) in stream
                 ]
                 return json.dumps(list(reversed(cmds)))
             else:
-                cmds = [cmdname for (header, cmdname) in stream]
+                cmds = [cmdname.decode('utf-8') for (header, cmdname) in stream]
                 return json.dumps(list(set(cmds)))
     except IOError:
         pass
