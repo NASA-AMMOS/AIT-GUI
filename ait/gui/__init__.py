@@ -736,6 +736,16 @@ def get_packet_delta(pkt_defn, packet):
     return delta, dntoeus
 
 
+def replace_datetimes(delta):
+    """Replace datetime objects with ISO formatted
+    strings for JSON serialization"""
+    for key, val in delta.items():
+        if type(val) is datetime:
+            delta[key] = val.isoformat()
+
+    return delta
+
+
 @App.route('/tlm/realtime')
 def handle():
     """Return telemetry packets in realtime to client"""
@@ -759,6 +769,8 @@ def handle():
                             break
 
                     delta, dntoeus = get_packet_delta(pkt_defn, data)
+                    delta = replace_datetimes(delta)
+                    log.info(delta)
 
                     wsock.send(json.dumps({
                         'packet': pkt_defn.name,
