@@ -356,12 +356,9 @@ class TelemetryStream
         this._socket   = new WebSocket(url)
         this._stale    = 0
         this._url      = url
-        m.request({ url: '/tlm/latest' }).then((latest) => {
-            this._pkt_states = latest
-            console.log('requested latest tlm from within stream')
-            console.log(ait.tlm.state)
-        })
+        this.getFullPacketStates()
         console.log(this._pkt_states)
+        console.log(this._counters)
 
         // Re-map telemetry dictionary to be keyed by a PacketDefinition
         // 'id' instead of 'name'.
@@ -385,6 +382,24 @@ class TelemetryStream
         this._emit('close', this)
     }
 
+    getFullPacketStates () {
+        m.request({ url: '/tlm/latest' }).then( (latest) => {
+            console.log('requesting latest tlm')
+            console.log(latest)
+            this._pkt_states = latest['states']
+            this._counters = latest['counters']
+        })
+    }
+
+    checkCounter (packetName, counter) {
+        // returns true if counter is as expected, false if not
+        let lastCounter = this._counters[packetName]
+        if ( counter == lastCounter + 1 ) {
+            return true
+        } 
+        console.log('counter mismatch: had ' + lastCounter + ' , got ' + counter)
+        return false
+    }
 
     onMessage (event) {
         if ( !(typeof event.data == "string") ) return
@@ -394,35 +409,35 @@ class TelemetryStream
         let packet_name = data['packet']
         let delta = data['data']
         let dntoeus = data['dntoeus']
+        let counter = data['counter']
 
-        console.log('packet states:')
-        console.log(this._pkt_states)
-
-        // add delta to last full packet
-        // want full packet inserted in packet buffer & emitted as event
         if ( packet_name in this._pkt_states ) {
-            if ( Object.keys(delta).length !== 0 ) {
-                for ( var field in delta ) {
-                    this._pkt_states[packet_name][field] = this._pkt_states[packet_name][field] + delta[field]
+            // check counter is as expected and request full packet states if not
+            let gotNextCounter = this.checkCounter(packet_name, counter)
+            if ( !gotNextCounter ) {
+                this.getFullPacketStates()
+            } else {
+                // add delta to current packet state and update counter
+                if ( Object.keys(delta).length !== 0 ) {
+                    console.log('adding delta to pkt state')
+                    for ( var field in delta ) {
+                        this._pkt_states[packet_name][field] = this._pkt_states[packet_name][field] + delta[field]
+                    }
                 }
+                this._counters[packet_name] = counter
             }
-        } else {
-            console.log('name not in states')
-            // delta is empty - request full packet from backend
+        } else { // new packet type
+            console.log('new packet type')
             if ( Object.keys(delta).length == 0 ) {
-                m.request({ url: '/tlm/latest' }).then( (latest) => {
-                    console.log('requesting latest tlm')
-                    console.log(latest)
-                    //ait.tlm.state = latest
-                    //packet_name = latest['packet']
-                    //delta = latest['data']
-                    //dntoeus = latest['dntoeus']
-                })
-            } 
-
-            this._pkt_states[packet_name] = delta
+                // empty delta - request full packet from backend
+                this.getFullPacketStates()
+            } else {
+                this._pkt_states[packet_name] = delta
+                this._counters[packet_name] = counter
+            }
         }
 
+        console.log("counter: ", this._counters[packet_name])
         // Since WebSockets can stay open indefinitely, the AIT GUI
         // server will occasionally probe for dropped client
         // connections by sending empty packets (data.byteLength == 0)

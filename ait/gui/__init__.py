@@ -700,6 +700,7 @@ def add_dntoeu_value(field, packet, dntoeus):
 
 
 packet_states = { }
+counters = { }
 def get_packet_delta(pkt_defn, packet):
     """
     Keeps track of last packets recieved of all types recieved
@@ -716,6 +717,7 @@ def get_packet_delta(pkt_defn, packet):
 
     # first packet of this type
     if pkt_defn.name not in packet_states:
+        counters[pkt_defn.name] = 0
         packet_states[pkt_defn.name] = json_pkt
         delta = json_pkt
 
@@ -725,6 +727,7 @@ def get_packet_delta(pkt_defn, packet):
 
     # previous packets of this type received
     else:
+        counters[pkt_defn.name] += 1
         delta, dntoeus = {}, {}
         for field, new_value in json_pkt.items():
             last_value = packet_states[pkt_defn.name][field]
@@ -733,7 +736,7 @@ def get_packet_delta(pkt_defn, packet):
                 packet_states[pkt_defn.name][field] = new_value
                 dntoeus = add_dntoeu_value(field, ait_pkt, dntoeus)
 
-    return delta, dntoeus
+    return delta, dntoeus, counters[pkt_defn.name]
 
 
 def replace_datetimes(delta):
@@ -768,14 +771,15 @@ def handle():
                             pkt_defn = v
                             break
 
-                    delta, dntoeus = get_packet_delta(pkt_defn, data)
+                    delta, dntoeus, counter = get_packet_delta(pkt_defn, data)
                     delta = replace_datetimes(delta)
                     log.info(delta)
 
                     wsock.send(json.dumps({
                         'packet': pkt_defn.name,
                         'data': delta,
-                        'dntoeus': dntoeus
+                        'dntoeus': dntoeus,
+                        'counter': counter
                     }))
 
                 except IndexError:
@@ -797,7 +801,11 @@ def handle():
 @App.route('/tlm/latest', method='GET')
 def handle():
     """Return latest telemetry packet to client"""
-    return json.dumps(packet_states)
+    for pkt_type, state in packet_states.items():
+        packet_states[pkt_type] = replace_datetimes(state)
+
+    return json.dumps({'states': packet_states,
+                       'counters': counters})
 
 
 @App.route('/tlm/query', method='POST')
