@@ -885,7 +885,7 @@ def handle(name):
        }
     """
     with Sessions.current() as session:
-        script_path = os.path.join(ScriptRoot, urllib.unquote(name))
+        script_path = os.path.join(ScriptRoot, urllib.parse.unquote(name))
         if not os.path.exists(script_path):
             bottle.abort(400, "Script cannot be located")
 
