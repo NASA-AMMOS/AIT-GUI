@@ -394,9 +394,11 @@ class TelemetryStream
     checkCounter (packetName, counter) {
         // returns true if counter is as expected, false if not
         let lastCounter = this._counters[packetName]
-        if ( counter == lastCounter + 1 ) {
+        if ( counter == lastCounter + 1) {
             return true
-        } 
+        } else if ( lastCounter == Math.pow(2, 31) - 1 && counter == 0 ) {
+            return true
+        }
         console.log('counter mismatch: had ' + lastCounter + ' , got ' + counter)
         return false
     }

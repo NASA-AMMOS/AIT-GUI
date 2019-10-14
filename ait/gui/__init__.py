@@ -726,7 +726,9 @@ def get_packet_delta(pkt_defn, packet):
 
     # previous packets of this type received
     else:
-        counters[pkt_defn.name] += 1
+        count = counters[pkt_defn.name]
+        count = count + 1 if count < 2**31 - 1 else 0
+        counters[pkt_defn.name] = count
         delta, dntoeus = {}, {}
         for field, new_value in json_pkt.items():
             last_value = packet_states[pkt_defn.name][field]
@@ -773,6 +775,7 @@ def handle():
                     delta, dntoeus, counter = get_packet_delta(pkt_defn, data)
                     delta = replace_datetimes(delta)
                     log.info(delta)
+                    log.info('Packet #{}'.format(counter))
 
                     wsock.send(json.dumps({
                         'packet': pkt_defn.name,
