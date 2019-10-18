@@ -42,6 +42,7 @@ class Session (object):
         self.events          = api.GeventDeque(maxlen=maxlen)
         self.messages        = api.GeventDeque(maxlen=maxlen)
         self.telemetry       = api.GeventDeque(maxlen=maxlen)
+        self.deltas          = api.GeventDeque(maxlen=maxlen)
         self.tlm_counters    = { }
         self._maxlen         = maxlen
         self._store          = store
@@ -69,7 +70,7 @@ class Session (object):
         """A unique identifier for this Session."""
         return str( id(self) )
 
-    def updateCounter(self, pkt_name)
+    def updateCounter(self, pkt_name):
         if pkt_name not in self.tlm_counters:
             self.tlm_counters[pkt_name] = 0
         else:
@@ -110,13 +111,17 @@ class SessionStore (dict):
         item = (uid, packet)
         SessionStore.History.telemetry.append(item)
 
+        pkt_defn = getPacketDefn(uid)
+        pkt_name = pkt_defn.name
+        delta, dntoeus = get_packet_delta(pkt_defn, packet)
+        delta = replace_datetimes(delta)
+
         for session in self.values():
             print(session)
-
-            pkt_name = getPacketDefn(uid).name
-            session.updateCounter(pkt_name)
-
+            counter = session.updateCounter(pkt_name)
             print(session.tlm_counters)
+            item = (pkt_name, delta, dntoeus, counter)
+            session.deltas.append(item)
             item = (uid, packet, session.tlm_counters[pkt_name])
             session.telemetry.append(item)
 
@@ -792,15 +797,12 @@ def handle():
         try:
             while not wsock.closed:
                 try:
-                    uid, data, counter = session.telemetry.popleft(timeout=30)
-                    pkt_defn = getPacketDefn(uid)
-                    delta, dntoeus = get_packet_delta(pkt_defn, data)
-                    delta = replace_datetimes(delta)
+                    name, delta, dntoeus, counter = session.deltas.popleft(timeout=30)
                     log.info(delta)
-                    log.info('Packet #{}'.format(counter))
+                    log.info('packet #{}'.format(counter))
 
                     wsock.send(json.dumps({
-                        'packet': pkt_defn.name,
+                        'packet': name,
                         'data': delta,
                         'dntoeus': dntoeus,
                         'counter': counter
