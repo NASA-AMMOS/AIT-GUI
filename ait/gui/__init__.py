@@ -69,6 +69,30 @@ class Session (object):
         """A unique identifier for this Session."""
         return str( id(self) )
 
+    def updateCounter(self, pkt_name)
+        if pkt_name not in self.tlm_counters:
+            self.tlm_counters[pkt_name] = 0
+        else:
+            count = self.tlm_counters[pkt_name]
+            count = count + 1 if count < 2**31 - 1 else 0
+            self.tlm_counters[pkt_name] = count
+
+        return self.tlm_counters[pkt_name]
+
+
+def getPacketDefn(uid):
+    """
+    Returns packet defn from tlm dict matching uid.
+    Logs warning and returns None if no defn matching uid is found.
+    """
+    tlmdict = ait.core.tlm.getDefaultDict()
+    for k, v in tlmdict.iteritems():
+        if v.uid == uid:
+            return v
+
+    log.warn('No packet defn matching UID {}'.format(uid))
+    return None
+
 
 class SessionStore (dict):
     """SessionStore
@@ -81,18 +105,6 @@ class SessionStore (dict):
         """Creates a new SessionStore."""
         dict.__init__(self, *args, **kwargs)
 
-    def getPacketName(self, uid):
-        """
-        Returns packet defn from tlm dict matching uid.
-        Logs error if no defn matching uid is found.
-        """
-        tlmdict = ait.core.tlm.getDefaultDict()
-        for k, v in tlmdict.iteritems():
-            if v.uid == uid:
-                return v
-
-        log.error('No packet defn matching UID {}'.format(uid))
-
     def addTelemetry (self, uid, packet):
         """Adds a telemetry packet to all Sessions in the store."""
         item = (uid, packet)
@@ -101,13 +113,8 @@ class SessionStore (dict):
         for session in self.values():
             print(session)
 
-            pkt_name = self.getPacketName(uid).name
-            if pkt_name not in session.tlm_counters:
-                session.tlm_counters[pkt_name] = 0
-            else:
-                count = session.tlm_counters[pkt_name]
-                count = count + 1 if count < 2**31 - 1 else 0
-                session.tlm_counters[pkt_name] = count
+            pkt_name = getPacketDefn(uid).name
+            session.updateCounter(pkt_name)
 
             print(session.tlm_counters)
             item = (uid, packet, session.tlm_counters[pkt_name])
@@ -784,16 +791,10 @@ def handle():
             bottle.abort(400, 'Expected WebSocket request.')
 
         try:
-            tlmdict = ait.core.tlm.getDefaultDict()
             while not wsock.closed:
                 try:
                     uid, data, counter = session.telemetry.popleft(timeout=30)
-                    pkt_defn = None
-                    for k, v in tlmdict.iteritems():
-                        if v.uid == uid:
-                            pkt_defn = v
-                            break
-
+                    pkt_defn = getPacketDefn(uid)
                     delta, dntoeus = get_packet_delta(pkt_defn, data)
                     delta = replace_datetimes(delta)
                     log.info(delta)
