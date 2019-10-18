@@ -457,7 +457,8 @@ class TelemetryStream
         this._stale    = 0
         this._interval = setInterval(this.onStale.bind(this), 5000)
 
-        ait.packets.insert(packet_name, this._pkt_states[packet_name])
+        let current_pkt = JSON.parse(JSON.stringify(this._pkt_states[packet_name]))
+        ait.packets.insert(packet_name, current_pkt)
         this._emit('packet', {'packet': packet_name,
                               'data': this._pkt_states[packet_name]})
     }
