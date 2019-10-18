@@ -423,7 +423,7 @@ class TelemetryStream
                 if ( Object.keys(delta).length !== 0 ) {
                     console.log('adding delta to pkt state')
                     for ( var field in delta ) {
-                        this._pkt_states[packet_name][field] = this._pkt_states[packet_name][field] + delta[field]
+                        this._pkt_states[packet_name][field] = delta[field]
                     }
                 }
                 this._counters[packet_name] = counter
