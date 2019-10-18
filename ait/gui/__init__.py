@@ -42,6 +42,7 @@ class Session (object):
         self.events          = api.GeventDeque(maxlen=maxlen)
         self.messages        = api.GeventDeque(maxlen=maxlen)
         self.telemetry       = api.GeventDeque(maxlen=maxlen)
+        self.tlm_counters    = { }
         self._maxlen         = maxlen
         self._store          = store
         self._numConnections = 0
@@ -80,11 +81,36 @@ class SessionStore (dict):
         """Creates a new SessionStore."""
         dict.__init__(self, *args, **kwargs)
 
+    def getPacketName(self, uid):
+        """
+        Returns packet defn from tlm dict matching uid.
+        Logs error if no defn matching uid is found.
+        """
+        tlmdict = ait.core.tlm.getDefaultDict()
+        for k, v in tlmdict.iteritems():
+            if v.uid == uid:
+                return v
+
+        log.error('No packet defn matching UID {}'.format(uid))
+
     def addTelemetry (self, uid, packet):
         """Adds a telemetry packet to all Sessions in the store."""
         item = (uid, packet)
         SessionStore.History.telemetry.append(item)
+
         for session in self.values():
+            print(session)
+
+            pkt_name = self.getPacketName(uid).name
+            if pkt_name not in session.tlm_counters:
+                session.tlm_counters[pkt_name] = 0
+            else:
+                count = session.tlm_counters[pkt_name]
+                count = count + 1 if count < 2**31 - 1 else 0
+                session.tlm_counters[pkt_name] = count
+
+            print(session.tlm_counters)
+            item = (uid, packet, session.tlm_counters[pkt_name])
             session.telemetry.append(item)
 
     def addMessage (self, msg):
@@ -699,7 +725,6 @@ def add_dntoeu_value(field, packet, dntoeus):
 
 
 packet_states = { }
-counters = { }
 def get_packet_delta(pkt_defn, packet):
     """
     Keeps track of last packets recieved of all types recieved
@@ -716,7 +741,6 @@ def get_packet_delta(pkt_defn, packet):
 
     # first packet of this type
     if pkt_defn.name not in packet_states:
-        counters[pkt_defn.name] = 0
         packet_states[pkt_defn.name] = json_pkt
         delta = json_pkt
 
@@ -726,9 +750,6 @@ def get_packet_delta(pkt_defn, packet):
 
     # previous packets of this type received
     else:
-        count = counters[pkt_defn.name]
-        count = count + 1 if count < 2**31 - 1 else 0
-        counters[pkt_defn.name] = count
         delta, dntoeus = {}, {}
         for field, new_value in json_pkt.items():
             last_value = packet_states[pkt_defn.name][field]
@@ -737,7 +758,7 @@ def get_packet_delta(pkt_defn, packet):
                 packet_states[pkt_defn.name][field] = new_value
                 dntoeus = add_dntoeu_value(field, ait_pkt, dntoeus)
 
-    return delta, dntoeus, counters[pkt_defn.name]
+    return delta, dntoeus
 
 
 def replace_datetimes(delta):
@@ -765,14 +786,14 @@ def handle():
             tlmdict = ait.core.tlm.getDefaultDict()
             while not wsock.closed:
                 try:
-                    uid, data = session.telemetry.popleft(timeout=30)
+                    uid, data, counter = session.telemetry.popleft(timeout=30)
                     pkt_defn = None
                     for k, v in tlmdict.iteritems():
                         if v.uid == uid:
                             pkt_defn = v
                             break
 
-                    delta, dntoeus, counter = get_packet_delta(pkt_defn, data)
+                    delta, dntoeus = get_packet_delta(pkt_defn, data)
                     delta = replace_datetimes(delta)
                     log.info(delta)
                     log.info('Packet #{}'.format(counter))
@@ -806,8 +827,10 @@ def handle():
     for pkt_type, state in packet_states.items():
         packet_states[pkt_type] = replace_datetimes(state)
 
-    return json.dumps({'states': packet_states,
-                       'counters': counters})
+    with Sessions.current() as session:
+        counters = session.tlm_counters
+        return json.dumps({'states': packet_states,
+                           'counters': counters})
 
 
 @App.route('/tlm/query', method='POST')
