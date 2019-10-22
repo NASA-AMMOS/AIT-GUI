@@ -83,7 +83,13 @@ const Field =
      * retrieving the packet value.
      */
     getValue (packet, raw=false) {
-        return packet && packet[this._fname]
+        if ( !raw ) {
+            if ( packet && this._fname in packet['dntoeu']) {
+                return packet && packet['dntoeu'][this._fname]
+            }
+        }
+
+        return packet && packet['raw'][this._fname]
     },
 
 
