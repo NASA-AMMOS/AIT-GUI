@@ -423,7 +423,10 @@ class TelemetryStream
                 if ( Object.keys(delta).length !== 0 ) {
                     console.log('adding delta to pkt state')
                     for ( var field in delta ) {
-                        this._pkt_states[packet_name][field] = delta[field]
+                        this._pkt_states[packet_name]['raw'][field] = delta[field]
+                    }
+                    for ( var field in dntoeus ) {
+                        this._pkt_states[packet_name]['dntoeu'][field] = dntoeus[field]
                     }
                 }
                 this._counters[packet_name] = counter
@@ -434,7 +437,9 @@ class TelemetryStream
                 // empty delta - request full packet from backend
                 this.getFullPacketStates()
             } else {
-                this._pkt_states[packet_name] = delta
+                this._pkt_states[packet_name] = {}
+                this._pkt_states[packet_name]['raw'] = delta
+                this._pkt_states[packet_name]['dntoeu'] = dntoeus
                 this._counters[packet_name] = counter
             }
         }

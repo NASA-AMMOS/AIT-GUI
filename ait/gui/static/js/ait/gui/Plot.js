@@ -80,7 +80,7 @@ class DygraphsBackend
 
     plot (data) {
         const pname = data['packet']
-        let packet = data['data']
+        let packet = data['data']['raw']
         const names = this._plot._packets[pname]
 
         if (!names) return
@@ -209,7 +209,7 @@ class HighchartsBackend
 
     plot(data) {
         const pname = data['packet']
-        let packet = data['data']
+        let packet = data['data']['raw']
         const names = this._plot._packets[pname]
         if (!names) return
 

@@ -139,8 +139,12 @@ const MnemonicSearch = {
         )
 
         if (curPacket !== null) {
-            val = curPacket.__get__(this._selection)
-            raw = curPacket.__get__(this._selection, true)
+            if ( this._selection in curPacket['dntoeu']) {
+                val = curPacket['dntoeu'][this._selection]
+            } else {
+                val = curPacket['raw'][this._selection]
+            }
+            raw = curPacket['raw'][this._selection]
         }
 
         let data = {}
