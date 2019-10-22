@@ -117,9 +117,7 @@ class SessionStore (dict):
         delta = replace_datetimes(delta)
 
         for session in self.values():
-            print(session)
             counter = session.updateCounter(pkt_name)
-            print(session.tlm_counters)
             item = (pkt_name, delta, dntoeus, counter)
             session.deltas.append(item)
             item = (uid, packet, session.tlm_counters[pkt_name])
@@ -732,7 +730,11 @@ def add_dntoeu_value(field, packet, dntoeus):
     """
     field_defn = packet._defn.fieldmap[field]
     if field_defn.dntoeu:
-        dntoeus[field] = field_defn.dntoeu.eval(packet)
+        value = field_defn.dntoeu.eval(packet)
+        # to send to frontend
+        dntoeus[field] = value
+        # track on backend
+        packet_states[packet._defn.name]['dntoeu'][field] = value
 
     return dntoeus
 
@@ -754,10 +756,12 @@ def get_packet_delta(pkt_defn, packet):
 
     # first packet of this type
     if pkt_defn.name not in packet_states:
-        packet_states[pkt_defn.name] = json_pkt
+        packet_states[pkt_defn.name] = {}
+        packet_states[pkt_defn.name]['raw'] = json_pkt
         delta = json_pkt
 
         dntoeus = {}
+        packet_states[pkt_defn.name]['dntoeu'] = {}
         for field, value in json_pkt.items():
             dntoeus = add_dntoeu_value(field, ait_pkt, dntoeus)
 
@@ -765,10 +769,10 @@ def get_packet_delta(pkt_defn, packet):
     else:
         delta, dntoeus = {}, {}
         for field, new_value in json_pkt.items():
-            last_value = packet_states[pkt_defn.name][field]
+            last_value = packet_states[pkt_defn.name]['raw'][field]
             if new_value != last_value:
                 delta[field] = new_value
-                packet_states[pkt_defn.name][field] = new_value
+                packet_states[pkt_defn.name]['raw'][field] = new_value
                 dntoeus = add_dntoeu_value(field, ait_pkt, dntoeus)
 
     return delta, dntoeus
@@ -799,7 +803,6 @@ def handle():
             while not wsock.closed:
                 try:
                     name, delta, dntoeus, counter = session.deltas.popleft(timeout=30)
-                    log.info(delta)
                     log.info('packet #{}'.format(counter))
 
                     wsock.send(json.dumps({
@@ -829,8 +832,9 @@ def handle():
 def handle():
     """Return latest telemetry packet to client"""
     for pkt_type, state in packet_states.items():
-        packet_states[pkt_type] = replace_datetimes(state)
+        packet_states[pkt_type]['raw'] = replace_datetimes(state['raw'])
 
+    log.info(packet_states)
     with Sessions.current() as session:
         counters = session.tlm_counters
         return json.dumps({'states': packet_states,
