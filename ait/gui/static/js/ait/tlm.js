@@ -78,84 +78,6 @@ class FieldDefinition
 }
 
 
-class Packet
-{
-    /**
-     * Creates and returns a new `Packet` (subclass) instance based on the
-     * given `PacketDefinition` and packet data. If the optional `raw`
-     * parameter is true, all field accesses will result in the raw value
-     * being returned (e.g. DN to EU conversions will be skipped).
-     *
-     * NOTE: This method will also create and register a new `Packet`
-     * subclass based on the given `PacketDefinition`, if this is the first
-     * time `create()` is called with that `PacketDefinition`.
-     */
-    static
-    create (defn, data, raw=false) {
-        const name = defn.name
-        let   ctor = this[name]
-
-        if (ctor === undefined) {
-            ctor       = Packet.createSubclass(defn)
-            this[name] = ctor
-        }
-
-        return new ctor(data, raw)
-    }
-
-
-    /**
-     * Creates and returns a new (anonymous) `Packet` subclass at runtime.
-     */
-    static
-    createSubclass (defn) {
-        let SubPacket = function (data, raw) {
-            this._defn = defn
-            this._data = data
-            this._raw  = raw
-        }
-
-        SubPacket.prototype             = Object.create(Packet.prototype)
-        SubPacket.prototype.constructor = SubPacket
-
-        for (const name in defn.fields) {
-            Object.defineProperty(SubPacket.prototype, name, {
-                get: function () {
-                    return this.__get__(name)
-                }
-            })
-        }
-
-        return SubPacket
-    }
-
-
-    __get__ (name, raw=false) {
-        let value = undefined
-
-        if (this._data instanceof DataView) {
-            const defn = this._defn.fields[name]
-
-            if (defn) {
-                if (raw || this._raw || !defn.dntoeu) {
-                    value = defn.decode(this._data, raw)
-                }
-                else if (defn.dntoeu && defn.dntoeu.equation) {
-                    value = this._defn.scope.eval(this, defn.dntoeu.equation)
-                }
-            }
-        }
-
-        return value
-    }
-
-
-    __clone__ (data, raw=false) {
-        return Packet.create(this._defn, data, raw)
-    }
-}
-
-
 class PacketDefinition
 {
     constructor (obj) {
@@ -487,7 +409,6 @@ class TelemetryStream
 
 export {
     FieldDefinition,
-    Packet,
     PacketDefinition,
     PacketScope,
     TelemetryDictionary,
