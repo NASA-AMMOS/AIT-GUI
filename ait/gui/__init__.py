@@ -692,11 +692,7 @@ def handle():
         while not wsock.closed:
             try:
                 uid, data = session.telemetry.popleft(timeout=30)
-                pkt_defn = None
-                for k, v in tlmdict.iteritems():
-                    if v.uid == uid:
-                        pkt_defn = v
-                        break
+                pkt_defn = getPacketDefn(uid)
 
                 wsock.send(json.dumps({
                     'packet': pkt_defn.name,
