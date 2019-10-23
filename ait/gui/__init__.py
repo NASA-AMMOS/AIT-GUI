@@ -1078,7 +1078,7 @@ def handle():
         start_time = points[0]['time'][:19] + 'Z'
         ranges[i].append(start_time)
         # Round end time up to nearest second
-        end_time = points[len(points) - 1]['time']
+        end_time = points[len(points) - 1]['time'][:23] + 'Z'
         dt = datetime.strptime(end_time, '%Y-%m-%dT%H:%M:%S.%fZ')
         if dt.microsecond != 0:
             dt += timedelta(0, 1)
