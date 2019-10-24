@@ -29,6 +29,9 @@ const Playback = {
             this._range = r
         })
 
+        // Time for range updates
+        this._minute = this.getCurrentMinute()
+
         // Initalize slider
         this._slider = m('input', {class: 'slider', type: 'range', min: '0', max: '1', value: '0',
             oninput: (e) => {
@@ -39,18 +42,26 @@ const Playback = {
         })
     },
 
-    view(vnode) {
+    getCurrentMinute() {
+        // return current minute
+        var today = new Date()
+        return today.getMinutes()
+    },
 
-        // Update time ranges every time a packet is sent
-        ait.events.on('ait:tlm:packet', () => {
+    onupdate(vnode) {
+        // update time range available every new minute
+        if ( this.getCurrentMinute() != this._minute ) {
+            this._minute = this.getCurrentMinute()
             m.request({
                 method: 'GET',
                 url: '/playback/range'
             }).then((r) => {
                 this._range = r
             })
-        })
+        }
+    },
 
+    view(vnode) {
         // Display time ranges available
         let range = m('div', {class: 'form-group'}, [
             m('label', 'Time ranges available'),
