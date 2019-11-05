@@ -154,7 +154,7 @@ class Playback(object):
         datastore = None
         other_args = {}
         for i in range(len(plugins)):
-            if plugins[i]['plugin']['name'] == 'ait.core.server.plugin.DataArchive':
+            if plugins[i]['plugin']['name'] == 'ait.core.server.plugins.DataArchive':
                 datastore = plugins[i]['plugin']['datastore']
                 other_args = copy.deepcopy(plugins[i]['plugin'])
                 other_args.pop('name')
