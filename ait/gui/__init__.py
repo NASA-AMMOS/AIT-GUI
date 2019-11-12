@@ -1078,12 +1078,10 @@ def handle():
         start_time = points[0]['time'][:19] + 'Z'
         ranges[i].append(start_time)
         # Round end time up to nearest second
-        end_time = points[len(points) - 1]['time'][:23] + 'Z'
-        dt = datetime.strptime(end_time, '%Y-%m-%dT%H:%M:%S.%fZ')
-        if dt.microsecond != 0:
-            dt += timedelta(0, 1)
-        end_time = dt.strftime('%Y-%m-%dT%H:%M:%SZ')
-        ranges[i].append(end_time)
+        time_split = points[len(points) - 1]['time'].split('.')
+        second = int(round(float(time_split[1][:-1]) / 10**9))
+        end_time = datetime.strptime(time_split[0], '%Y-%m-%dT%H:%M:%S') + timedelta(seconds=second)
+        ranges[i].append(end_time.strftime('%Y-%m-%dT%H:%M:%SZ'))
 
     return json.dumps(ranges)
 
