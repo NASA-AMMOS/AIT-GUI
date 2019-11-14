@@ -804,6 +804,19 @@ def handle():
         return json.dumps( sorted(files) )
 
 
+@App.route('/seq/running', method='GET')
+def handle():
+    """ If a sequence is running, emit event and return name of file,
+    otherwise return None """
+    global _RUNNING_SEQ
+    if _RUNNING_SEQ:
+        seq_file = _RUNNING_SEQ.args[0]
+        Sessions.addEvent('seq:exec', seq_file)
+        return json.dumps(seq_file)
+
+    return _RUNNING_SEQ
+
+
 @App.route('/seq', method='POST')
 def handle():
     """Run requested sequence file
@@ -814,6 +827,7 @@ def handle():
     with Sessions.current() as session:
         bn_seqfile = bottle.request.forms.get('seqfile')
         _RUNNING_SEQ = gevent.spawn(bgExecSeq, bn_seqfile)
+
 
 @App.route('/seq/abort', method='POST')
 def handle():
@@ -829,6 +843,8 @@ def handle():
 
 
 def bgExecSeq(bn_seqfile):
+    global _RUNNING_SEQ
+
     seqfile = os.path.join(SEQRoot, bn_seqfile)
     if not os.path.isfile(seqfile):
         msg  = "Sequence file not found.  "
@@ -846,9 +862,12 @@ def bgExecSeq(bn_seqfile):
             if not seq_err:
                 seq_err = "Unknown Error"
             Sessions.addEvent('seq:err', bn_seqfile + ': ' + seq_err)
+            _RUNNING_SEQ = None
             return
 
         Sessions.addEvent('seq:done', bn_seqfile)
+        _RUNNING_SEQ = None
+
     except gevent.GreenletExit:
         seq_p.kill()
 

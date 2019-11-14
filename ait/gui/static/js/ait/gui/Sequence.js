@@ -46,6 +46,12 @@ const Sequence = {
         })
     },
 
+    getRunningSeq() {
+        m.request('/seq/running').then((data) => {
+            console.log(data)
+        })
+    },
+
     handleFormSubmit(event) {
         event.preventDefault()
         let data = new FormData()
@@ -63,6 +69,7 @@ const Sequence = {
     oninit(vnode) {
         this._action = vnode.attrs.action || '/seq'
         this.refreshSequenceList()
+        this.getRunningSeq()
 
         ait.events.on('seq:exec', () => {
             this._disableControls = true
