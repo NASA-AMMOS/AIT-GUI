@@ -946,8 +946,7 @@ def handle():
     global _RUNNING_SCRIPT
 
     if _RUNNING_SCRIPT:
-        script_path = _RUNNING_SCRIPT.args[0]
-        Sessions.addEvent('script:start', None)
+        script_path = _RUNNING_SCRIPT.args[0].split('/')[-1]
         return json.dumps(script_path)
 
     return _RUNNING_SCRIPT

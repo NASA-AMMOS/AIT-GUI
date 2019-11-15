@@ -46,7 +46,16 @@ const ScriptSelect = {
         })
 
         m.request('/script/run').then((data) => {
-            console.log(data)
+            if (data) {
+                ait.events.emit('script:loaded', null)
+                vnode.attrs.ScriptSelectionData.selected = data
+                document.activeElement.blur()
+                m.request('/scripts/load/' + encodeURIComponent(data)).then((data) => {
+                    vnode.attrs.ScriptSelectionData.scriptText = data.script_text
+                })
+                ait.events.emit('script:loaded', null)
+                ait.events.emit('script:start', null)
+            }
         })
     },
 
