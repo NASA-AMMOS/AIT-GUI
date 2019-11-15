@@ -940,6 +940,19 @@ def handle():
         log.warn(msg)
 
 
+@App.route('/script/run', method='GET')
+def handle():
+    """ Return currently running script if there is one and emit event """
+    global _RUNNING_SCRIPT
+
+    if _RUNNING_SCRIPT:
+        script_path = _RUNNING_SCRIPT.args[0]
+        Sessions.addEvent('script:start', None)
+        return json.dumps(script_path)
+
+    return _RUNNING_SCRIPT
+
+
 @App.route('/script/run', method='PUT')
 def handle():
     """ Resume a paused script """

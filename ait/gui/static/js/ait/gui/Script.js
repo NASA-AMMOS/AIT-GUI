@@ -44,6 +44,10 @@ const ScriptSelect = {
                 return m('option', {value: value, key: index}, value)
             })
         })
+
+        m.request('/script/run').then((data) => {
+            console.log(data)
+        })
     },
 
     oncreate(vnode) {
