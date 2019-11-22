@@ -213,6 +213,10 @@ const Prompt = {
             this._reset_prompt()
             m.redraw()
         })
+
+        m.request({ 'method': 'GET',
+                    'url': '/prompt'
+        })
     },
 
     _reset_prompt() {

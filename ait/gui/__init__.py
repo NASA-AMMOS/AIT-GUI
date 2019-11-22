@@ -1033,45 +1033,61 @@ def handle():
 
 
 PromptResponse = None
+PromptData = None
+PromptTimeout = None
+PromptElapsed = None
+
+
+@App.route('/prompt', method='GET')
+def handle():
+    global PromptData
+
+    if PromptData:
+        Sessions.addEvent('prompt:init', PromptData)
+
 
 @App.route('/prompt', method='POST')
 def handle():
     global PromptResponse
+    global PromptData
+    global PromptTimeout
+    global PromptElapsed
 
     prompt_type = bottle.request.json.get('type')
     options = bottle.request.json.get('options')
-    timeout = int(bottle.request.json.get('timeout'))
+    PromptTimeout = int(bottle.request.json.get('timeout'))
 
     delay = 0.25
-    elapsed = 0
+    PromptElapsed = 0
     status = None
 
-    prompt_data = {
+    PromptData = {
         'type': prompt_type,
         'options': options,
     }
 
-    Sessions.addEvent('prompt:init', prompt_data)
+    Sessions.addEvent('prompt:init', PromptData)
     while True:
         if PromptResponse:
             status = PromptResponse
             break
 
-        if timeout > 0 and elapsed >= timeout:
+        if PromptTimeout > 0 and PromptElapsed >= PromptTimeout:
             status = {u'response': u'timeout'}
             Sessions.addEvent('prompt:timeout', None)
             break
         else:
             time.sleep(delay)
-            elapsed += delay
+            PromptElapsed += delay
 
-    PromptResponse = None
+    PromptResponse, PromptTimeout, PromptElapsed, PromptData = None, None, None, None
     return bottle.HTTPResponse(status=200, body=json.dumps(status))
 
 
 @App.route('/prompt/response', method='POST')
 def handle():
     global PromptResponse
+
     with Sessions.current() as session:
         Sessions.addEvent('prompt:done', None)
         PromptResponse = json.loads(bottle.request.body.read())

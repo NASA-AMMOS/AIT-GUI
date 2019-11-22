@@ -48,7 +48,7 @@ const Sequence = {
 
     getRunningSeq() {
         m.request('/seq/running').then((data) => {
-            console.log(data)
+            console.log('Running sequence? ', data)
         })
     },
 
