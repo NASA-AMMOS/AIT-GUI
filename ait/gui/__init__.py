@@ -1075,15 +1075,13 @@ def handle():
         point_query = 'SELECT * FROM "{}"'.format(packet_name)
         points = list(playback.dbconn.query(point_query).get_points())
         # Round start time down to nearest second
-        start_time = points[0]['time'][:19] + 'Z'
+        print(points[0]['time'])
+        start_time = points[0]['time'].split('.')[0] + 'Z'
         ranges[i].append(start_time)
         # Round end time up to nearest second
-        end_time = points[len(points) - 1]['time']
-        dt = datetime.strptime(end_time, '%Y-%m-%dT%H:%M:%S.%fZ')
-        if dt.microsecond != 0:
-            dt += timedelta(0, 1)
-        end_time = dt.strftime('%Y-%m-%dT%H:%M:%SZ')
-        ranges[i].append(end_time)
+        time_str = points[-1]['time'].split('.')[0]
+        end_time = datetime.strptime(time_str, '%Y-%m-%dT%H:%M:%S') + timedelta(seconds=1)
+        ranges[i].append(end_time.strftime('%Y-%m-%dT%H:%M:%SZ'))
 
     return json.dumps(ranges)
 
