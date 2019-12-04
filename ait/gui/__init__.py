@@ -7,7 +7,7 @@ import geventwebsocket
 
 import bdb
 from collections import defaultdict
-import cPickle as pickle
+import pickle
 import importlib
 import json
 import os
@@ -276,6 +276,7 @@ class AITGUIPlugin(Plugin):
             raise ValueError('Topic of received message not recognized as telem or log stream.')
 
     def process_telem_msg(self, msg):
+        msg = eval(msg)
         msg = pickle.loads(msg)
         if playback.on == False:
             Sessions.addTelemetry(msg[0], msg[1])
@@ -590,13 +591,13 @@ def handle():
                 cmds = [
                     {
                         'timestamp': str(header.timestamp),
-                        'command': cmdname
+                        'command': cmdname.decode('utf-8')
                     }
                     for (header, cmdname) in stream
                 ]
                 return json.dumps(list(reversed(cmds)))
             else:
-                cmds = [cmdname for (header, cmdname) in stream]
+                cmds = [cmdname.decode('utf-8') for (header, cmdname) in stream]
                 return json.dumps(list(set(cmds)))
     except IOError:
         pass
@@ -884,7 +885,7 @@ def handle(name):
        }
     """
     with Sessions.current() as session:
-        script_path = os.path.join(ScriptRoot, urllib.unquote(name))
+        script_path = os.path.join(ScriptRoot, urllib.parse.unquote(name))
         if not os.path.exists(script_path):
             bottle.abort(400, "Script cannot be located")
 
