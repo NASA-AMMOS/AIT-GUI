@@ -97,7 +97,7 @@ setup(
     namespace_packages   = ['ait'],
     include_package_data = True,
 
-    install_requires = ['ait-core>=1.4.0'],
+    install_requires = ['ait-core>=2.0rc1.dev0'],
     extras_require = {
         'docs':  [
             'Sphinx==1.7.2',
