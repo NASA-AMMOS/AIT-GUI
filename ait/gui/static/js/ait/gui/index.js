@@ -199,8 +199,6 @@ function init () {
 
         m.request({ url: '/tlm/latest' }).then((latest) => {
             ait.tlm.state = latest
-            console.log('requested latest tlm')
-            console.log(ait.tlm.state)
         })
 
         m.mount(root, { view: () => createMithrilNodes(elems) })

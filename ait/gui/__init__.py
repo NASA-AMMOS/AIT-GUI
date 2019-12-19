@@ -799,7 +799,6 @@ def handle():
             while not wsock.closed:
                 try:
                     name, delta, dntoeus, counter = session.deltas.popleft(timeout=30)
-                    log.info('packet #{}'.format(counter))
 
                     wsock.send(json.dumps({
                         'packet': name,
@@ -830,7 +829,6 @@ def handle():
     for pkt_type, state in packet_states.items():
         packet_states[pkt_type]['raw'] = replace_datetimes(state['raw'])
 
-    log.info(packet_states)
     with Sessions.current() as session:
         counters = session.tlm_counters
         return json.dumps({'states': packet_states,
