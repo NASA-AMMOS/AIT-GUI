@@ -723,26 +723,6 @@ def handle():
         pass
 
 
-def add_dntoeu_value(field, packet, dntoeus):
-    """
-    Returns dntoeu value of field from packet.
-
-    Params:
-        field: str name of field to evaluate
-        packet: AIT Packet
-        dntoeus: dict of dntoeu values to add to
-    """
-    field_defn = packet._defn.fieldmap[field]
-    if field_defn.dntoeu:
-        value = field_defn.dntoeu.eval(packet)
-        # to send to frontend
-        dntoeus[field] = value
-        # track on backend
-        packet_states[packet._defn.name]['dntoeu'][field] = value
-
-    return dntoeus
-
-
 packet_states = { }
 def get_packet_delta(pkt_defn, packet):
     """
@@ -756,28 +736,36 @@ def get_packet_delta(pkt_defn, packet):
         delta:     JSON of packet fields that have changed
     """
     ait_pkt = ait.core.tlm.Packet(pkt_defn, data=packet)
-    json_pkt = ait_pkt.toJSON()
 
     # first packet of this type
     if pkt_defn.name not in packet_states:
         packet_states[pkt_defn.name] = {}
-        packet_states[pkt_defn.name]['raw'] = json_pkt
-        delta = json_pkt
 
-        dntoeus = {}
+        # get raw fields
+        raw_fields = {f.name: getattr(ait_pkt.raw, f.name) for f in pkt_defn.fields}
+        packet_states[pkt_defn.name]['raw'] = raw_fields
+        delta = raw_fields
+
+        # get converted fields
         packet_states[pkt_defn.name]['dntoeu'] = {}
-        for field, value in json_pkt.items():
-            dntoeus = add_dntoeu_value(field, ait_pkt, dntoeus)
+        dntoeus = {f.name: getattr(ait_pkt, f.name) for f in pkt_defn.fields if f.dntoeu is not None}
 
     # previous packets of this type received
     else:
         delta, dntoeus = {}, {}
-        for field, new_value in json_pkt.items():
-            last_value = packet_states[pkt_defn.name]['raw'][field]
+
+        for field in pkt_defn.fields:
+            new_value = getattr(ait_pkt.raw, field.name)
+            last_value = packet_states[pkt_defn.name]['raw'][field.name]
+
             if new_value != last_value:
-                delta[field] = new_value
-                packet_states[pkt_defn.name]['raw'][field] = new_value
-                dntoeus = add_dntoeu_value(field, ait_pkt, dntoeus)
+                delta[field.name] = new_value
+                packet_states[pkt_defn.name]['raw'][field.name] = new_value
+
+                if field.dntoeu is not None:
+                    dntoeu_val = getattr(ait_pkt, field.name)
+                    dntoeus[field.name] = dntoeu_val
+                    packet_states[pkt_defn.name]['dntoeu'][field.name] = dntoeu_val
 
     return delta, dntoeus
 
