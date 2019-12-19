@@ -291,8 +291,7 @@ const Field =
     },
 
     onbeforeupdate (vnode, old) {
-        let changed = this.hasChanged()
-        return changed
+        return this.hasChanged() 
     },
 
     view (vnode) {
