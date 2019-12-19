@@ -81,18 +81,26 @@ class Session (object):
         return self.tlm_counters[pkt_name]
 
 
+packet_defns = {}
 def getPacketDefn(uid):
     """
     Returns packet defn from tlm dict matching uid.
     Logs warning and returns None if no defn matching uid is found.
     """
-    tlmdict = ait.core.tlm.getDefaultDict()
-    for k, v in tlmdict.iteritems():
-        if v.uid == uid:
-            return v
+    global packet_defns
 
-    log.warn('No packet defn matching UID {}'.format(uid))
-    return None
+    if uid in packet_defns:
+        return packet_defns[uid]
+
+    else:
+        tlmdict = ait.core.tlm.getDefaultDict()
+        for k, v in tlmdict.iteritems():
+            if v.uid == uid:
+                packet_defns[uid] = v
+                return v
+
+        log.warn('No packet defn matching UID {}'.format(uid))
+        return None
 
 
 class SessionStore (dict):
