@@ -33,9 +33,9 @@ def install_ui_deps():
         FNULL = open(os.devnull, 'wb')
         subprocess.check_call("npm", stdout=FNULL, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError:
-        print subprocess.check_output("cd ait/gui/static; npm install", shell=True)
+        print(subprocess.check_output('cd ait/gui/static; npm install', shell=True))
     except OSError:
-        print "Unable to locate npm on system. Skipping dependency installation"
+        print('Unable to locate npm on system. Skipping dependency installation')
     finally:
         FNULL.close()
 
@@ -53,10 +53,10 @@ class CustomDevelopCmd(develop):
 
     def run(self):
         if self.with_ui_deps:
-            print "UI Dependency installation requested. Running ..."
+            print('UI Dependency installation requested. Running ...')
             install_ui_deps()
         else:
-            print "UI Dependency installation not requested. Skipping ..."
+            print('UI Dependency installation not requested. Skipping ...')
 
         develop.run(self)
 
@@ -75,10 +75,10 @@ class CustomInstallCmd(install):
 
     def run(self):
         if self.with_ui_deps:
-            print "UI Dependency installation requested. Running ..."
+            print('UI Dependency installation requested. Running ...')
             install_ui_deps()
         else:
-            print "UI Dependency installation not requested. Skipping ..."
+            print('UI Dependency installation not requested. Skipping ...')
 
         install.run(self)
 
@@ -97,7 +97,7 @@ setup(
     namespace_packages   = ['ait'],
     include_package_data = True,
 
-    install_requires = ['ait-core>=1.4.0'],
+    install_requires = ['ait-core>=2.0rc1.dev0'],
     extras_require = {
         'docs':  [
             'Sphinx==1.7.2',

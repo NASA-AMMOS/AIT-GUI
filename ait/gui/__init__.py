@@ -7,7 +7,7 @@ import geventwebsocket
 
 import bdb
 from collections import defaultdict
-import cPickle as pickle
+import pickle
 import importlib
 import json
 import os
@@ -276,6 +276,7 @@ class AITGUIPlugin(Plugin):
             raise ValueError('Topic of received message not recognized as telem or log stream.')
 
     def process_telem_msg(self, msg):
+        msg = eval(msg)
         msg = pickle.loads(msg)
         if playback.on == False:
             Sessions.addTelemetry(msg[0], msg[1])
@@ -590,13 +591,13 @@ def handle():
                 cmds = [
                     {
                         'timestamp': str(header.timestamp),
-                        'command': cmdname
+                        'command': cmdname.decode('utf-8')
                     }
                     for (header, cmdname) in stream
                 ]
                 return json.dumps(list(reversed(cmds)))
             else:
-                cmds = [cmdname for (header, cmdname) in stream]
+                cmds = [cmdname.decode('utf-8') for (header, cmdname) in stream]
                 return json.dumps(list(set(cmds)))
     except IOError:
         pass
@@ -884,7 +885,7 @@ def handle(name):
        }
     """
     with Sessions.current() as session:
-        script_path = os.path.join(ScriptRoot, urllib.unquote(name))
+        script_path = os.path.join(ScriptRoot, urllib.parse.unquote(name))
         if not os.path.exists(script_path):
             bottle.abort(400, "Script cannot be located")
 
@@ -1075,15 +1076,13 @@ def handle():
         point_query = 'SELECT * FROM "{}"'.format(packet_name)
         points = list(playback.dbconn.query(point_query).get_points())
         # Round start time down to nearest second
-        start_time = points[0]['time'][:19] + 'Z'
+        print(points[0]['time'])
+        start_time = points[0]['time'].split('.')[0] + 'Z'
         ranges[i].append(start_time)
         # Round end time up to nearest second
-        end_time = points[len(points) - 1]['time'][:23] + 'Z'
-        dt = datetime.strptime(end_time, '%Y-%m-%dT%H:%M:%S.%fZ')
-        if dt.microsecond != 0:
-            dt += timedelta(0, 1)
-        end_time = dt.strftime('%Y-%m-%dT%H:%M:%SZ')
-        ranges[i].append(end_time)
+        time_str = points[-1]['time'].split('.')[0]
+        end_time = datetime.strptime(time_str, '%Y-%m-%dT%H:%M:%S') + timedelta(seconds=1)
+        ranges[i].append(end_time.strftime('%Y-%m-%dT%H:%M:%SZ'))
 
     return json.dumps(ranges)
 
