@@ -25,7 +25,7 @@
     "jquery": "^3.2.1",
     "jsdom": "^9.11.0",
     "jsdom-global": "^2.1.1",
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.13",
     "mithril": "^1.1.0",
     "mithril-query": "2.2.0",
     "mocha": "^3.1.2",
