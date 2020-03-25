@@ -100,7 +100,7 @@ setup(
     install_requires = ['ait-core>=2.0rc1.dev0'],
     extras_require = {
         'docs':  [
-            'Sphinx==1.7.2',
+            'Sphinx==2.2.2',
             'sphinx_rtd_theme',
             'sphinxcontrib-httpdomain',
             'sphinx-js'
