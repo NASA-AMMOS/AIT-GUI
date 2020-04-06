@@ -45,10 +45,9 @@ Guide <https://github.com/NASA-AMMOS/AIT-Core/wiki/Contributing>`__
 |travis|
 |docs|
 
-.. |travis| image:: https://travis-ci.org/NASA-AMMOS/AIT-GUI.svg?branch=master
-    :alt: build status
-    :scale: 100%
-    :target: https://travis-ci.org/NASA-AMMOS/AIT-GUI
+.. |travis| image:: https://travis-ci.com/NASA-AMMOS/AIT-GUI.svg?branch=master
+    :target: https://travis-ci.com/NASA-AMMOS/AIT-GUI
+
 .. |docs| image:: https://readthedocs.org/projects/ait-gui/badge/?version=master
     :alt: Documentation Status
     :scale: 100%
