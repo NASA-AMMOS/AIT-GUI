@@ -1,6 +1,8 @@
 AMMOS Instrument Toolkit (AIT) GUI
 ==================================
 
+build test
+
 AIT GUI provides a framework for building a custom website for realtime
 telemetry monitoring, commanding, and other MOS operations with only
 minimal HTML and configuration file changes. Built on top of the AIT
