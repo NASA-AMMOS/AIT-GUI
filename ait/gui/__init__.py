@@ -154,7 +154,7 @@ class Playback(object):
         datastore = None
         other_args = {}
         for i in range(len(plugins)):
-            if plugins[i]['plugin']['name'] == 'ait.core.server.plugins.DataArchive':
+            if plugins[i]['plugin']['name'] == 'ait.core.server.plugins.data_archive.DataArchive':
                 datastore = plugins[i]['plugin']['datastore']
                 other_args = copy.deepcopy(plugins[i]['plugin'])
                 other_args.pop('name')
@@ -1066,6 +1066,7 @@ def handle():
 
     # Loop through each packet from database
     packets = list(playback.dbconn.query('SHOW MEASUREMENTS').get_points())
+
     for i in range(len(packets)):
 
         # Add packet name
@@ -1074,14 +1075,28 @@ def handle():
 
         # Add start time and end time
         point_query = 'SELECT * FROM "{}"'.format(packet_name)
+
         points = list(playback.dbconn.query(point_query).get_points())
+
         # Round start time down to nearest second
-        print(points[0]['time'])
-        start_time = points[0]['time'].split('.')[0] + 'Z'
+
+        start_time_str = points[0]['time'].split('.')[0]
+
+        if start_time_str[-1] != 'Z':
+            start_time = points[0]['time'].split('.')[0] + 'Z'
+        else:
+            start_time = points[0]['time'].split('.')[0]
+
         ranges[i].append(start_time)
+
         # Round end time up to nearest second
-        time_str = points[-1]['time'].split('.')[0]
-        end_time = datetime.strptime(time_str, '%Y-%m-%dT%H:%M:%S') + timedelta(seconds=1)
+        end_time_str = points[-1]['time'].split('.')[0]
+
+        if end_time_str[-1] == 'Z':
+            end_time = datetime.strptime(end_time_str, '%Y-%m-%dT%H:%M:%SZ') + timedelta(seconds=1)
+        else:
+            end_time = datetime.strptime(end_time_str, '%Y-%m-%dT%H:%M:%S') + timedelta(seconds=1)
+
         ranges[i].append(end_time.strftime('%Y-%m-%dT%H:%M:%SZ'))
 
     return json.dumps(ranges)
@@ -1121,10 +1136,10 @@ def handle():
     for i in range(len(points)):
         # Round time down to nearest 0.1 second
         timestamp = str(points[i]['time'][:21] + 'Z')
-        data = ''
+        data = b''
         for j in range(len(field_names)):
             data += struct.pack(field_formats[j], points[i][field_names[j]])
-        if playback.query.has_key(timestamp):
+        if timestamp in playback.query:
             playback.query[timestamp].append((uid, data))
         else:
             playback.query[timestamp] = [(uid, data)]
@@ -1143,7 +1158,8 @@ def handle():
     global playback
     timestamp = bottle.request.forms.get('timestamp')
 
-    if playback.query.has_key(timestamp):
+#    if playback.query.has_key(timestamp):
+    if timestamp in playback.query:
         query_list = playback.query[timestamp]
         for i in range(len(query_list)):
             Sessions.addTelemetry(query_list[i][0], query_list[i][1])
