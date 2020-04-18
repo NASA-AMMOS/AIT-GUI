@@ -1066,7 +1066,6 @@ def handle():
 
     # Loop through each packet from database
     packets = list(playback.dbconn.query('SHOW MEASUREMENTS').get_points())
-
     for i in range(len(packets)):
 
         # Add packet name
@@ -1075,11 +1074,9 @@ def handle():
 
         # Add start time and end time
         point_query = 'SELECT * FROM "{}"'.format(packet_name)
-
         points = list(playback.dbconn.query(point_query).get_points())
 
         # Round start time down to nearest second
-
         start_time_str = points[0]['time'].split('.')[0]
 
         if start_time_str[-1] != 'Z':
@@ -1158,7 +1155,6 @@ def handle():
     global playback
     timestamp = bottle.request.forms.get('timestamp')
 
-#    if playback.query.has_key(timestamp):
     if timestamp in playback.query:
         query_list = playback.query[timestamp]
         for i in range(len(query_list)):
