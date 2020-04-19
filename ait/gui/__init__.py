@@ -1080,9 +1080,9 @@ def handle():
         start_time_str = points[0]['time'].split('.')[0]
 
         if start_time_str[-1] != 'Z':
-            start_time = points[0]['time'].split('.')[0] + 'Z'
+            start_time = start_time_str + 'Z'
         else:
-            start_time = points[0]['time'].split('.')[0]
+            start_time = start_time_str
 
         ranges[i].append(start_time)
 
