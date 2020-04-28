@@ -193,7 +193,7 @@ playback = Playback()
 
 _RUNNING_SCRIPT = None
 _RUNNING_SEQ = None
-CMD_API = ait.core.api.CmdAPI(ait.config.get('command.port', ait.DEFAULT_CMD_PORT))
+CMD_API = ait.core.api.CmdAPI()
 
 class HTMLRoot:
     Static = pkg_resources.resource_filename('ait.gui', 'static/')
