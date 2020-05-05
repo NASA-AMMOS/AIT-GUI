@@ -1,1 +1,2 @@
 recursive-include ait/gui *
+prune ait/gui/static/node_modules
