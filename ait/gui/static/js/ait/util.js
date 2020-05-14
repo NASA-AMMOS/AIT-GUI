@@ -36,5 +36,11 @@ function move (array, from, to) {
     array.splice(to, 0, array.splice(from, 1)[0])
 }
 
+/**
+ *
+ */
+function getPacket (data, dntoeu) {
+    return dntoeu ? data['dntoeu']:data['raw']
+}
 
-export { merge, move}
+export { merge, move, getPacket }
