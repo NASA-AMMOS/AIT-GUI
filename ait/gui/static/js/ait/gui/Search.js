@@ -21,7 +21,7 @@ import map from 'lodash/map'
 import defaults from 'lodash/defaults'
 
 import * as format from 'ait/format'
-import { getPacket }     from '../util.js'
+import { getPacket } from '../util.js'
 import Field from './Field'
 import Clock from './Clock'
 
