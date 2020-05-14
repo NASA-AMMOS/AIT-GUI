@@ -94,7 +94,7 @@ def getPacketDefn(uid):
 
     else:
         tlmdict = ait.core.tlm.getDefaultDict()
-        for k, v in tlmdict.iteritems():
+        for k, v in tlmdict.items():
             if v.uid == uid:
                 packet_defns[uid] = v
                 return v
@@ -175,7 +175,7 @@ class Playback(object):
         be sent to the frontend during this.
     playback.enabled: True if historical data playback is enabled. This will be False
         if a database connection cannot be made or if data playback is disabled for
-        some other reason. 
+        some other reason.
     """
 
     def __init__(self):
@@ -316,7 +316,7 @@ class AITGUIPlugin(Plugin):
                 self.process_log_msg(input_data)
                 processed = True
 
-        if not processed: 
+        if not processed:
             raise ValueError('Topic of received message not recognized as telem or log stream.')
 
     def process_telem_msg(self, msg):

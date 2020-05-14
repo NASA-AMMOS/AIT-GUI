@@ -98,7 +98,7 @@ def get_packet_and_defn():
 
 def get_limit_dict():
     limit_dict = defaultdict(dict)
-    for k, v in limits.getDefaultDict().iteritems():
+    for k, v in limits.getDefaultDict().items():
         packet, field = k.split('.')
         limit_dict[packet][field] = v
 
