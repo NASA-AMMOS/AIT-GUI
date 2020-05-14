@@ -78,9 +78,9 @@ class DygraphsBackend
         }
     }
 
-    plot (data) {
+    plot (data, dntoeu) {
         const pname = data['packet']
-        let packet = data['data']['raw']
+        let packet = dntoeu ? data['data']['dntoeu']:data['data']['raw']
         const names = this._plot._packets[pname]
 
         if (!names) return
@@ -207,9 +207,9 @@ class HighchartsBackend
         Object.assign(options, overrides)
     }
 
-    plot(data) {
+    plot(data, dntoeu) {
         const pname = data['packet']
-        let packet = data['data']['raw']
+        let packet = dntoeu ? data['data']['dntoeu']:data['data']['raw']
         const names = this._plot._packets[pname]
         if (!names) return
 
@@ -291,7 +291,7 @@ class HighchartsBackend
  *   The name of the field in the packet that defines this series.
  *
  * Optional attributes:
- * 
+ *
  * type
  *   The type of series being displayed. This is not relevant for all plot
  *   backends. For instance, Highcharts would use this to define the type
@@ -322,7 +322,7 @@ class HighchartsBackend
  *      {
  *         "title": "Plot title",
  *         "xlabel": "X label",
- *         "ylabel": "Y label"  
+ *         "ylabel": "Y label"
  *      }
  *    </ait-plot-config>
  *
@@ -350,15 +350,15 @@ class HighchartsBackend
  *   <ait-plot-series packet="1553_HS_Packet" name="Voltage_B"></ait-plot-series>
  *   <ait-plot-series packet="1553_HS_Packet" name="Voltage_C"></ait-plot-series>
  *   <ait-plot-series packet="1553_HS_Packet" name="Voltage_D"></ait-plot-series>
- * </ait-plot> 
+ * </ait-plot>
  */
 const Plot =
 {
     /**
      * Plots data from the given packet.
      */
-    plot (packet) {
-        this._backend.plot(packet)
+    plot (packet, dntoeu=false) {
+        this._backend.plot(packet, dntoeu)
     },
 
 
@@ -402,6 +402,8 @@ const Plot =
         // For each packet, maintain a list of fields to plot
         this._packets[packet] = this._packets[packet] || [ ]
         this._packets[packet].push(name)
+
+        this._dntoeu   = vnode.attrs.dntoeu
     },
 
 
@@ -455,7 +457,7 @@ const Plot =
             this._time = new PlotTimeField()
         }
 
-        ait.events.on('ait:tlm:packet', (p) => this.plot(p))
+        ait.events.on('ait:tlm:packet', (p) => this.plot(p, this._dntoeu))
         ait.events.on('ait:playback:on', () => this.redraw())
         ait.events.on('ait:playback:off', () => this.redraw())
     },
