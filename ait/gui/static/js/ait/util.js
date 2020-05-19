@@ -37,10 +37,23 @@ function move (array, from, to) {
 }
 
 /**
- *
+ * Returns DN to EU value if it exists unless the `raw` parameter is true,
+ * otherwise return raw value.
  */
-function getPacket (data, dntoeu) {
-    return dntoeu ? data['dntoeu']:data['raw']
+function getPacket (data, raw=false) {
+    let value = undefined
+
+    if (!data['dntoeu']){
+        value = data['raw']
+    }
+    else if (data['dntoeu'] && raw) {
+        value = data['raw']
+    }
+    else {
+        value = data['dntoeu']
+    }
+
+    return value
 }
 
 export { merge, move, getPacket }
