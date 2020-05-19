@@ -134,7 +134,6 @@ const MnemonicSearch = {
 
         let val = 'N/A'
         let raw = 'N/A'
-        let dneu = 'N/A'
         let curTime = format.datetime(new Date(), {utc: true, gps: false})
         let curPacket = (ait.packets[this._packet] ?
             ait.packets[this._packet].get(0) :
@@ -142,8 +141,7 @@ const MnemonicSearch = {
         )
 
         if (curPacket !== null) {
-            dneu = this._selection in curPacket['dntoeu']
-            val = getPacket(curPacket, dneu)
+            val = getPacket(curPacket, raw=false)
             val = val[this._selection]
             raw = curPacket['raw'][this._selection]
         }
