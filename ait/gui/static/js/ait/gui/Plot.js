@@ -79,9 +79,9 @@ class DygraphsBackend
         }
     }
 
-    plot (data, dntoeu) {
+    plot (data, raw) {
         const pname = data['packet']
-        let packet = getPacket(data['data'], dntoeu)
+        let packet = getPacket(data['data'], raw)
         const names = this._plot._packets[pname]
 
         if (!names) return
@@ -208,9 +208,9 @@ class HighchartsBackend
         Object.assign(options, overrides)
     }
 
-    plot(data, dntoeu) {
+    plot(data, raw) {
         const pname = data['packet']
-        let packet = getPacket(data['data'], dntoeu)
+        let packet = getPacket(data['data'], raw)
         const names = this._plot._packets[pname]
         if (!names) return
 
@@ -306,9 +306,13 @@ class HighchartsBackend
  *   point to be removed from the queue. This is only used by the Dygraphs
  *   backend.
  *
+ * raw
+ *   If the `raw` parameter is true, the raw value will be returned.
+ *   DN to EU conversions will be skipped. (Default: raw=false)
+ *
  * .. code:: Javascript
  *
- *    <ait-plot-series packet="1553_HS_Packet" field="Voltage_A"></ait-plot-series>
+ *    <ait-plot-series packet="1553_HS_Packet" field="Voltage_A" raw=true></ait-plot-series>
  *
  * **ait-plot-config:**
  *
@@ -347,10 +351,10 @@ class HighchartsBackend
  *       "height": 300
  *     }
  *   </ait-plot-config>
- *   <ait-plot-series packet="1553_HS_Packet" name="Voltage_A"></ait-plot-series>
- *   <ait-plot-series packet="1553_HS_Packet" name="Voltage_B"></ait-plot-series>
- *   <ait-plot-series packet="1553_HS_Packet" name="Voltage_C"></ait-plot-series>
- *   <ait-plot-series packet="1553_HS_Packet" name="Voltage_D"></ait-plot-series>
+ *   <ait-plot-series packet="1553_HS_Packet" name="Voltage_A" raw=true></ait-plot-series>
+ *   <ait-plot-series packet="1553_HS_Packet" name="Voltage_B" raw=true></ait-plot-series>
+ *   <ait-plot-series packet="1553_HS_Packet" name="Voltage_C" raw=true></ait-plot-series>
+ *   <ait-plot-series packet="1553_HS_Packet" name="Voltage_D" raw=true></ait-plot-series>
  * </ait-plot>
  */
 const Plot =
@@ -358,8 +362,8 @@ const Plot =
     /**
      * Plots data from the given packet.
      */
-    plot (packet, dntoeu=false) {
-        this._backend.plot(packet, dntoeu)
+    plot (packet, raw=false) {
+        this._backend.plot(packet, raw)
     },
 
 
@@ -404,7 +408,7 @@ const Plot =
         this._packets[packet] = this._packets[packet] || [ ]
         this._packets[packet].push(name)
 
-        this._dntoeu   = vnode.attrs.dntoeu
+        this._raw   = vnode.attrs.raw
     },
 
 
@@ -458,7 +462,7 @@ const Plot =
             this._time = new PlotTimeField()
         }
 
-        ait.events.on('ait:tlm:packet', (p) => this.plot(p, this._dntoeu))
+        ait.events.on('ait:tlm:packet', (p) => this.plot(p, this._raw))
         ait.events.on('ait:playback:on', () => this.redraw())
         ait.events.on('ait:playback:off', () => this.redraw())
     },
