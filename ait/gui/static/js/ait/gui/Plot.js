@@ -66,7 +66,8 @@ class DygraphsBackend
             legend:     'always',
             labelsSeparateLines: false,
             labelsDiv: this._plot_id,
-            showRangeSelector: true
+            showRangeSelector: true,
+            digitsAfterDecimal: 5
         }
     }
 
