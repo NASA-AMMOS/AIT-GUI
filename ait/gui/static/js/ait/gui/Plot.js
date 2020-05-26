@@ -16,7 +16,7 @@
 
 import m from 'mithril'
 import Dygraph from 'dygraphs';
-import { getPacket } from '../util.js'
+import { getFieldType } from '../util.js'
 
 /*
  * FIXME: The two Backend classes (Dygraphs and Highcharts) are not cleanly
@@ -82,7 +82,7 @@ class DygraphsBackend
 
     plot (data, raw) {
         const pname = data['packet']
-        let packet = getPacket(data['data'], raw)
+        let packet = getFieldType(data['data'], raw)
         const names = this._plot._packets[pname]
 
         if (!names) return
@@ -211,7 +211,7 @@ class HighchartsBackend
 
     plot(data, raw) {
         const pname = data['packet']
-        let packet = getPacket(data['data'], raw)
+        let packet = getFieldType(data['data'], raw)
         const names = this._plot._packets[pname]
         if (!names) return
 

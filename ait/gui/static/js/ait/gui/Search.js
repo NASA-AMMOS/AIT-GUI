@@ -21,7 +21,7 @@ import map from 'lodash/map'
 import defaults from 'lodash/defaults'
 
 import * as format from 'ait/format'
-import { getPacket } from '../util.js'
+import { getFieldType } from '../util.js'
 import Field from './Field'
 import Clock from './Clock'
 
@@ -143,7 +143,7 @@ const MnemonicSearch = {
 
         if (curPacket !== null) {
             dneu = this._selection in curPacket['dntoeu']
-            val = getPacket(curPacket, !dneu)
+            val = getFieldTyoe(curPacket, !dneu)
             val = val[this._selection]
             raw = curPacket['raw'][this._selection]
         }
