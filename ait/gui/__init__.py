@@ -42,6 +42,8 @@ class Session (object):
         self.events          = api.GeventDeque(maxlen=maxlen)
         self.messages        = api.GeventDeque(maxlen=maxlen)
         self.telemetry       = api.GeventDeque(maxlen=maxlen)
+        self.deltas          = api.GeventDeque(maxlen=maxlen)
+        self.tlm_counters    = { }
         self._maxlen         = maxlen
         self._store          = store
         self._numConnections = 0
@@ -68,6 +70,38 @@ class Session (object):
         """A unique identifier for this Session."""
         return str( id(self) )
 
+    def updateCounter(self, pkt_name):
+        if pkt_name not in self.tlm_counters:
+            self.tlm_counters[pkt_name] = 0
+        else:
+            count = self.tlm_counters[pkt_name]
+            count = count + 1 if count < 2**31 - 1 else 0
+            self.tlm_counters[pkt_name] = count
+
+        return self.tlm_counters[pkt_name]
+
+
+packet_defns = {}
+def getPacketDefn(uid):
+    """
+    Returns packet defn from tlm dict matching uid.
+    Logs warning and returns None if no defn matching uid is found.
+    """
+    global packet_defns
+
+    if uid in packet_defns:
+        return packet_defns[uid]
+
+    else:
+        tlmdict = ait.core.tlm.getDefaultDict()
+        for k, v in tlmdict.items():
+            if v.uid == uid:
+                packet_defns[uid] = v
+                return v
+
+        log.warn('No packet defn matching UID {}'.format(uid))
+        return None
+
 
 class SessionStore (dict):
     """SessionStore
@@ -84,7 +118,17 @@ class SessionStore (dict):
         """Adds a telemetry packet to all Sessions in the store."""
         item = (uid, packet)
         SessionStore.History.telemetry.append(item)
+
+        pkt_defn = getPacketDefn(uid)
+        pkt_name = pkt_defn.name
+        delta, dntoeus = get_packet_delta(pkt_defn, packet)
+        delta = replace_datetimes(delta)
+
         for session in self.values():
+            counter = session.updateCounter(pkt_name)
+            item = (pkt_name, delta, dntoeus, counter)
+            session.deltas.append(item)
+            item = (uid, packet, session.tlm_counters[pkt_name])
             session.telemetry.append(item)
 
     def addMessage (self, msg):
@@ -131,7 +175,7 @@ class Playback(object):
         be sent to the frontend during this.
     playback.enabled: True if historical data playback is enabled. This will be False
         if a database connection cannot be made or if data playback is disabled for
-        some other reason. 
+        some other reason.
     """
 
     def __init__(self):
@@ -272,7 +316,7 @@ class AITGUIPlugin(Plugin):
                 self.process_log_msg(input_data)
                 processed = True
 
-        if not processed: 
+        if not processed:
             raise ValueError('Topic of received message not recognized as telem or log stream.')
 
     def process_telem_msg(self, msg):
@@ -640,6 +684,7 @@ def handle():
             __setResponseToEventStream()
             yield 'data: %s\n\n' % json.dumps(msg)
 
+
 @App.route('/tlm/realtime/openmct')
 def handle():
     """Return telemetry packets in realtime to client"""
@@ -655,13 +700,7 @@ def handle():
         while not wsock.closed:
             try:
                 uid, data = session.telemetry.popleft(timeout=30)
-                pkt_defn = None
-                for k, v in tlmdict.iteritems():
-                    if v.uid == uid:
-                        pkt_defn = v
-                        break
-                else:
-                    continue
+                pkt_defn = getPacketDefn(uid)
 
                 wsock.send(json.dumps({
                     'packet': pkt_defn.name,
@@ -684,6 +723,63 @@ def handle():
         pass
 
 
+packet_states = { }
+def get_packet_delta(pkt_defn, packet):
+    """
+    Keeps track of last packets recieved of all types recieved
+    and returns only fields that have changed since last packet.
+
+    Params:
+        pkt_defn:  Packet definition
+        packet:    Binary packet data
+    Returns:
+        delta:     JSON of packet fields that have changed
+    """
+    ait_pkt = ait.core.tlm.Packet(pkt_defn, data=packet)
+
+    # first packet of this type
+    if pkt_defn.name not in packet_states:
+        packet_states[pkt_defn.name] = {}
+
+        # get raw fields
+        raw_fields = {f.name: getattr(ait_pkt.raw, f.name) for f in pkt_defn.fields}
+        packet_states[pkt_defn.name]['raw'] = raw_fields
+        delta = raw_fields
+
+        # get converted fields
+        packet_states[pkt_defn.name]['dntoeu'] = {}
+        dntoeus = {f.name: getattr(ait_pkt, f.name) for f in pkt_defn.fields if f.dntoeu is not None}
+
+    # previous packets of this type received
+    else:
+        delta, dntoeus = {}, {}
+
+        for field in pkt_defn.fields:
+            new_value = getattr(ait_pkt.raw, field.name)
+            last_value = packet_states[pkt_defn.name]['raw'][field.name]
+
+            if new_value != last_value:
+                delta[field.name] = new_value
+                packet_states[pkt_defn.name]['raw'][field.name] = new_value
+
+                if field.dntoeu is not None:
+                    dntoeu_val = getattr(ait_pkt, field.name)
+                    dntoeus[field.name] = dntoeu_val
+                    packet_states[pkt_defn.name]['dntoeu'][field.name] = dntoeu_val
+
+    return delta, dntoeus
+
+
+def replace_datetimes(delta):
+    """Replace datetime objects with ISO formatted
+    strings for JSON serialization"""
+    for key, val in delta.items():
+        if type(val) is datetime:
+            delta[key] = val.isoformat()
+
+    return delta
+
+
 @App.route('/tlm/realtime')
 def handle():
     """Return telemetry packets in realtime to client"""
@@ -698,8 +794,15 @@ def handle():
         try:
             while not wsock.closed:
                 try:
-                    uid, data = session.telemetry.popleft(timeout=30)
-                    wsock.send(pad + struct.pack('>I', uid) + data)
+                    name, delta, dntoeus, counter = session.deltas.popleft(timeout=30)
+
+                    wsock.send(json.dumps({
+                        'packet': name,
+                        'data': delta,
+                        'dntoeus': dntoeus,
+                        'counter': counter
+                    }))
+
                 except IndexError:
                     # If no telemetry has been received by the GUI
                     # server after timeout seconds, "probe" the client
@@ -714,6 +817,18 @@ def handle():
                         wsock.send(pad + struct.pack('>I', 0))
         except geventwebsocket.WebSocketError:
             pass
+
+
+@App.route('/tlm/latest', method='GET')
+def handle():
+    """Return latest telemetry packet to client"""
+    for pkt_type, state in packet_states.items():
+        packet_states[pkt_type]['raw'] = replace_datetimes(state['raw'])
+
+    with Sessions.current() as session:
+        counters = session.tlm_counters
+        return json.dumps({'states': packet_states,
+                           'counters': counters})
 
 
 @App.route('/tlm/query', method='POST')

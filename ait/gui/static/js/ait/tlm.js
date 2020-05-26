@@ -78,84 +78,6 @@ class FieldDefinition
 }
 
 
-class Packet
-{
-    /**
-     * Creates and returns a new `Packet` (subclass) instance based on the
-     * given `PacketDefinition` and packet data. If the optional `raw`
-     * parameter is true, all field accesses will result in the raw value
-     * being returned (e.g. DN to EU conversions will be skipped).
-     *
-     * NOTE: This method will also create and register a new `Packet`
-     * subclass based on the given `PacketDefinition`, if this is the first
-     * time `create()` is called with that `PacketDefinition`.
-     */
-    static
-    create (defn, data, raw=false) {
-        const name = defn.name
-        let   ctor = this[name]
-
-        if (ctor === undefined) {
-            ctor       = Packet.createSubclass(defn)
-            this[name] = ctor
-        }
-
-        return new ctor(data, raw)
-    }
-
-
-    /**
-     * Creates and returns a new (anonymous) `Packet` subclass at runtime.
-     */
-    static
-    createSubclass (defn) {
-        let SubPacket = function (data, raw) {
-            this._defn = defn
-            this._data = data
-            this._raw  = raw
-        }
-
-        SubPacket.prototype             = Object.create(Packet.prototype)
-        SubPacket.prototype.constructor = SubPacket
-
-        for (const name in defn.fields) {
-            Object.defineProperty(SubPacket.prototype, name, {
-                get: function () {
-                    return this.__get__(name)
-                }
-            })
-        }
-
-        return SubPacket
-    }
-
-
-    __get__ (name, raw=false) {
-        let value = undefined
-
-        if (this._data instanceof DataView) {
-            const defn = this._defn.fields[name]
-
-            if (defn) {
-                if (raw || this._raw || !defn.dntoeu) {
-                    value = defn.decode(this._data, raw)
-                }
-                else if (defn.dntoeu && defn.dntoeu.equation) {
-                    value = this._defn.scope.eval(this, defn.dntoeu.equation)
-                }
-            }
-        }
-
-        return value
-    }
-
-
-    __clone__ (data, raw=false) {
-        return Packet.create(this._defn, data, raw)
-    }
-}
-
-
 class PacketDefinition
 {
     constructor (obj) {
@@ -356,6 +278,9 @@ class TelemetryStream
         this._socket   = new WebSocket(url)
         this._stale    = 0
         this._url      = url
+        this.getFullPacketStates()
+        console.log(this._pkt_states)
+        console.log(this._counters)
 
         // Re-map telemetry dictionary to be keyed by a PacketDefinition
         // 'id' instead of 'name'.
@@ -379,14 +304,69 @@ class TelemetryStream
         this._emit('close', this)
     }
 
+    getFullPacketStates () {
+        m.request({ url: '/tlm/latest' }).then( (latest) => {
+            console.log('requesting latest tlm')
+            console.log(latest)
+            this._pkt_states = latest['states']
+            this._counters = latest['counters']
+        })
+    }
+
+    checkCounter (packetName, counter) {
+        // returns true if counter is as expected, false if not
+        let lastCounter = this._counters[packetName]
+        if ( counter == lastCounter + 1) {
+            return true
+        } else if ( lastCounter == Math.pow(2, 31) - 1 && counter == 0 ) {
+            return true
+        }
+        console.log('counter mismatch: had ' + lastCounter + ' , got ' + counter)
+        return false
+    }
 
     onMessage (event) {
-        if ( !(event.data instanceof ArrayBuffer) ) return
+        if ( !(typeof event.data == "string") ) return
 
-        let uid  = new DataView(event.data, 1, 4).getUint32(0)
-        let data = new DataView(event.data, 5)
-        let defn = this._dict[uid]
+        let now = Date.now()
+        let data = JSON.parse(event.data)
+        let packet_name = data['packet']
+        let delta = data['data']
+        let dntoeus = data['dntoeus']
+        let counter = data['counter']
 
+        if ( packet_name in this._pkt_states ) {
+            // check counter is as expected and request full packet states if not
+            let gotNextCounter = this.checkCounter(packet_name, counter)
+            if ( !gotNextCounter ) {
+                this.getFullPacketStates()
+            } else {
+                // add delta to current packet state and update counter
+                if ( Object.keys(delta).length !== 0 ) {
+                    console.log('adding delta to pkt state')
+                    for ( var field in delta ) {
+                        this._pkt_states[packet_name]['raw'][field] = delta[field]
+                    }
+                    for ( var field in dntoeus ) {
+                        this._pkt_states[packet_name]['dntoeu'][field] = dntoeus[field]
+                    }
+                }
+                this._counters[packet_name] = counter
+            }
+        } else { // new packet type
+            console.log('new packet type')
+            if ( Object.keys(delta).length == 0 ) {
+                // empty delta - request full packet from backend
+                this.getFullPacketStates()
+            } else {
+                this._pkt_states[packet_name] = {}
+                this._pkt_states[packet_name]['raw'] = delta
+                this._pkt_states[packet_name]['dntoeu'] = dntoeus
+                this._counters[packet_name] = counter
+            }
+        }
+
+        console.log("counter: ", this._counters[packet_name])
         // Since WebSockets can stay open indefinitely, the AIT GUI
         // server will occasionally probe for dropped client
         // connections by sending empty packets (data.byteLength == 0)
@@ -399,16 +379,15 @@ class TelemetryStream
         // It's also possible that the packet UID is not in the client
         // telemetry dictionary (defn === undefined).  Without a
         // packet definition, the packet cannot be processed further.
-        if ((uid == 0 && data.byteLength == 0) || !defn) return
-
-        let packet = Packet.create(defn, data)
 
         clearInterval(this._interval)
         this._stale    = 0
         this._interval = setInterval(this.onStale.bind(this), 5000)
 
-        ait.packets.insert(defn.name, packet)
-        this._emit('packet', packet)
+        let current_pkt = JSON.parse(JSON.stringify(this._pkt_states[packet_name]))
+        ait.packets.insert(packet_name, current_pkt)
+        this._emit('packet', {'packet': packet_name,
+                              'data': this._pkt_states[packet_name]})
     }
 
 
@@ -430,7 +409,6 @@ class TelemetryStream
 
 export {
     FieldDefinition,
-    Packet,
     PacketDefinition,
     PacketScope,
     TelemetryDictionary,

@@ -16,6 +16,7 @@
 
 import m from 'mithril'
 import Dygraph from 'dygraphs';
+import { getFieldType } from '../util.js'
 
 /*
  * FIXME: The two Backend classes (Dygraphs and Highcharts) are not cleanly
@@ -65,7 +66,8 @@ class DygraphsBackend
             legend:     'always',
             labelsSeparateLines: false,
             labelsDiv: this._plot_id,
-            showRangeSelector: true
+            showRangeSelector: true,
+            digitsAfterDecimal: 5
         }
     }
 
@@ -78,21 +80,21 @@ class DygraphsBackend
         }
     }
 
-    plot (packet) {
-        const pname = packet._defn.name
+    plot (data, raw) {
+        const pname = data['packet']
+        let packet = getFieldType(data['data'], raw)
         const names = this._plot._packets[pname]
 
         if (!names) return
 
         let row = [ this._plot._time.get(packet) ]
-
         // For each series of data, if it's in the current packet
         // that we're updating, add the associated point. Otherwise,
         // add a null value. Dygraphs requires that the data added
         // to the plot maintains the same "shape" as the labels.
         this._series.forEach((id) => {
             if (id.startsWith(pname)) {
-                row.push(packet.__get__(id.split('.')[1]))
+                row.push(packet[id.split('.')[1]])
             } else {
                 row.push(null)
             }
@@ -207,8 +209,9 @@ class HighchartsBackend
         Object.assign(options, overrides)
     }
 
-    plot(packet) {
-        const pname = packet._defn.name
+    plot(data, raw) {
+        const pname = data['packet']
+        let packet = getFieldType(data['data'], raw)
         const names = this._plot._packets[pname]
         if (!names) return
 
@@ -217,7 +220,7 @@ class HighchartsBackend
 
             if (series) {
                 const x = this._plot._time.get(packet).getTime()
-                const y = packet.__get__(name)
+                const y = packet[name]
 
                 series.addPoint([x, y], false)
 
@@ -290,7 +293,7 @@ class HighchartsBackend
  *   The name of the field in the packet that defines this series.
  *
  * Optional attributes:
- * 
+ *
  * type
  *   The type of series being displayed. This is not relevant for all plot
  *   backends. For instance, Highcharts would use this to define the type
@@ -304,9 +307,13 @@ class HighchartsBackend
  *   point to be removed from the queue. This is only used by the Dygraphs
  *   backend.
  *
+ * raw
+ *   If the `raw` parameter is true, the raw value will be returned.
+ *   DN to EU conversions will be skipped. (Default: raw=false)
+ *
  * .. code:: Javascript
  *
- *    <ait-plot-series packet="1553_HS_Packet" field="Voltage_A"></ait-plot-series>
+ *    <ait-plot-series packet="1553_HS_Packet" field="Voltage_A" raw=true></ait-plot-series>
  *
  * **ait-plot-config:**
  *
@@ -321,7 +328,7 @@ class HighchartsBackend
  *      {
  *         "title": "Plot title",
  *         "xlabel": "X label",
- *         "ylabel": "Y label"  
+ *         "ylabel": "Y label"
  *      }
  *    </ait-plot-config>
  *
@@ -345,19 +352,19 @@ class HighchartsBackend
  *       "height": 300
  *     }
  *   </ait-plot-config>
- *   <ait-plot-series packet="1553_HS_Packet" name="Voltage_A"></ait-plot-series>
- *   <ait-plot-series packet="1553_HS_Packet" name="Voltage_B"></ait-plot-series>
- *   <ait-plot-series packet="1553_HS_Packet" name="Voltage_C"></ait-plot-series>
- *   <ait-plot-series packet="1553_HS_Packet" name="Voltage_D"></ait-plot-series>
- * </ait-plot> 
+ *   <ait-plot-series packet="1553_HS_Packet" name="Voltage_A" raw=true></ait-plot-series>
+ *   <ait-plot-series packet="1553_HS_Packet" name="Voltage_B" raw=true></ait-plot-series>
+ *   <ait-plot-series packet="1553_HS_Packet" name="Voltage_C" raw=true></ait-plot-series>
+ *   <ait-plot-series packet="1553_HS_Packet" name="Voltage_D" raw=true></ait-plot-series>
+ * </ait-plot>
  */
 const Plot =
 {
     /**
      * Plots data from the given packet.
      */
-    plot (packet) {
-        this._backend.plot(packet)
+    plot (packet, raw=false) {
+        this._backend.plot(packet, raw)
     },
 
 
@@ -401,6 +408,8 @@ const Plot =
         // For each packet, maintain a list of fields to plot
         this._packets[packet] = this._packets[packet] || [ ]
         this._packets[packet].push(name)
+
+        this._raw   = vnode.attrs.raw
     },
 
 
@@ -454,7 +463,7 @@ const Plot =
             this._time = new PlotTimeField()
         }
 
-        ait.events.on('ait:tlm:packet', (p) => this.plot(p))
+        ait.events.on('ait:tlm:packet', (p) => this.plot(p, this._raw))
         ait.events.on('ait:playback:on', () => this.redraw())
         ait.events.on('ait:playback:off', () => this.redraw())
     },

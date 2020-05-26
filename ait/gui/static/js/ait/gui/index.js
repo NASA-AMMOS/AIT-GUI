@@ -197,6 +197,10 @@ function init () {
             ait.events.emit(e.name, e.data)
         });
 
+        m.request({ url: '/tlm/latest' }).then((latest) => {
+            ait.tlm.state = latest
+        })
+
         m.mount(root, { view: () => createMithrilNodes(elems) })
     })
 }

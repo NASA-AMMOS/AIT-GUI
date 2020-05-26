@@ -36,5 +36,21 @@ function move (array, from, to) {
     array.splice(to, 0, array.splice(from, 1)[0])
 }
 
+/**
+ * Returns DN to EU value if it exists unless the `raw` parameter is true,
+ * otherwise return raw value.
+ */
+function getFieldType (data, raw=false) {
 
-export { merge, move}
+    // Default to the raw value since it will always be avilable
+    let value = data['raw']
+
+    // If raw==false and a DN to EU value exists, grab that
+    if (!raw && data['dntoeu']) {
+        value = data['dntoeu']
+    }
+
+    return value
+}
+
+export { merge, move, getFieldType }

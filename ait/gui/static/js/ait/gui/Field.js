@@ -83,7 +83,13 @@ const Field =
      * retrieving the packet value.
      */
     getValue (packet, raw=false) {
-        return packet && packet.__get__(this._fname, raw)
+        if ( !raw ) {
+            if ( packet && this._fname in packet['dntoeu']) {
+                return packet && packet['dntoeu'][this._fname]
+            }
+        }
+
+        return packet && packet['raw'][this._fname]
     },
 
 
@@ -285,7 +291,7 @@ const Field =
     },
 
     onbeforeupdate (vnode, old) {
-        return this.hasChanged()
+        return this.hasChanged() 
     },
 
     view (vnode) {

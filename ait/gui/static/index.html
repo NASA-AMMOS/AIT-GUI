@@ -122,7 +122,7 @@ information to foreign countries or providing access to foreign persons.
               The AIT UI is created from a number of <strong>components</strong>. These components are written in JavaScript and provided by the project to cover basic functionality needed in the user interface. Users can customize their interface by making minimal HTML or configuration file changes. If a user needs more control they can create their own components and include them in the interface.
             </p>
             <p>
-              The majority of the content that you're seeing is displayed in <strong>ait-tabset</strong> components. The tabset component helps keep our display split into logical blocks and displays additional status information to the user. 
+              The majority of the content that you're seeing is displayed in <strong>ait-tabset</strong> components. The tabset component helps keep our display split into logical blocks and displays additional status information to the user.
 
 <pre>
   &lt;ait-tabset&gt;
@@ -202,10 +202,10 @@ information to foreign countries or providing access to foreign persons.
                 "height": 300
               }
             </ait-plot-config>
-            <ait-plot-series packet="1553_HS_Packet" name="Voltage_A"></ait-plot-series>
-            <ait-plot-series packet="1553_HS_Packet" name="Voltage_B"></ait-plot-series>
-            <ait-plot-series packet="1553_HS_Packet" name="Voltage_C"></ait-plot-series>
-            <ait-plot-series packet="1553_HS_Packet" name="Voltage_D"></ait-plot-series>
+            <ait-plot-series packet="1553_HS_Packet" name="Voltage_A" raw=true></ait-plot-series>
+            <ait-plot-series packet="1553_HS_Packet" name="Voltage_B" raw=true></ait-plot-series>
+            <ait-plot-series packet="1553_HS_Packet" name="Voltage_C" raw=true></ait-plot-series>
+            <ait-plot-series packet="1553_HS_Packet" name="Voltage_D" raw=true></ait-plot-series>
           </ait-plot>
         </div>
         <div class="col-sm-6">
@@ -232,7 +232,7 @@ information to foreign countries or providing access to foreign persons.
       </ait-tab>
     </ait-tabset>
   </div>
-  
+
 
   <div class='ctrlcontainer'>
     <ait-tabset class='nav-tabs'>
@@ -259,7 +259,7 @@ information to foreign countries or providing access to foreign persons.
         <ait-command-history></ait-command-history>
       </ait-tab>
       <ait-tab title='Sequences'>
-        <ait-sequence></ait-sequence> 
+        <ait-sequence></ait-sequence>
       </ait-tab>
       <ait-tab title="Script Control">
         <div class="row">

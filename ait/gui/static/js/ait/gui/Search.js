@@ -21,12 +21,14 @@ import map from 'lodash/map'
 import defaults from 'lodash/defaults'
 
 import * as format from 'ait/format'
+import { getFieldType } from '../util.js'
 import Field from './Field'
 import Clock from './Clock'
 
+
 /**
  * Search for a Packets's telemetry fields by name and display dictionary data
- * and data snapshot of selected value in a modal. 
+ * and data snapshot of selected value in a modal.
  *
  * Requires that ait-modal is included in the page for modal functionality
  * to work. Default styling via the display-border and invert-colors attributes
@@ -132,6 +134,7 @@ const MnemonicSearch = {
 
         let val = 'N/A'
         let raw = 'N/A'
+        let dneu = 'N/A'
         let curTime = format.datetime(new Date(), {utc: true, gps: false})
         let curPacket = (ait.packets[this._packet] ?
             ait.packets[this._packet].get(0) :
@@ -139,8 +142,10 @@ const MnemonicSearch = {
         )
 
         if (curPacket !== null) {
-            val = curPacket.__get__(this._selection)
-            raw = curPacket.__get__(this._selection, true)
+            dneu = this._selection in curPacket['dntoeu']
+            val = getFieldTyoe(curPacket, !dneu)
+            val = val[this._selection]
+            raw = curPacket['raw'][this._selection]
         }
 
         let data = {}
