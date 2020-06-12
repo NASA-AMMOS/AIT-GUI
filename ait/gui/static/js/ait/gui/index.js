@@ -173,6 +173,7 @@ function init () {
         })
 
         ait.tlm = {dict: {}}
+
         ait.tlm.promise = m.request({ url: '/tlm/dict' })
         ait.tlm.promise.then((dict) => {
             const proto = location.protocol === 'https:' ? 'wss' : 'ws'
@@ -181,9 +182,9 @@ function init () {
             ait.tlm.dict   = TelemetryDictionary.parse(dict)
             ait.tlm.stream = new TelemetryStream(url, ait.tlm.dict)
 
-            ait.events.on('ait:tlm:packet', () => {
+            setInterval(() => {
                 m.redraw()
-            })
+            }, 1000)
         })
 
         m.request({url: '/limits/dict'}).then((dict) => {
