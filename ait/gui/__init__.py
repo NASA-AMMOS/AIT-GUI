@@ -750,6 +750,10 @@ def get_packet_delta(pkt_defn, packet):
         packet_states[pkt_defn.name]['dntoeu'] = {}
         dntoeus = {f.name: getattr(ait_pkt, f.name) for f in pkt_defn.fields if f.dntoeu is not None}
 
+        # get derivations
+        packet_states[pkt_defn.name]['raw'].update({f.name: getattr(ait_pkt.raw, f.name) for f in pkt_defn.derivations})
+        delta.update({f.name: getattr(ait_pkt.raw, f.name) for f in pkt_defn.derivations})
+
     # previous packets of this type received
     else:
         delta, dntoeus = {}, {}
@@ -766,6 +770,14 @@ def get_packet_delta(pkt_defn, packet):
                     dntoeu_val = getattr(ait_pkt, field.name)
                     dntoeus[field.name] = dntoeu_val
                     packet_states[pkt_defn.name]['dntoeu'][field.name] = dntoeu_val
+
+        for field in pkt_defn.derivations:
+            new_value = getattr(ait_pkt.raw, field.name)
+            last_value = packet_states[pkt_defn.name]['raw'][field.name]
+
+            if new_value != last_value:
+                delta[field.name] = new_value
+                packet_states[pkt_defn.name]['raw'][field.name] = new_value
 
     return delta, dntoeus
 
