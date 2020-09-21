@@ -241,7 +241,12 @@ CMD_API = ait.core.api.CmdAPI()
 
 class HTMLRoot:
     Static = pkg_resources.resource_filename('ait.gui', 'static/')
-    User   = ait.config.get('gui.html.directory', Static)
+    User = None
+    plugins = ait.config.get('server.plugins', Static)
+    for plugin in plugins:
+        if plugin['plugin']['name'] == 'ait.gui.AITGUIPlugin':
+            User = plugin['plugin']['html']['directory']
+            break
 
 SEQRoot = ait.config.get('sequence.directory', None)
 if SEQRoot and not os.path.isdir(SEQRoot):
