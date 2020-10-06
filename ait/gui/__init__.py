@@ -239,14 +239,24 @@ _RUNNING_SCRIPT = None
 _RUNNING_SEQ = None
 CMD_API = ait.core.api.CmdAPI()
 
+
 class HTMLRoot:
     Static = pkg_resources.resource_filename('ait.gui', 'static/')
     User = None
     plugins = ait.config.get('server.plugins', Static)
     for plugin in plugins:
         if plugin['plugin']['name'] == 'ait.gui.AITGUIPlugin':
-            User = plugin['plugin']['html']['directory']
+            User = plugin['plugin']
             break
+
+    try:
+        with open(os.path.join(Static, 'package.json')) as infile:
+            package_data = json.loads(infile.read())
+        VERSION = 'AIT GUI v{}'.format(package_data['version'])
+        log.info('Running {}'.format(VERSION))
+    except:
+        VERSION = ''
+        log.warn('Unable to determine which AIT GUI Version is running')
 
 SEQRoot = ait.config.get('sequence.directory', None)
 if SEQRoot and not os.path.isdir(SEQRoot):
@@ -264,17 +274,6 @@ if ScriptRoot and not os.path.isdir(ScriptRoot):
 App     = bottle.Bottle()
 Servers = [ ]
 Greenlets = []
-
-
-try:
-    with open(os.path.join(HTMLRoot.Static, 'package.json')) as infile:
-        package_data = json.loads(infile.read())
-    VERSION = 'AIT GUI v{}'.format(package_data['version'])
-    log.info('Running {}'.format(VERSION))
-except:
-    VERSION = ''
-    log.warn('Unable to determine which AIT GUI Version is running')
-
 
 
 class AITGUIPlugin(Plugin):
