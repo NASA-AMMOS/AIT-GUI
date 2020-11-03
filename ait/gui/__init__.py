@@ -262,7 +262,7 @@ Greenlets = []
 
 
 try:
-    with open(os.path.join(Static, 'package.json')) as infile:
+    with open(os.path.join(HTMLRoot.Static, 'package.json')) as infile:
         package_data = json.loads(infile.read())
     VERSION = 'AIT GUI v{}'.format(package_data['version'])
     log.info('Running {}'.format(VERSION))
