@@ -280,7 +280,10 @@ class AITGUIPlugin(Plugin):
 
         try:
             HTMLRoot.User = kwargs['html']['directory']
+            log.info('[GUI Plugin Configuration] Static file directory is set to {}'.format(HTMLRoot.User))
         except:
+            log.warn('[GUI Plugin Configuration] Unable to locate static file direcotry in config.yaml. '\
+             'The directory is set to {}'.format(HTMLRoot.User))
             pass
 
         bottle.TEMPLATE_PATH.append(HTMLRoot.User)
