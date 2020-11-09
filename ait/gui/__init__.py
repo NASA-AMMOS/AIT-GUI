@@ -284,7 +284,6 @@ class AITGUIPlugin(Plugin):
         except:
             log.warn('[GUI Plugin Configuration] Unable to locate static file direcotry in config.yaml. '\
              'The directory is set to {}'.format(HTMLRoot.User))
-            pass
 
         bottle.TEMPLATE_PATH.append(HTMLRoot.User)
 
