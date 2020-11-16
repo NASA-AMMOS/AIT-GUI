@@ -80,6 +80,8 @@ You'll need to update your **server** configuration to enable the GUI Plugin. Ad
                - telem_stream
            outputs:
                - command_stream
+           html:
+               directory: /path/to/ait-gui/static/dir
 
 The definitions for **log_stream**, **telem_stream**, and **command_stream** exist in the example Core **config.yaml** file.
 

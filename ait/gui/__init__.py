@@ -239,9 +239,9 @@ _RUNNING_SCRIPT = None
 _RUNNING_SEQ = None
 CMD_API = ait.core.api.CmdAPI()
 
+
 class HTMLRoot:
-    Static = pkg_resources.resource_filename('ait.gui', 'static/')
-    User   = ait.config.get('gui.html.directory', Static)
+    Static = User = pkg_resources.resource_filename('ait.gui', 'static/')
 
 SEQRoot = ait.config.get('sequence.directory', None)
 if SEQRoot and not os.path.isdir(SEQRoot):
@@ -280,8 +280,10 @@ class AITGUIPlugin(Plugin):
 
         try:
             HTMLRoot.User = kwargs['html']['directory']
+            log.info('[GUI Plugin Configuration] Static file directory is set to {}'.format(HTMLRoot.User))
         except:
-            pass
+            log.warn('[GUI Plugin Configuration] Unable to locate static file direcotry in config.yaml. '\
+             'The directory is set to {}'.format(HTMLRoot.User))
 
         bottle.TEMPLATE_PATH.append(HTMLRoot.User)
 
