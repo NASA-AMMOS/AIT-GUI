@@ -143,7 +143,7 @@ const MnemonicSearch = {
 
         if (curPacket !== null) {
             dneu = this._selection in curPacket['dntoeu']
-            val = getFieldTyoe(curPacket, !dneu)
+            val = getFieldType(curPacket, !dneu)
             val = val[this._selection]
             raw = curPacket['raw'][this._selection]
         }
