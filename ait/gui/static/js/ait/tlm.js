@@ -279,8 +279,6 @@ class TelemetryStream
         this._stale    = 0
         this._url      = url
         this.getFullPacketStates()
-        console.log(this._pkt_states)
-        console.log(this._counters)
 
         // Re-map telemetry dictionary to be keyed by a PacketDefinition
         // 'id' instead of 'name'.
@@ -306,8 +304,6 @@ class TelemetryStream
 
     getFullPacketStates () {
         m.request({ url: '/tlm/latest' }).then( (latest) => {
-            console.log('requesting latest tlm')
-            console.log(latest)
             this._pkt_states = latest['states']
             this._counters = latest['counters']
         })
@@ -343,7 +339,6 @@ class TelemetryStream
             } else {
                 // add delta to current packet state and update counter
                 if ( Object.keys(delta).length !== 0 ) {
-                    console.log('adding delta to pkt state')
                     for ( var field in delta ) {
                         this._pkt_states[packet_name]['raw'][field] = delta[field]
                     }
@@ -354,7 +349,6 @@ class TelemetryStream
                 this._counters[packet_name] = counter
             }
         } else { // new packet type
-            console.log('new packet type')
             if ( Object.keys(delta).length == 0 ) {
                 // empty delta - request full packet from backend
                 this.getFullPacketStates()
@@ -366,7 +360,6 @@ class TelemetryStream
             }
         }
 
-        console.log("counter: ", this._counters[packet_name])
         // Since WebSockets can stay open indefinitely, the AIT GUI
         // server will occasionally probe for dropped client
         // connections by sending empty packets (data.byteLength == 0)

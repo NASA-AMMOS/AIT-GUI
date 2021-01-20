@@ -323,7 +323,7 @@ const Field =
         }
         else {
             if (vnode.attrs.format) {
-                const defn = packet._defn.fields[this._fname]
+                const defn = ait.tlm.dict[this._pname]._fields[this._fname]
                 const type = defn && defn.type
 
                 value = (type && type.isTime) ?
