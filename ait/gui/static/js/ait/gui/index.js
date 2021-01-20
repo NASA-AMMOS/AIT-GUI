@@ -134,7 +134,6 @@ function makeMithrilNode(e) {
 
 function filterNodes(n) {
     let nodes =  map(n, makeMithrilNode)
-    console.log(nodes)
     return nodes
 }
 
