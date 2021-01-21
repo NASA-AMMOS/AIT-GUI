@@ -122,7 +122,7 @@ class SessionStore (dict):
         pkt_defn = getPacketDefn(uid)
         pkt_name = pkt_defn.name
         delta, dntoeus = get_packet_delta(pkt_defn, packet)
-        delta = replace_datetimes(delta)
+        dntoeus = replace_datetimes(dntoeus)
 
         for session in self.values():
             counter = session.updateCounter(pkt_name)
@@ -748,9 +748,24 @@ def get_packet_delta(pkt_defn, packet):
         packet_states[pkt_defn.name]['raw'] = raw_fields
         delta = raw_fields
 
-        # get converted fields
+        # get converted fields / complex fields
         packet_states[pkt_defn.name]['dntoeu'] = {}
-        dntoeus = {f.name: getattr(ait_pkt, f.name) for f in pkt_defn.fields if f.dntoeu is not None}
+        dntoeus = {}
+        for f in pkt_defn.fields:
+            if f.dntoeu is not None or f.enum is not None or f.type.name in dtype.ComplexTypeMap.keys():
+                try:
+                    val = getattr(ait_pkt, f.name)
+                except ValueError:
+                    if isinstance(f.type, dtype.CmdType):
+                        val = "Unidentified Cmd"
+                    else:
+                        val = getattr(ait_pkt.raw, f.name)
+
+                if isinstance(val, cmd.CmdDefn) or isinstance(val, evr.EVRDefn):
+                    val = val.name
+
+                dntoeus[f.name] = val
+
 
         # get derivations
         packet_states[pkt_defn.name]['raw'].update({f.name: getattr(ait_pkt.raw, f.name) for f in pkt_defn.derivations})
@@ -768,8 +783,18 @@ def get_packet_delta(pkt_defn, packet):
                 delta[field.name] = new_value
                 packet_states[pkt_defn.name]['raw'][field.name] = new_value
 
-                if field.dntoeu is not None:
-                    dntoeu_val = getattr(ait_pkt, field.name)
+                if field.dntoeu is not None or field.enum is not None or field.type.name in dtype.ComplexTypeMap.keys():
+                    try:
+                        dntoeu_val = getattr(ait_pkt, field.name)
+                    except ValueError:
+                        if isinstance(field.type, dtype.CmdType):
+                            dntoeu_val = "Unidentified Cmd"
+                        else:
+                            dntoeu_val = getattr(ait_pkt.raw, field.name)
+
+                    if isinstance(dntoeu_val, cmd.CmdDefn) or isinstance(dntoeu_val, evr.EVRDefn):
+                        dntoeu_val = dntoeu_val.name
+
                     dntoeus[field.name] = dntoeu_val
                     packet_states[pkt_defn.name]['dntoeu'][field.name] = dntoeu_val
 
@@ -837,7 +862,7 @@ def handle():
 def handle():
     """Return latest telemetry packet to client"""
     for pkt_type, state in packet_states.items():
-        packet_states[pkt_type]['raw'] = replace_datetimes(state['raw'])
+        packet_states[pkt_type]['dntoeu'] = replace_datetimes(state['dntoeu'])
 
     with Sessions.current() as session:
         counters = session.tlm_counters
