@@ -19,6 +19,7 @@ import {sprintf}  from 'sprintf-js'
 import * as strftime from 'strftime'
 
 import { CommandDefinition } from '../cmd.js'
+import { isComplexType }     from '../dtype.js'
 import { EVRDefinition }     from '../evr.js'
 
 /**
@@ -303,32 +304,22 @@ const Field =
         if (value === undefined || value === null) {
             value = 'N/A'
         }
-        else if (value instanceof CommandDefinition) {
-            value = value.name ? value.name : (value.opcode ? value.opcode : 'Unidentified Cmd')
-        }
-        else if (value instanceof EVRDefinition) {
-            value = value.name ? value.name : (value.code ? value.code : 'Unidentified EVR')
-        }
-        else if(Array.isArray(value)) {
-            // If we're handling an array value that means the field is a ArrayType.
-            // ArrayType elements are displayed as separate hex dumps of their contents.
-            let elemSize = 2 * this._fieldDefn.type._nbytes / this._fieldDefn.type._num_elems
-            let valAcc = ''
-            let format = `0x%0${elemSize}X `
-            for (let i of value) {
-                valAcc += sprintf(format, i)
-            }
-
-            value = valAcc
-        }
         else {
             if (vnode.attrs.format) {
                 const defn = ait.tlm.dict[this._pname]._fields[this._fname]
                 const type = defn && defn.type
 
-                value = (type && type.isTime) ?
-                    strftime.utc()(vnode.attrs.format, value) :
-                    sprintf(vnode.attrs.format, value)
+                if (this._raw === false && isComplexType(type._name) ||
+                    typeof(value) !== "number") {
+                    value = this.getValue(packet, true)
+                }
+
+                if (type && type.isTime) {
+                    value = type.decode(value)
+                    value = strftime.utc()(vnode.attrs.format, value)
+                } else {
+                    value = sprintf(vnode.attrs.format, value)
+                }
             } else {
                 // If the Field doesn't have a format specified and is
                 // displaying a float we default to 5 digits after the

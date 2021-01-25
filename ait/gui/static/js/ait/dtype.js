@@ -197,24 +197,17 @@ class Time8Type extends TimeType
 
 class Time32Type extends TimeType
 {
-    decode (view, offset=0) {
-        if (!inBounds(view, 4, offset)) return null
-
-        const tv_sec = view.getUint32(offset, false)
-        return new Date(GPSEpoch + (tv_sec * 1000))
+    decode (raw) {
+        return new Date(GPSEpoch + (raw * 1000))
     }
 }
 
 
 class Time64Type extends TimeType
 {
-    decode (view, offset=0) {
-        if (!inBounds(view, 8, offset)) return null
-
-        const tv_sec   = view.getUint32(offset, false)
-        const tv_nsec  = view.getUint32(offset + 4, false)
-
-        return new Date(GPSEpoch + (tv_sec * 1000) + (tv_nsec / 1e6))
+    decode (raw) {
+        const parts = String(raw).split('.').map(x => parseInt(x))
+        return new Date(GPSEpoch + (parts[0] * 1000) + (parts[1] / 1e6))
     }
 }
 
@@ -273,5 +266,13 @@ function get (typename) {
     return type
 }
 
+function isComplexType(typeName) {
+    return typeName === 'CMD16' ||
+           typeName === 'EVR16' ||
+           typeName === 'TIME8' ||
+           typeName === 'TIME32' ||
+           typeName === 'TIME64'
+}
 
-export { PrimitiveType, get }
+
+export { PrimitiveType, get, isComplexType }
