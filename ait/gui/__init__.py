@@ -322,7 +322,6 @@ class AITGUIPlugin(Plugin):
             raise ValueError('Topic of received message not recognized as telem or log stream.')
 
     def process_telem_msg(self, msg):
-        msg = eval(msg)
         msg = pickle.loads(msg)
         if playback.on == False:
             Sessions.addTelemetry(msg[0], msg[1])
