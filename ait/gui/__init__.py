@@ -764,6 +764,7 @@ def get_packet_delta(pkt_defn, packet):
                     val = val.name
 
                 dntoeus[f.name] = val
+                packet_states[pkt_defn.name]['dntoeu'][f.name] = val
 
 
         # get derivations
