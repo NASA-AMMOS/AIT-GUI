@@ -776,12 +776,17 @@ def get_packet_delta(pkt_defn, packet):
         delta, dntoeus = {}, {}
 
         for field in pkt_defn.fields:
-            new_value = getattr(ait_pkt.raw, field.name)
-            last_value = packet_states[pkt_defn.name]['raw'][field.name]
+            new_raw = getattr(ait_pkt.raw, field.name)
+            last_raw = packet_states[pkt_defn.name]['raw'][field.name]
 
-            if new_value != last_value:
-                delta[field.name] = new_value
-                packet_states[pkt_defn.name]['raw'][field.name] = new_value
+            # A field update needs sent when the raw value has changed or if a
+            # DN to EU is defined on the field. DN to EUs can take multiple
+            # telemetry points as input or may rely on other means to determine
+            # a value. We can't be sure that they won't change so we should
+            # always calculate them.
+            if new_raw != last_raw or field.dntoeu is not None:
+                delta[field.name] = new_raw
+                packet_states[pkt_defn.name]['raw'][field.name] = new_raw
 
                 if field.dntoeu is not None or field.enum is not None or field.type.name in dtype.ComplexTypeMap.keys():
                     try:
