@@ -206,7 +206,13 @@ class Time32Type extends TimeType
 class Time64Type extends TimeType
 {
     decode (raw) {
-        const parts = String(raw).split('.').map(x => parseInt(x))
+        let parts = [0, 0]
+        if (raw % 1 === 0) {
+            parts = [parseInt(raw), 0]
+        } else {
+            parts = String(raw).split('.').map(x => parseInt(x))
+        }
+
         return new Date(GPSEpoch + (parts[0] * 1000) + (parts[1] / 1e6))
     }
 }
