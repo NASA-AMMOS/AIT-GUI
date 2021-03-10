@@ -327,6 +327,7 @@ class AITGUIPlugin(Plugin):
             Sessions.addTelemetry(msg[0], msg[1])
 
     def process_log_msg(self, msg):
+        msg = msg.decode()
         parsed = log.parseSyslog(msg)
         Sessions.addMessage(parsed)
 
