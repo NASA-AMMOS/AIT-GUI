@@ -328,7 +328,7 @@ class AITGUIPlugin(Plugin):
 
     def process_log_msg(self, msg):
         msg = msg.decode()
-        parsed = log.parseSyslog(msg)
+        parsed = log.parse_syslog(msg)
         Sessions.addMessage(parsed)
 
     def getBrowserName(self, browser):
