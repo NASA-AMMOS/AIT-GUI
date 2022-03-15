@@ -97,7 +97,7 @@ setup(
     namespace_packages   = ['ait'],
     include_package_data = True,
 
-    python_requires = '==3.7.*',
+    python_requires = '>=3.7.*',
     install_requires = ['ait-core>=2.3.0'],
     extras_require = {
         'docs':  [
