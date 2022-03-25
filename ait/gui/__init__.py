@@ -846,26 +846,26 @@ def handle():
                 try:
                     name, delta, dntoeus, counter = session.deltas.popleft(timeout=30)
 
-                    log.info("Name: %s" % name)
-                    log.info("Data Delta: %s" % delta)
-                    log.info("dntoeus: %s" % dntoeus)
-                    log.info("Counter: %s" % counter)
-                    log.info("Data: %s" % counter)
+                    #log.info("Name: %s" % name)
+                    #log.info("Data Delta: %s" % delta)
+                    #log.info("dntoeus: %s" % dntoeus)
+                    #log.info("Counter: %s" % counter)
+                    #log.info("Data: %s" % counter)
                     for key in delta.keys():
                         val = delta[key]
                         val = "%s" % type(val)
                         if (re.search(".*FieldList.*", val)):
                             delta[key] = "Value not displayable"
-                            log.info("Updated value of key: %s from delta" % key)
-                    log.info("New Data Delta: %s" % delta)
+                            #log.info("Updated value of key: %s from delta" % key)
+                    #log.info("New Data Delta: %s" % delta)
 
                     for key in dntoeus.keys():
                         val = dntoeus[key]
                         val = "%s" % type(val)
                         if (re.search(".*FieldList.*", val)):
                             dntoeus[key] = "Value not displayable"
-                            log.info("Updated value of key: %s from dntoeus" % key)
-                    log.info("New dntoeus: %s" % dntoeus)
+                            #log.info("Updated value of key: %s from dntoeus" % key)
+                    #log.info("New dntoeus: %s" % dntoeus)
 
                     try:
                         json.dumps({
