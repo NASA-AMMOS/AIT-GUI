@@ -116,12 +116,16 @@ class SessionStore (dict):
 
     def addTelemetry (self, uid, packet):
         """Adds a telemetry packet to all Sessions in the store."""
+        #log.info(f"SessionStore.addTelemetry function recieved data with packet UID {uid} and data {packet}")
         item = (uid, packet)
         SessionStore.History.telemetry.append(item)
 
+        #log.info(f"ADDING TELEMETRY FOR UID {uid}")
         pkt_defn = getPacketDefn(uid)
         pkt_name = pkt_defn.name
+        #log.info(f"PACKET NAME IS {pkt_name}")
         delta, dntoeus = get_packet_delta(pkt_defn, packet)
+        #print(delta)
         dntoeus = replace_datetimes(dntoeus)
 
         for session in self.values():
@@ -323,6 +327,7 @@ class AITGUIPlugin(Plugin):
 
     def process_telem_msg(self, msg):
         msg = pickle.loads(msg)
+        #log.info(f"process_telem_msg function recieved a tuple with values {msg[0]} and {msg[1]}")
         if playback.on == False:
             Sessions.addTelemetry(msg[0], msg[1])
 
@@ -841,6 +846,37 @@ def handle():
                 try:
                     name, delta, dntoeus, counter = session.deltas.popleft(timeout=30)
 
+                    #log.info("Name: %s" % name)
+                    #log.info("Data Delta: %s" % delta)
+                    #log.info("dntoeus: %s" % dntoeus)
+                    #log.info("Counter: %s" % counter)
+                    #log.info("Data: %s" % counter)
+                    for key in delta.keys():
+                        val = delta[key]
+                        val = "%s" % type(val)
+                        if (re.search(".*FieldList.*", val)):
+                            delta[key] = "Value not displayable"
+                            #log.info("Updated value of key: %s from delta" % key)
+                    #log.info("New Data Delta: %s" % delta)
+
+                    for key in dntoeus.keys():
+                        val = dntoeus[key]
+                        val = "%s" % type(val)
+                        if (re.search(".*FieldList.*", val)):
+                            dntoeus[key] = "Value not displayable"
+                            #log.info("Updated value of key: %s from dntoeus" % key)
+                    #log.info("New dntoeus: %s" % dntoeus)
+
+                    try:
+                        json.dumps({
+                            'packet': name,
+                            'data': delta,
+                            'dntoeus': dntoeus,
+                            'counter': counter})
+                    except:
+                        log.info("JSON DUMPS exception")
+                        continue
+
                     wsock.send(json.dumps({
                         'packet': name,
                         'data': delta,
@@ -867,13 +903,24 @@ def handle():
 @App.route('/tlm/latest', method='GET')
 def handle():
     """Return latest telemetry packet to client"""
+    log.info("TLM/LATEST handle function executing")
     for pkt_type, state in packet_states.items():
         packet_states[pkt_type]['dntoeu'] = replace_datetimes(state['dntoeu'])
 
     with Sessions.current() as session:
         counters = session.tlm_counters
-        return json.dumps({'states': packet_states,
-                           'counters': counters})
+        #log.info(f"packet_states.keys is {packet_states.keys()}")
+        #log.info(f"packet type in question is: {packet_states['BCT_XACT_ADCS_ORBIT_REFS_TELEMETRY']}")
+        for packet_type in packet_states.keys():
+            for telem_type in packet_states[packet_type].keys():
+                for channel_name, value in packet_states[packet_type][telem_type].items():
+                    if (type(value) == tlm.FieldList) or (type(value) == bytes):
+                        packet_states[packet_type][telem_type][channel_name] = "Value not displayable"
+
+        #log.info(f"packet_states is {packet_states}")
+        json_result =  json.dumps({'states': packet_states, 'counters': counters})
+        #log.info(f"json output is: {json_result}")
+        return json_result
 
 
 @App.route('/tlm/query', method='POST')
