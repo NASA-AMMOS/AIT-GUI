@@ -1,1 +1,2 @@
 git+https://github.com/NASA-AMMOS/AIT-Core.git#egg=ait-core
+MarkupSafe==2.0.1
