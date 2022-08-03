@@ -50,4 +50,3 @@ You can send example telemetry data to the GUI for testing using **ait_tlm_send.
    $ ait-tlm-send /path/to/sometestdata.pcap
 
 You will need to ensure that the **tlm.yaml** used when generating the example PCAP data matches the **tlm.yaml** you're using when running **ait_tlm_send**, otherwise you will end up with data that looks odd in the UI.
-

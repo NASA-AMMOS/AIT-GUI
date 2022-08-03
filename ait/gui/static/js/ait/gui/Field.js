@@ -137,7 +137,7 @@ const Field =
             if ('upper' in this._limits && 'error' in this._limits.upper) {
                 isError = value > this._limits.upper.error
             }
-            
+
             if ('lower' in this._limits && 'error' in this._limits.lower) {
                 isError = value < this._limits.lower.error || isError
             }
@@ -159,7 +159,7 @@ const Field =
         } else {
             if ('upper' in this._limits && 'warn' in this._limits.upper) {
                 isWarning =  value > this._limits.upper.warn
-            } 
+            }
 
             if ('lower' in this._limits && 'warn' in this._limits.lower) {
                 isWarning = value < this._limits.lower.warn || isWarning
@@ -292,7 +292,7 @@ const Field =
     },
 
     onbeforeupdate (vnode, old) {
-        return this.hasChanged() 
+        return this.hasChanged()
     },
 
     view (vnode) {
@@ -365,7 +365,7 @@ const Field =
             dname = vnode.attrs.display_name + ': '
         }
 
-        return m('ait-field', vnode.attrs, [m('name', dname), 
+        return m('ait-field', vnode.attrs, [m('name', dname),
                                             m('value', value)])
     }
 }

@@ -47,7 +47,7 @@ class PacketBuffer
      * @return the underlying circular _buffer index for n.
      */
     _index (n) {
-        
+
         return (this._start + this._length + n) % this._buffer.length
     }
 
@@ -84,7 +84,7 @@ class PacketBuffer
      * Inserts a packet into this PacketBuffer, removing the oldest
      * packet, if the buffer is at capacity.
      */
-    insert (packet) {        
+    insert (packet) {
         if ((this._length + 1) > this._buffer.length) {
             this.remove()
         }
@@ -123,7 +123,7 @@ class PacketBuffers
 {
     create (name, capacity = 600) {
         let created = false
-        
+
         if (this[name] === undefined) {
             this[name] = new PacketBuffer(capacity)
             created    = true
@@ -132,7 +132,7 @@ class PacketBuffers
         return created
     }
 
-    
+
     insert (name, packet) {
         if (this[name] === undefined) {
             this.create(name)

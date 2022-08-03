@@ -241,7 +241,7 @@ const CommandInput = {
                                      if (e.keyCode == 17) {
                                          this._cntrl_toggled = true
                                      }
-                                     
+
                                      // Cancel submission if
                                      //  - Enter was pressed without pressing Ctrl
                                      //  - Enter + Ctrl was pressed but the command isn't valid
@@ -485,7 +485,7 @@ const CommandConfigure = {
     _cmding_disabled: false,
     _cmd_valid: false,
     _validating: false,
-    
+
     // We need to keep track of the selected command state for initial command
     // validation so we can handle commands that are always valid (commands
     // with no arguments or only enumerated values).

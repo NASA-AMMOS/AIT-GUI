@@ -35,7 +35,7 @@ class EventBus
         const listeners = this._listeners[event]
         const index     = listeners && listeners.indexOf(fn)
         const found     = index !== undefined && index !== -1
-        
+
         if (found) {
             listeners.splice(index, 1)
         }

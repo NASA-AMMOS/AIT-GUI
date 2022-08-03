@@ -510,7 +510,7 @@ const Scripts = {
         ait.events.on('script:resume', (e) => {
             ScriptsState.execState = 'running'
         })
-        
+
         ait.events.on('script:loaded', (e) => {
             ScriptsState.execState = 'stopped'
             this._script_load_toggle = !this._script_load_toggle

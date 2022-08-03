@@ -113,11 +113,11 @@ function AITIntegration() {
             namespace: 'taxonomy',
             key: 'spacecraft'
         });
-    
+
         openmct.objects.addProvider('taxonomy', objectProvider);
-    
+
         openmct.composition.addProvider(compositionProvider);
-    
+
         openmct.types.addType('telemetry', {
             name: 'Telemetry Point',
             description: 'Spacecraft Telemetry point',
@@ -135,14 +135,14 @@ function AITHistoricalTelemetryPlugin() {
             request: function (domainObject, options) {
                 let url = '/history/' + domainObject.identifier.key +
                     '?start=' + options.start + '&end=' + options.end;
-    
+
                 return http.get(url)
                     .then(function (resp) {
                         return resp.data
                     });
             }
         };
-    
+
         openmct.telemetry.addProvider(provider);
     }
 };
@@ -152,7 +152,7 @@ function AITRealtimeTelemetryPlugin() {
         let socket = new WebSocket(
             'ws://' + AIT_HOST + ':' + AIT_PORT + '/tlm/realtime/openmct');
         let listener = {};
-    
+
         socket.onmessage = function (event) {
             let now = Date.now()
 
@@ -170,7 +170,7 @@ function AITRealtimeTelemetryPlugin() {
                 }
             }
         };
-        
+
         let provider = {
             supportsSubscribe: function (domainObject) {
                 return domainObject.type === 'telemetry';
@@ -182,7 +182,7 @@ function AITRealtimeTelemetryPlugin() {
                 };
             }
         };
-        
+
         openmct.telemetry.addProvider(provider);
     }
 };
