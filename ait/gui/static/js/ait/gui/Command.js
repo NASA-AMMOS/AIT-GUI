@@ -584,6 +584,7 @@ const CommandConfigure = {
         let cmdArgs = map(argdefns, (arg) => {
             return m('div', {class: 'form-group'}, flatten([
               m('label', {class: 'control-label'}, this.prettifyName(arg.name)),
+              this.generateArgumentInfo(arg),
               this.generateArgumentInput(arg)
             ]))
         })
@@ -655,6 +656,128 @@ const CommandConfigure = {
          name_parts = map(name_parts, (v) => v.charAt(0).toUpperCase() + v.slice(1))
          return name_parts.join(' ')
      },
+
+
+    /**
+     * Generate info popup for a given command's argument object
+     */
+    generateArgumentInfo(argument){
+        // Generate element id and name
+        let id = "popover-data-" + argument.name
+        let element_name = "#" + id
+
+        // Create popover title and content
+        let title = this.createPopoverTitle(argument)
+        let popover_content = this.createPopoverContent(argument)
+
+        // Taken from Field.js
+        let bodyClickClosePopoverHandler = () => {
+            $(element_name).popover('hide')
+        }
+
+        $(element_name).popover({
+            html: true,
+            placement: 'auto right',
+            container: 'body'
+        }).on('shown.bs.popover', (e) => {
+            let popover_id = e.currentTarget.attributes['aria-describedby'].value
+            let popover_title = document.getElementById(popover_id).getElementsByClassName('popover-title')[0]
+            let span = popover_title.getElementsByTagName('span')[0]
+
+            if(span != null){
+                // Add handler to the close icon span in the popover title
+                // so it can be used to close the popover.
+                span.addEventListener('click', () => {
+                    $(element_name).popover('hide')
+                })
+            }
+
+            // Add handler to body so that clicks outside of the popover
+            // cause it to close.
+            document.body.addEventListener('click', bodyClickClosePopoverHandler)
+
+            // Capture click events on the popover so they don't
+            // propagate up to the body and close the popover.
+            document.getElementById(popover_id).addEventListener('click', (e) => {
+                e.stopPropagation()
+            })
+        }).on('hide.bs.popover', (e) => {
+            // Clean up our popover click handler from body when we're done.
+            document.body.removeEventListener('click', bodyClickClosePopoverHandler)
+        }).on('hidden.bs.popover', (e) => {
+            // Resets the popover click state that gets out of sync when
+            // the popover is open/closed programmatically. Without this
+            // the Field can end up in a state where you need to click
+            // it twice to toggle the popover if the close icon or body
+            // click handler caused it to close previously.
+            $(e.target).data("bs.popover").inState.click = false;
+        })
+
+        return m('span',
+                    {
+                      id: id,
+                      class: 'glyphicon glyphicon-info-sign',
+                      'data-content': popover_content,
+                      'data-original-title': title,
+                      'data-toggle': 'popover',
+                      'data-trigger': 'click',
+                      style: 'cursor:pointer; margin-left:0.25em; display:inline-block',
+                      tabindex: 0
+                    }
+                )
+    },
+
+    /**
+     * Generate the popover title for a given command's argument object
+     */
+    createPopoverTitle(argument) {
+        let title = '<div>' + argument.name +
+            '<span class="pull-right" style="cursor:pointer">' +
+              '\u00D7' +
+            '</span></div>'
+        return title
+    },
+
+    /**
+     * Generate the popover content for a given command's argument object
+     */
+    createPopoverContent(argument) {
+        let desc = argument.desc ? argument.desc : "None"
+        let type = argument.type ? argument.type : "Unknown"
+        let bytes = typeof(argument.bytes) === "object" ? (
+            argument.bytes[0] + " - " + argument.bytes[1]) : (
+            argument.bytes)
+
+        let hex_padding = 2
+        if (typeof(argument.bytes) === "object") {
+            hex_padding = (argument.bytes[1] - argument.bytes[0] + 1) * 2
+        }
+
+        let mask = argument.mask ? (
+            `0x${sprintf(`%0${hex_padding}X`, argument.mask)}`) : (
+            "None")
+
+        let units = argument.units ? argument.units : "None"
+
+        let popover_content = `
+            <p><b>Description:</b> ${desc}</p>
+            <p><b>Data Type:</b> ${type}</p>
+            <p><b>Byte(s) in Packet:</b> ${bytes}</p>
+            <p><b>Bit Mask:</b> ${mask}</p>
+            <p><b>Units:</b> ${units}</p>
+        `
+
+        if (argument.enum) {
+            let enums = ""
+            let _enum = argument.enum
+            for (let k in _enum) {
+                enums += `<dt>${k}</dt><dd>${_enum[k]}`
+            }
+            popover_content += `<b>Enumerated Values:</b><dl>${enums}</dl>`
+        }
+
+        return `<ait-arg-popover>${popover_content}</ait-arg-popover>`
+    },
 
     /**
      * Generate the argument input field for a given command's argument object.
