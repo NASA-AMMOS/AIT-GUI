@@ -164,20 +164,33 @@ const TabSet =
         const attrs = {
             href       : '#',
             class      : '',
+            html       : true,
             draggable  : this.isActive(index),
             ondragstart: (e) => this._drag.start(e, index),
             ondragend  : (e) => this._drag.end(e, index)
         }
 
         const tabName = vnode.attrs.title
+        let tab = m('a', attrs, vnode.attrs.title)
         if (this.tabs && Object.keys(this.tabs[tabName]['___limit_error']).length > 0) {
             attrs['class'] += ' tab_title--out-of-limit--error'
-        }
-        else if (this.tabs && Object.keys(this.tabs[tabName]['___limit_warning']).length > 0) {
+            let num_limit = Object.keys(this.tabs[tabName]['___limit_error']).length.toString()
+            tab = m('a', attrs, vnode.attrs.title, [
+                    m('span', {
+                            class: 'badge badge-light',
+                            style: 'margin-left:0.25em;',
+                            "data-toggle": "tooltip",
+                            "data-placement": "bottom",
+                            title: "Number of fields that are out of limit: " + num_limit
+                        },
+                        num_limit
+                    )
+                  ])
+        } else if (this.tabs && Object.keys(this.tabs[tabName]['___limit_warning']).length > 0) {
             attrs['class'] += ' tab_title--out-of-limit--warning'
         }
 
-        return m('a', attrs, vnode.attrs.title)
+        return tab
     },
 
 
