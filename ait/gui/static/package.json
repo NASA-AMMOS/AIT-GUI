@@ -12,7 +12,7 @@
   "license": "MIT",
   "devDependencies": {
     "babel-core": "^6.26.3",
-    "babel-loader": "^6.2.10",
+    "babel-loader": "^9.1.0",
     "babel-polyfill": "^6.23.0",
     "babel-preset-es2015": "^6.18.0",
     "bootstrap": "^3.3.7",
@@ -20,8 +20,8 @@
     "codemirror": "^5.26.0",
     "css-loader": "^0.26.0",
     "dygraphs": "^2.0.0",
-    "extract-text-webpack-plugin": "^1.0.1",
-    "file-loader": "^0.9.0",
+    "extract-text-webpack-plugin": "^3.0.2",
+    "file-loader": "^6.2.0",
     "jquery": "^3.2.1",
     "jsdom": "^9.11.0",
     "jsdom-global": "^2.1.1",
@@ -34,7 +34,7 @@
     "style-loader": "^0.13.1",
     "typeahead.js": "^0.11.1",
     "url-loader": "^0.5.7",
-    "webpack": "^1.13.3"
+    "webpack": "^5.74.0"
   },
   "dependencies": {}
 }
