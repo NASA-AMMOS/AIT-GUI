@@ -105,7 +105,7 @@ function time (obj, { h24 = true, gps = true, utc = false } = {}) {
     } else {
         hh = time.getHours()
         mm = time.getMinutes()
-        ss = time.getSeconds()            
+        ss = time.getSeconds()
     }
 
     if (!h24 && hh > 12) {
@@ -127,7 +127,7 @@ function tz (obj, { utc = false, gps = true, local = false } = {}) {
     if (gps) {
         return 'GPS'
     } else if (utc) {
-        return 'UTC' 
+        return 'UTC'
     } else if (local) {
         return 'Local Time'
     } else {

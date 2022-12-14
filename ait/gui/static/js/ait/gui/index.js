@@ -106,7 +106,7 @@ function createMithrilNode (elem) {
     return node
 }
 
-            
+
 function makeMithrilNode(e) {
     if (e === undefined || e.tag === undefined) {
         return e

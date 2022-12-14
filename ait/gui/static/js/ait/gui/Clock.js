@@ -21,7 +21,7 @@ import * as format from 'ait/format'
  * AIT Clock UI Widget
  *
  * The AIT Clock UI Widget displays a clock with date and time that
- * updates every second.  The display is configurable at initialization 
+ * updates every second.  The display is configurable at initialization
  * time or by clicking on specific parts of the time / date display.
  *
  * Configurable / Toggleable options include:

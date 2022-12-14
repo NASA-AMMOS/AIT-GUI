@@ -26,7 +26,7 @@
  * Each class sets a background color for a message of a given
  * severity when it is displayed in the ait-messages component.
  *
- * E.g., 
+ * E.g.,
  *   "ait-messages .entry--critical" sets the background color
  *   for a "critical" message.
  *

@@ -1,0 +1,17 @@
+repos:
+
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+    -   id: trailing-whitespace
+    -   id: end-of-file-fixer
+    -   id: check-merge-conflict
+
+-   repo: local
+    hooks:
+    -   id: tests
+        name: Tests
+        entry: 'npm test --prefix ait/gui/static'
+        language: system
+        stages: [push]
+        pass_filenames: false

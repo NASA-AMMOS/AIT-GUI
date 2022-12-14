@@ -29,7 +29,7 @@ function DOY (year, month, day) {
 
 /**
  * @returns true if year is a leap year, false otherwise.
- */ 
+ */
 function isLeap (year) {
     return ((year % 4 === 0) && (year % 100 !== 0)) || (year % 400 === 0)
 }
