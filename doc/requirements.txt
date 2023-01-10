@@ -1,3 +1,4 @@
 sphinx-rtd-theme
 sphinxcontrib-httpdomain
+sphinx-js
 git+https://github.com/NASA-AMMOS/AIT-Core.git#egg=ait-core
