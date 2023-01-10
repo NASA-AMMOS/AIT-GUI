@@ -1,3 +1,6 @@
+.. image:: https://readthedocs.org/projects/ait-gui/badge/?version=latest
+    :target: https://ait-gui.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
 AMMOS Instrument Toolkit (AIT) GUI
 ==================================
 
