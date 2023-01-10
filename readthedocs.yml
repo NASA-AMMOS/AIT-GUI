@@ -1,9 +1,7 @@
-build:
-  image: latest
 formats:
     - none
 python:
-    version: 3.7
+    version: "3.8"
     pip_install: true
     install:
       - requirements: doc/requirements.txt
