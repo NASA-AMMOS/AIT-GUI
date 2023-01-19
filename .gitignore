@@ -6,6 +6,7 @@ build/
 *.egg
 .tox
 dist/
+.tox/
 
 # Object Files
 *.o
