@@ -4,8 +4,45 @@ repos:
     rev: v4.0.1
     hooks:
     -   id: trailing-whitespace
+        exclude: "build/"
     -   id: end-of-file-fixer
+        exclude: "build/"
     -   id: check-merge-conflict
+        exclude: "build/"
+    -   id: debug-statements
+        exclude: "build/"
+
+-   repo: https://github.com/asottile/reorder_python_imports
+    rev: v2.6.0
+    hooks:
+    -   id: reorder-python-imports
+        files: ^src/|test/
+
+-   repo: local
+    hooks:
+    -   id: mypy
+        name: mypy
+        entry: mypy --namespace-packages --package ait.gui
+        language: system
+        pass_filenames: false
+        exclude: "bin/"
+
+-   repo: local
+    hooks:
+    -   id: black
+        name: black
+        entry: black
+        files: ^src/|test/
+        language: system
+        types: [python]
+
+-   repo: local
+    hooks:
+    -   id: flake8
+        name: flake8
+        entry: flake8 ait
+        language: system
+        pass_filenames: false
 
 -   repo: local
     hooks:
