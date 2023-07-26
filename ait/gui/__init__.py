@@ -265,7 +265,7 @@ class HTMLRoot:
 SEQRoot = ait.config.get("sequence.directory", None)  # type: ignore[attr-defined]
 if SEQRoot and not os.path.isdir(SEQRoot):
     msg = "sequence.directory does not exist. Sequence loads may fail."
-    ait.core.log.warn(msg)
+    ait.core.log.warn(msg)  # type: ignore
 
 ScriptRoot = ait.config.get("script.directory", None)  # type: ignore[attr-defined]
 if ScriptRoot and not os.path.isdir(ScriptRoot):
@@ -273,7 +273,7 @@ if ScriptRoot and not os.path.isdir(ScriptRoot):
         "script.directory points to a directory that does not exist. "
         "Script loads may fail."
     )
-    ait.core.log.warn(msg)
+    ait.core.log.warn(msg)  # type: ignore
 
 App = bottle.Bottle()
 Servers = []
@@ -284,11 +284,11 @@ try:
     with open(os.path.join(HTMLRoot.Static, "package.json")) as infile:
         package_data = json.loads(infile.read())
     VERSION = "AIT GUI v{}".format(package_data["version"])
-    log.info("Running {}".format(VERSION))
+    log.info("Running {}".format(VERSION))  # type: ignore
 # TODO: Fix this nonsense
 except Exception:
     VERSION = ""
-    log.warn("Unable to determine which AIT GUI Version is running")
+    log.warn("Unable to determine which AIT GUI Version is running")  # type: ignore
 
 
 class AITGUIPlugin(Plugin):
