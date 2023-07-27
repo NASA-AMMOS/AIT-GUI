@@ -1,6 +1,6 @@
 {
   "name": "ait-gui",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "description": "AIT GUI",
   "main": "index.js",
   "scripts": {
