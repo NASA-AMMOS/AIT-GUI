@@ -1,6 +1,7 @@
 .. image:: https://readthedocs.org/projects/ait-gui/badge/?version=latest
     :target: https://ait-gui.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
+
 AMMOS Instrument Toolkit (AIT) GUI
 ==================================
 
@@ -15,9 +16,8 @@ REST API to handle common MOS use cases.
 Getting Started
 ---------------
 
-You can read through the `Installation
-Page <http://ait-gui.readthedocs.io/en/latest/installation.html>`__ for
-instruction on how to install AIT GUI.
+You can read through the `Installation Page <http://ait-gui.readthedocs.io/en/latest/installation.html>`__ for
+instructions on how to install AIT GUI.
 
 Browser Requirements
 --------------------
@@ -27,8 +27,7 @@ AIT GUI requires one of the following browsers:
 -  Firefox version 52.0 or newer
 -  Chrome version 57.0 or newer
 
-Safari v10.1 or newer will likely work as well but compatibility is not
-regularly checked or guaranteed.
+Safari v10.1 or newer will likely work as well but compatibility is not regularly checked or guaranteed.
 
 Join the Community
 ------------------
@@ -40,5 +39,4 @@ This project exists thanks to the dedicated users, contributors, committers, and
 Contributing
 ------------
 
-For information on how to contribute please see the `AIT Contributing
-Guide <https://github.com/NASA-AMMOS/AIT-Core/wiki/Contributing>`__
+For information on how to contribute please see the `AIT Contributing Guide <https://github.com/NASA-AMMOS/AIT-Core/wiki/Contributing>`__
