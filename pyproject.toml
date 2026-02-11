@@ -35,11 +35,11 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python   = ">= 3.7 < 3.11"
-ait-core = ">=3.0.0"
-greenlet = "1.1.3"
+python   = ">= 3.9 < 3.14"
+ait-core = { path = "../AIT-Core", develop = true }
+greenlet = ">= 2.0.0"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 black                     = '*'
 flake8                    = '*'
 pyproject-flake8          = '^0.0.1-alpha.2'
@@ -59,7 +59,7 @@ pre-commit                = '*'
 sphinx                    = '>= 4.2'
 sphinx-rtd-theme          = '*'
 sphinxcontrib-httpdomain  = '*'
-tox                       = '>= 3.8 < 4.0'
+tox                       = '>= 3.8 < 5.0'
 twine                     = '^3.4.2'
 
 [tool.poetry.scripts]
