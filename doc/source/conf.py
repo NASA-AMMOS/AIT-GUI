@@ -23,10 +23,15 @@ if os.environ.get('AIT_CONFIG', None) is None:
 
 if os.getenv('READTHEDOCS'):
     root_for_relative_js_paths = '../../ait/gui/static'
-    js_source_path = ['../../ait/gui/static/js/ait', '../../ait/gui/static/js/ait/gui']
 else:
-    root_for_relative_js_paths = 'ait/gui/static'
-    js_source_path = ['ait/gui/static/js/ait', 'ait/gui/static/js/ait/gui']
+    import ait.gui
+    import os as _os
+    _static = _os.path.join(_os.path.dirname(ait.gui.__file__), 'static')
+    root_for_relative_js_paths = _static
+    js_source_path = [
+        _os.path.join(_static, 'js/ait'),
+        _os.path.join(_static, 'js/ait/gui')
+    ]
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
