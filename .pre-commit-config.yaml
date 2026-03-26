@@ -50,5 +50,5 @@ repos:
         name: Tests
         entry: 'npm test --prefix ait/gui/static'
         language: system
-        stages: [pre-push]
+        stages: [push]
         pass_filenames: false
