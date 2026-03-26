@@ -3,7 +3,7 @@ AIT GUI Installation
 
 This guide will show you how to install AIT GUI. It assumes that you have followed the `AIT Core Installation and Configuration Guide <https://ait-core.readthedocs.io/en/latest/installation.html>`_ and ended up with a working AIT Core install. You can install AIT GUI from a checkout of the code or from the AIT PyPi server. Having a checkout of the code can be handy if you want to view the source or make changes. Installing from PyPi keeps your system clutter free since you don't have a copy of the code base around. Either choice will work fine!
 
-.. note::  AIT GUI is tested against Python 3.9, 3.10, 3.11, and 3.12. Python 3.12 is recommended for new installations.
+.. note::  AIT GUI is tested against Python 3.10, and 3.11. Python 3.11 is recommended for new installations.
 
 From Code Checkout
 ------------------
