@@ -35,9 +35,11 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python   = ">= 3.9 < 3.14"
-ait-core = { path = "../AIT-Core", develop = true }
-greenlet = ">= 2.0.0"
+python              = ">= 3.10 < 3.12"
+ait-core            = { path = "../AIT-Core", develop = true }
+greenlet            = ">= 2.0.0"
+importlib_metadata  = "4.3.0"
+importlib_resources = "6.5.2"
 
 [tool.poetry.group.dev.dependencies]
 black                     = '*'
@@ -56,7 +58,8 @@ pytest-cov                = '*'
 pytest-watch              = '*'
 pytest-xdist              = '*'
 pre-commit                = '*'
-sphinx                    = '>= 4.2'
+sphinx                    = '4.4'
+sphinx-js                 = '*'
 sphinx-rtd-theme          = '*'
 sphinxcontrib-httpdomain  = '*'
 tox                       = '>= 3.8 < 5.0'
