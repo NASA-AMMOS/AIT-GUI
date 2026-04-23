@@ -17,6 +17,7 @@ import time
 from typing import Dict
 import urllib
 import webbrowser
+import pathlib
 
 import bottle
 
@@ -1103,13 +1104,16 @@ def handle_scripts_load(name):
        }
     """
     with Sessions.current() as session:  # noqa: F841
-        script_path = os.path.join(ScriptRoot, urllib.parse.unquote(name))
-        if not os.path.exists(script_path):
+        safe_root = pathlib.Path(ScriptRoot).resolve()
+        script_path = (safe_root / pathlib.Path(urllib.parse.unquote(name))).resolve()
+
+        if not script_path.is_relative_to(safe_root):
+            bottle.abort(400, "Invalid script path")
+        if not script_path.exists():
             bottle.abort(400, "Script cannot be located")
 
         with open(script_path) as infile:
             script_text = infile.read()
-
         return json.dumps({"script_text": script_text})
 
 
