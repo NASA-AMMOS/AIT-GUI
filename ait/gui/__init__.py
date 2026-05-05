@@ -259,7 +259,7 @@ CMD_API = ait.core.api.CmdAPI()
 
 
 class HTMLRoot:
-    Static = User = str(importlib.resources.files("ait.gui").joinpath("static/"))
+    static_dir = user = str(importlib.resources.files("ait.gui").joinpath("static/"))
 
 
 SEQRoot = ait.config.get("sequence.directory", None)  # type: ignore[attr-defined]
@@ -281,7 +281,7 @@ Greenlets = []  # type: ignore[var-annotated]
 
 
 try:
-    with open(os.path.join(HTMLRoot.Static, "package.json")) as infile:
+    with open(os.path.join(HTMLRoot.static_dir, "package.json")) as infile:
         package_data = json.loads(infile.read())
     VERSION = "AIT GUI v{}".format(package_data["version"])
     log.info("Running {}".format(VERSION))  # type: ignore
@@ -298,20 +298,20 @@ class AITGUIPlugin(Plugin):
         super(AITGUIPlugin, self).__init__(inputs, outputs, zmq_args, **kwargs)
 
         try:
-            HTMLRoot.User = kwargs["html"]["directory"]
+            HTMLRoot.user = kwargs["html"]["directory"]
             log.info(
                 "[GUI Plugin Configuration] Static file directory "
-                "is set to {}".format(HTMLRoot.User)
+                "is set to {}".format(HTMLRoot.user)
             )
         # TODO: Fix this nonsense
         except Exception:
             log.warn(
                 "[GUI Plugin Configuration] Unable to locate static "
                 "file directory in config.yaml. "
-                "The directory is set to {}".format(HTMLRoot.User)
+                "The directory is set to {}".format(HTMLRoot.user)
             )
 
-        bottle.TEMPLATE_PATH.append(HTMLRoot.User)
+        bottle.TEMPLATE_PATH.append(HTMLRoot.user)
 
         gevent.spawn(self.init)
 
@@ -394,11 +394,11 @@ class AITGUIPlugin(Plugin):
 
         @App.route("/ait/gui/static/<pathname:path>")
         def handle_static_files(pathname):
-            return bottle.static_file(pathname, root=HTMLRoot.Static)
+            return bottle.static_file(pathname, root=HTMLRoot.static_dir)
 
         @App.route("/<pathname:path>")
         def handle_root_files(pathname):
-            return bottle.static_file(pathname, root=HTMLRoot.User)
+            return bottle.static_file(pathname, root=HTMLRoot.user)
 
         port = int(getattr(self, "port", 8080))
         host = getattr(self, "host", "localhost")  # noqa: F841
@@ -927,7 +927,7 @@ def handle_tlm_latest():
 @App.route("/tlm/query", method="POST")
 def handle_tlm_query_post():
     """"""
-    _fields_file_path = os.path.join(HTMLRoot.Static, "fields_in.txt")
+    _fields_file_path = os.path.join(HTMLRoot.static_dir, "fields_in.txt")
 
     data_dir = bottle.request.forms.get("dataDir")
     time_field = bottle.request.forms.get("timeField")
@@ -970,7 +970,7 @@ def handle_tlm_query_post():
             "--packet",
             packet,
             "--csv",
-            os.path.join(HTMLRoot.Static, "query_out.csv"),
+            os.path.join(HTMLRoot.static_dir, "query_out.csv"),
         ]
         + ["{}".format(p) for p in pcaps]  # noqa: W503
     )
@@ -978,7 +978,7 @@ def handle_tlm_query_post():
     os.remove(_fields_file_path)
 
     return bottle.static_file(
-        "query_out.csv", root=HTMLRoot.Static, mimetype="application/octet-stream"
+        "query_out.csv", root=HTMLRoot.static_dir, mimetype="application/octet-stream"
     )
 
 
