@@ -36,7 +36,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python              = ">= 3.10 < 3.12"
-ait-core            = { path = "../AIT-Core", develop = true }
+ait-core            = ">=3.0.0"
 greenlet            = ">= 2.0.0"
 importlib_metadata  = "4.3.0"
 importlib_resources = "6.5.2"

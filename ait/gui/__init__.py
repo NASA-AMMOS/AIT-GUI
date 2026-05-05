@@ -578,15 +578,13 @@ def handle_tlm_get():
                        type: "MSB_U16",
                        bytes: [2, 3],
                        name: "Voltage_B",
-                       desc: "Voltage B as a 14-bit DN. Conversion to
-                             engineering units is TBD."
+                       desc: "Voltage B as a 14-bit DN. Conversion to engineering units is TBD." # noqa: B950
                    },
                    Voltage_C: {
                        type: "MSB_U16",
                        bytes: [4, 5],
                        name: "Voltage_C",
-                       desc: "Voltage C as a 14-bit DN. Conversion to
-                             engineering units is TBD."
+                       desc: "Voltage C as a 14-bit DN. Conversion to engineering units is TBD." # noqa: B950
                    },
                    ...
                }
