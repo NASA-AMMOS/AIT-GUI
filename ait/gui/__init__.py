@@ -17,9 +17,9 @@ import time
 from typing import Dict
 import urllib
 import webbrowser
+import pathlib
 
 import bottle
-import pkg_resources
 
 import ait.core
 from ait.core import (
@@ -185,8 +185,8 @@ class Playback(object):
     A Playback manages the state for the playback component.
     playback.dbconn: connection to database
     playback.query: time query map of {timestamp: list of (uid, data)} from database
-    playback.on: True if gui is currently in playback mode. Real-time telemetry will not
-        be sent to the frontend during this.
+    playback.on: True if gui is currently in playback mode.
+        Real-time telemetry will not be sent to the frontend during this.
     playback.enabled: True if historical data playback is enabled. This will be False
         if a database connection cannot be made or if data playback is disabled for
         some other reason.
@@ -214,7 +214,7 @@ class Playback(object):
         for i in range(len(plugins)):
             if (
                 plugins[i]["plugin"]["name"]
-                == "ait.core.server.plugins.data_archive.DataArchive"
+                == "ait.core.server.plugins.data_archive.DataArchive"  # noqa: W503
             ):
                 datastore = plugins[i]["plugin"]["datastore"]
                 other_args = copy.deepcopy(plugins[i]["plugin"])
@@ -252,13 +252,14 @@ class Playback(object):
 Sessions = SessionStore()
 playback = Playback()
 
+
 _RUNNING_SCRIPT = None
 _RUNNING_SEQ = None
 CMD_API = ait.core.api.CmdAPI()
 
 
 class HTMLRoot:
-    Static = User = pkg_resources.resource_filename("ait.gui", "static/")
+    static_dir = user = str(importlib.resources.files("ait.gui").joinpath("static/"))
 
 
 SEQRoot = ait.config.get("sequence.directory", None)  # type: ignore[attr-defined]
@@ -280,7 +281,7 @@ Greenlets = []  # type: ignore[var-annotated]
 
 
 try:
-    with open(os.path.join(HTMLRoot.Static, "package.json")) as infile:
+    with open(os.path.join(HTMLRoot.static_dir, "package.json")) as infile:
         package_data = json.loads(infile.read())
     VERSION = "AIT GUI v{}".format(package_data["version"])
     log.info("Running {}".format(VERSION))  # type: ignore
@@ -297,20 +298,20 @@ class AITGUIPlugin(Plugin):
         super(AITGUIPlugin, self).__init__(inputs, outputs, zmq_args, **kwargs)
 
         try:
-            HTMLRoot.User = kwargs["html"]["directory"]
+            HTMLRoot.user = kwargs["html"]["directory"]
             log.info(
-                "[GUI Plugin Configuration] Static file directory is set to {}".format(
-                    HTMLRoot.User
-                )
+                "[GUI Plugin Configuration] Static file directory "
+                "is set to {}".format(HTMLRoot.user)
             )
         # TODO: Fix this nonsense
         except Exception:
             log.warn(
-                "[GUI Plugin Configuration] Unable to locate static file directory in config.yaml. "
-                "The directory is set to {}".format(HTMLRoot.User)
+                "[GUI Plugin Configuration] Unable to locate static "
+                "file directory in config.yaml. "
+                "The directory is set to {}".format(HTMLRoot.user)
             )
 
-        bottle.TEMPLATE_PATH.append(HTMLRoot.User)
+        bottle.TEMPLATE_PATH.append(HTMLRoot.user)
 
         gevent.spawn(self.init)
 
@@ -393,11 +394,11 @@ class AITGUIPlugin(Plugin):
 
         @App.route("/ait/gui/static/<pathname:path>")
         def handle_static_files(pathname):
-            return bottle.static_file(pathname, root=HTMLRoot.Static)
+            return bottle.static_file(pathname, root=HTMLRoot.static_dir)
 
         @App.route("/<pathname:path>")
         def handle_root_files(pathname):
-            return bottle.static_file(pathname, root=HTMLRoot.User)
+            return bottle.static_file(pathname, root=HTMLRoot.user)
 
         port = int(getattr(self, "port", 8080))
         host = getattr(self, "host", "localhost")  # noqa: F841
@@ -578,13 +579,13 @@ def handle_tlm_get():
                        type: "MSB_U16",
                        bytes: [2, 3],
                        name: "Voltage_B",
-                       desc: "Voltage B as a 14-bit DN. Conversion to engineering units is TBD."
+                       desc: "Voltage B as a 14-bit DN. Conversion to engineering units is TBD." # noqa: B950
                    },
                    Voltage_C: {
                        type: "MSB_U16",
                        bytes: [4, 5],
                        name: "Voltage_C",
-                       desc: "Voltage C as a 14-bit DN. Conversion to engineering units is TBD."
+                       desc: "Voltage C as a 14-bit DN. Conversion to engineering units is TBD." # noqa: B950
                    },
                    ...
                }
@@ -785,8 +786,8 @@ def get_packet_delta(pkt_defn, packet):
         for f in pkt_defn.fields:
             if (
                 f.dntoeu is not None
-                or f.enum is not None
-                or f.type.name in dtype.ComplexTypeMap.keys()
+                or f.enum is not None  # noqa: W503
+                or f.type.name in dtype.ComplexTypeMap.keys()  # noqa: W503
             ):
                 try:
                     val = getattr(ait_pkt, f.name)
@@ -829,8 +830,8 @@ def get_packet_delta(pkt_defn, packet):
 
                 if (
                     field.dntoeu is not None
-                    or field.enum is not None
-                    or field.type.name in dtype.ComplexTypeMap.keys()
+                    or field.enum is not None  # noqa: W503
+                    or field.type.name in dtype.ComplexTypeMap.keys()  # noqa: W503
                 ):
                     try:
                         dntoeu_val = getattr(ait_pkt, field.name)
@@ -926,7 +927,7 @@ def handle_tlm_latest():
 @App.route("/tlm/query", method="POST")
 def handle_tlm_query_post():
     """"""
-    _fields_file_path = os.path.join(HTMLRoot.Static, "fields_in.txt")
+    _fields_file_path = os.path.join(HTMLRoot.static_dir, "fields_in.txt")
 
     data_dir = bottle.request.forms.get("dataDir")
     time_field = bottle.request.forms.get("timeField")
@@ -969,15 +970,15 @@ def handle_tlm_query_post():
             "--packet",
             packet,
             "--csv",
-            os.path.join(HTMLRoot.Static, "query_out.csv"),
+            os.path.join(HTMLRoot.static_dir, "query_out.csv"),
         ]
-        + ["{}".format(p) for p in pcaps]
+        + ["{}".format(p) for p in pcaps]  # noqa: W503
     )
 
     os.remove(_fields_file_path)
 
     return bottle.static_file(
-        "query_out.csv", root=HTMLRoot.Static, mimetype="application/octet-stream"
+        "query_out.csv", root=HTMLRoot.static_dir, mimetype="application/octet-stream"
     )
 
 
@@ -1101,13 +1102,16 @@ def handle_scripts_load(name):
        }
     """
     with Sessions.current() as session:  # noqa: F841
-        script_path = os.path.join(ScriptRoot, urllib.parse.unquote(name))
-        if not os.path.exists(script_path):
+        safe_root = pathlib.Path(ScriptRoot).resolve()
+        script_path = (safe_root / pathlib.Path(urllib.parse.unquote(name))).resolve()
+
+        if not script_path.is_relative_to(safe_root):
+            bottle.abort(400, "Invalid script path")
+        if not script_path.exists():
             bottle.abort(400, "Script cannot be located")
 
         with open(script_path) as infile:
             script_text = infile.read()
-
         return json.dumps({"script_text": script_text})
 
 
@@ -1170,7 +1174,7 @@ def handle_script_abort_delete():
         script_exec_lock.acquire()
 
     if _RUNNING_SCRIPT:
-        _RUNNING_SCRIPT.kill(UIAbortException())
+        _RUNNING_SCRIPT.kill(UIAbortError())
     script_exec_lock.release()
     Sessions.add_event("script:aborted", None)
 
@@ -1265,13 +1269,15 @@ def handle_prompt_response_post():
 
 @App.route("/playback/range", method="GET")
 def handle_playback_range_get():
-    """Return a JSON array of [packet_name, start_time, end_time] to represent the time range
-    of each packet in the database
+    """Return a JSON array of [packet_name, start_time, end_time] to
+    represent the time range of each packet in the database
         **Example Response**:
         .. sourcecode: json
             [
-                ["1553_HS_Packet", "2019-07-15T18:10:00.0", "2019-07-15T18:12:00.0"],
-                ["Ethernet_HS_Packet", "2019-07-15T19:25:16.0", "2019-07-15T19:28:50.0"],
+                ["1553_HS_Packet", "2019-07-15T18:10:00.0",
+                 "2019-07-15T18:12:00.0"],
+                ["Ethernet_HS_Packet", "2019-07-15T19:25:16.0",
+                 "2019-07-15T19:28:50.0"],
             ]
     """
     global playback
@@ -1310,8 +1316,9 @@ def handle_playback_range_get():
                 end_time_str, "%Y-%m-%dT%H:%M:%SZ"
             ) + timedelta(seconds=1)
         else:
-            end_time = datetime.strptime(end_time_str, "%Y-%m-%dT%H:%M:%S") + timedelta(
-                seconds=1
+            end_time = (
+                datetime.strptime(end_time_str, "%Y-%m-%dT%H:%M:%S")
+                + timedelta(seconds=1)  # noqa: W503
             )
 
         ranges[i].append(end_time.strftime("%Y-%m-%dT%H:%M:%SZ"))
@@ -1395,7 +1402,7 @@ def handle_playback_abort_put():
         session.telemetry.clear()
 
 
-class UIAbortException(Exception):
+class UIAbortError(Exception):
     """Raised when user aborts script execution via GUI controls"""
 
     def __init__(self, msg=None):
@@ -1406,7 +1413,7 @@ class UIAbortException(Exception):
 
     @property
     def msg(self):
-        s = "UIAbortException: User aborted script execution via GUI controls."
+        s = "UIAbortError: User aborted script execution via GUI controls."
 
         if self._msg:
             s += ": " + self._msg

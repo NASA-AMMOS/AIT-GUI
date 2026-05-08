@@ -2,6 +2,7 @@ import socket
 import struct
 import time
 
+
 def main():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     hs_packet = struct.Struct('>hhhhh')
