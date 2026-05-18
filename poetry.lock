@@ -2,32 +2,30 @@
 
 [[package]]
 name = "ait-core"
-version = "3.0.0"
+version = "3.1.0"
 description = "NASA JPL's Ground Data System toolkit for Instrument and CubeSat Missions"
 optional = false
-python-versions = ">= 3.10 < 3.12"
+python-versions = "<3.12,>=3.10"
 groups = ["main"]
-files = []
-develop = true
+files = [
+    {file = "ait_core-3.1.0-py3-none-any.whl", hash = "sha256:680fd558c58d6199f5f8c4786b090fd02527dc3e92a0313c8ba09a061c6806a0"},
+    {file = "ait_core-3.1.0.tar.gz", hash = "sha256:7fa10bd73840033212441d246ded2249260ddc375b946b344ec7cb452c38132d"},
+]
 
 [package.dependencies]
 bottle = "0.12.23"
 gevent = "25.9.1"
 gevent-websocket = "0.10.1"
-gipc = "^1.1.0"
-greenlet = "^3.1.1"
+gipc = ">=1.1.0,<2.0.0"
+greenlet = ">=3.1.1,<4.0.0"
 importlib_metadata = "4.3.0"
 importlib_resources = "6.5.2"
 jsonschema = "4.25.1"
 msgpack = "1.0.5"
 pyyaml = "6.0.1"
 pyzmq = "24.0.0"
-requests = ">= 2.22.0"
-setproctitle = "^1.2.3"
-
-[package.source]
-type = "directory"
-url = "../AIT-Core"
+requests = ">=2.22.0"
+setproctitle = ">=1.2.3,<2.0.0"
 
 [[package]]
 name = "alabaster"
@@ -2748,4 +2746,4 @@ testing = ["coverage[toml]", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">= 3.10 < 3.12"
-content-hash = "a3d514ff722180d640b00593133be2fa29aef82ca34d16efee53a4e706402bb0"
+content-hash = "8e810ebbdf91b1ab9cbe31a335a6a692f698019635b42b4dbf5e793c834094a5"
