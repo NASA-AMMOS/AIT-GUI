@@ -13,6 +13,7 @@ import json
 import os
 import struct
 import sys
+import tempfile
 import time
 from typing import Dict
 import urllib
@@ -927,55 +928,63 @@ def handle_tlm_latest():
 @App.route("/tlm/query", method="POST")
 def handle_tlm_query_post():
     """"""
-    _fields_file_path = os.path.join(HTMLRoot.static_dir, "fields_in.txt")
+    _fields_file_path = None
 
     data_dir = bottle.request.forms.get("dataDir")
     time_field = bottle.request.forms.get("timeField")
     packet = bottle.request.forms.get("packet")
-    fields = bottle.request.forms.get("fields").split(",")
+    fields_raw = bottle.request.forms.get("fields")
     start_time = bottle.request.forms.get("startTime")
     end_time = bottle.request.forms.get("endTime")
 
-    if not (time_field and packet and fields and start_time):
+    if not (time_field and packet and fields_raw and start_time):
         bottle.abort(400, "Malformed parameters")
 
-    with open(_fields_file_path, "w") as fields_file:
-        for f in fields:
-            fields_file.write(f + "\n")
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            prefix="ait-gui-fields-",
+            suffix=".txt",
+            delete=False,
+        ) as fields_file:
+            _fields_file_path = fields_file.name
+            for f in fields_raw.split(","):
+                fields_file.write(f + "\n")
 
-    pcaps = []
-    for d, _dirs, files in os.walk(data_dir):
-        for f in files:
-            if f.endswith(".pcap"):
-                pcaps.append(os.path.join(d, f))
+        pcaps = []
+        for d, _dirs, files in os.walk(data_dir):
+            for f in files:
+                if f.endswith(".pcap"):
+                    pcaps.append(os.path.join(d, f))
 
-    if len(pcaps) == 0:
-        msg = "Unable to locate PCAP files for query given data directory {}".format(
-            data_dir
+        if len(pcaps) == 0:
+            msg = "Unable to locate PCAP files for query given data directory {}".format(
+                data_dir
+            )
+            log.error(msg)
+            bottle.abort(400, msg)
+
+        tlm_query_proc = gevent.subprocess.call(  # noqa: F841
+            [
+                "ait-tlm-csv",
+                "--time_field",
+                time_field,
+                "--fields",
+                _fields_file_path,
+                "--stime",
+                start_time,
+                "--etime",
+                end_time,
+                "--packet",
+                packet,
+                "--csv",
+                os.path.join(HTMLRoot.static_dir, "query_out.csv"),
+            ]
+            + ["{}".format(p) for p in pcaps]  # noqa: W503
         )
-        log.error(msg)
-        bottle.abort(400, msg)
-
-    tlm_query_proc = gevent.subprocess.call(  # noqa: F841
-        [
-            "ait-tlm-csv",
-            "--time_field",
-            time_field,
-            "--fields",
-            _fields_file_path,
-            "--stime",
-            start_time,
-            "--etime",
-            end_time,
-            "--packet",
-            packet,
-            "--csv",
-            os.path.join(HTMLRoot.static_dir, "query_out.csv"),
-        ]
-        + ["{}".format(p) for p in pcaps]  # noqa: W503
-    )
-
-    os.remove(_fields_file_path)
+    finally:
+        if _fields_file_path and os.path.exists(_fields_file_path):
+            os.remove(_fields_file_path)
 
     return bottle.static_file(
         "query_out.csv", root=HTMLRoot.static_dir, mimetype="application/octet-stream"
@@ -1128,12 +1137,18 @@ def handle_script_run_post():
     if _RUNNING_SCRIPT is None:
         with Sessions.current() as session:  # noqa: F841
             script_name = bottle.request.forms.get("scriptPath")
-            script_path = os.path.join(ScriptRoot, script_name)
-
-            if not os.path.exists(script_path):
+            if not script_name:
                 bottle.abort(400, "Script cannot be located")
 
-            _RUNNING_SCRIPT = gevent.spawn(bg_exec_script, script_path)
+            safe_root = pathlib.Path(ScriptRoot).resolve()
+            script_path = (safe_root / pathlib.Path(script_name)).resolve()
+
+            if not script_path.is_relative_to(safe_root):
+                bottle.abort(400, "Invalid script path")
+            if not script_path.exists():
+                bottle.abort(400, "Script cannot be located")
+
+            _RUNNING_SCRIPT = gevent.spawn(bg_exec_script, str(script_path))
     else:
         msg = (
             "Attempted to execute script while another script is running. "
