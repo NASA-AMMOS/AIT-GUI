@@ -277,6 +277,44 @@ if ScriptRoot and not os.path.isdir(ScriptRoot):
 
 App = bottle.Bottle()
 Servers = []
+
+# Methods that can change server state and therefore must be protected against
+# Cross-Site Request Forgery (CSRF).
+_STATE_CHANGING_METHODS = ("POST", "PUT", "DELETE", "PATCH")
+
+
+@App.hook("before_request")
+def _enforce_same_origin():
+    """Reject cross-origin state-changing requests to mitigate CSRF.
+
+    The command / script / sequence endpoints accept ``application/x-www-form-
+    urlencoded`` bodies, which browsers treat as CORS "simple" requests and
+    deliver cross-origin with no preflight. Without this check any web page an
+    operator visits could silently drive the API.
+
+    We compare the request's ``Origin`` (falling back to ``Referer``) against the
+    server's own ``Host``. When a browser sends one of these headers and it does
+    not match, the request is refused. Non-browser clients (e.g. command line
+    tooling) that send neither header are unaffected, so legitimate scripted use
+    still works.
+    """
+    if bottle.request.method not in _STATE_CHANGING_METHODS:
+        return
+
+    host = bottle.request.get_header("Host")
+
+    source = bottle.request.get_header("Origin")
+    if not source:
+        source = bottle.request.get_header("Referer")
+
+    # No Origin/Referer means the request did not originate from a browsing
+    # context (or the browser omitted it for a same-origin navigation); allow it.
+    if not source:
+        return
+
+    source_host = urllib.parse.urlsplit(source).netloc
+    if source_host and host and source_host != host:
+        bottle.abort(403, "Cross-origin request rejected")
 Greenlets = []  # type: ignore[var-annotated]
 
 
@@ -401,11 +439,11 @@ class AITGUIPlugin(Plugin):
             return bottle.static_file(pathname, root=HTMLRoot.user)
 
         port = int(getattr(self, "port", 8080))
-        host = getattr(self, "host", "localhost")  # noqa: F841
+        host = getattr(self, "host", "localhost")
 
         Servers.append(
             gevent.pywsgi.WSGIServer(
-                ("0.0.0.0", port),
+                (host, port),
                 App,
                 handler_class=geventwebsocket.handler.WebSocketHandler,
             )
@@ -1046,7 +1084,14 @@ def handle_seq_abort():
 
 
 def bg_exec_seq(bn_seqfile):
-    seqfile = os.path.join(SEQRoot, bn_seqfile)
+    safe_root = pathlib.Path(SEQRoot).resolve()
+    seqpath = (safe_root / pathlib.Path(urllib.parse.unquote(bn_seqfile))).resolve()
+
+    if not seqpath.is_relative_to(safe_root):
+        log.error("Invalid sequence path.")
+        return
+
+    seqfile = str(seqpath)
     if not os.path.isfile(seqfile):
         msg = "Sequence file not found.  "
         msg += "Reload page to see updated list of files."
@@ -1128,12 +1173,18 @@ def handle_script_run_post():
     if _RUNNING_SCRIPT is None:
         with Sessions.current() as session:  # noqa: F841
             script_name = bottle.request.forms.get("scriptPath")
-            script_path = os.path.join(ScriptRoot, script_name)
 
-            if not os.path.exists(script_path):
+            safe_root = pathlib.Path(ScriptRoot).resolve()
+            script_path = (
+                safe_root / pathlib.Path(urllib.parse.unquote(script_name))
+            ).resolve()
+
+            if not script_path.is_relative_to(safe_root):
+                bottle.abort(400, "Invalid script path")
+            if not script_path.exists():
                 bottle.abort(400, "Script cannot be located")
 
-            _RUNNING_SCRIPT = gevent.spawn(bg_exec_script, script_path)
+            _RUNNING_SCRIPT = gevent.spawn(bg_exec_script, str(script_path))
     else:
         msg = (
             "Attempted to execute script while another script is running. "
