@@ -958,7 +958,7 @@ def handle_tlm_query_post():
                     pcaps.append(os.path.join(d, f))
 
         if len(pcaps) == 0:
-            msg = "Unable to locate PCAP files for query given data directory {}".format(
+            msg = "Unable to locate PCAP files for query given data directory {}".format(  # noqa: B950
                 data_dir
             )
             log.error(msg)
