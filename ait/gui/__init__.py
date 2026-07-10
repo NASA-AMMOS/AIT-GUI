@@ -8,13 +8,11 @@ gevent.monkey.patch_all()
 import geventwebsocket
 
 import bdb
-import pickle
 import importlib
 import json
 import os
 import struct
 import sys
-import tempfile
 import time
 from typing import Dict
 import urllib
@@ -279,6 +277,44 @@ if ScriptRoot and not os.path.isdir(ScriptRoot):
 
 App = bottle.Bottle()
 Servers = []
+
+# Methods that can change server state and therefore must be protected against
+# Cross-Site Request Forgery (CSRF).
+_STATE_CHANGING_METHODS = ("POST", "PUT", "DELETE", "PATCH")
+
+
+@App.hook("before_request")
+def _enforce_same_origin():
+    """Reject cross-origin state-changing requests to mitigate CSRF.
+
+    The command / script / sequence endpoints accept ``application/x-www-form-
+    urlencoded`` bodies, which browsers treat as CORS "simple" requests and
+    deliver cross-origin with no preflight. Without this check any web page an
+    operator visits could silently drive the API.
+
+    We compare the request's ``Origin`` (falling back to ``Referer``) against the
+    server's own ``Host``. When a browser sends one of these headers and it does
+    not match, the request is refused. Non-browser clients (e.g. command line
+    tooling) that send neither header are unaffected, so legitimate scripted use
+    still works.
+    """
+    if bottle.request.method not in _STATE_CHANGING_METHODS:
+        return
+
+    host = bottle.request.get_header("Host")
+
+    source = bottle.request.get_header("Origin")
+    if not source:
+        source = bottle.request.get_header("Referer")
+
+    # No Origin/Referer means the request did not originate from a browsing
+    # context (or the browser omitted it for a same-origin navigation); allow it.
+    if not source:
+        return
+
+    source_host = urllib.parse.urlsplit(source).netloc
+    if source_host and host and source_host != host:
+        bottle.abort(403, "Cross-origin request rejected")
 Greenlets = []  # type: ignore[var-annotated]
 
 
@@ -352,7 +388,6 @@ class AITGUIPlugin(Plugin):
             )
 
     def process_telem_msg(self, msg):
-        msg = pickle.loads(msg)
         if playback.on is False:
             Sessions.add_telemetry(msg[0], msg[1])
 
@@ -404,11 +439,11 @@ class AITGUIPlugin(Plugin):
             return bottle.static_file(pathname, root=HTMLRoot.user)
 
         port = int(getattr(self, "port", 8080))
-        host = getattr(self, "host", "localhost")  # noqa: F841
+        host = getattr(self, "host", "localhost")
 
         Servers.append(
             gevent.pywsgi.WSGIServer(
-                ("0.0.0.0", port),
+                (host, port),
                 App,
                 handler_class=geventwebsocket.handler.WebSocketHandler,
             )
@@ -930,63 +965,55 @@ def handle_tlm_latest():
 @App.route("/tlm/query", method="POST")
 def handle_tlm_query_post():
     """"""
-    _fields_file_path = None
+    _fields_file_path = os.path.join(HTMLRoot.static_dir, "fields_in.txt")
 
     data_dir = bottle.request.forms.get("dataDir")
     time_field = bottle.request.forms.get("timeField")
     packet = bottle.request.forms.get("packet")
-    fields_raw = bottle.request.forms.get("fields")
+    fields = bottle.request.forms.get("fields").split(",")
     start_time = bottle.request.forms.get("startTime")
     end_time = bottle.request.forms.get("endTime")
 
-    if not (time_field and packet and fields_raw and start_time):
+    if not (time_field and packet and fields and start_time):
         bottle.abort(400, "Malformed parameters")
 
-    try:
-        with tempfile.NamedTemporaryFile(
-            mode="w",
-            prefix="ait-gui-fields-",
-            suffix=".txt",
-            delete=False,
-        ) as fields_file:
-            _fields_file_path = fields_file.name
-            for f in fields_raw.split(","):
-                fields_file.write(f + "\n")
+    with open(_fields_file_path, "w") as fields_file:
+        for f in fields:
+            fields_file.write(f + "\n")
 
-        pcaps = []
-        for d, _dirs, files in os.walk(data_dir):
-            for f in files:
-                if f.endswith(".pcap"):
-                    pcaps.append(os.path.join(d, f))
+    pcaps = []
+    for d, _dirs, files in os.walk(data_dir):
+        for f in files:
+            if f.endswith(".pcap"):
+                pcaps.append(os.path.join(d, f))
 
-        if len(pcaps) == 0:
-            msg = "Unable to locate PCAP files for query given data directory {}".format(
-                data_dir
-            )
-            log.error(msg)
-            bottle.abort(400, msg)
-
-        tlm_query_proc = gevent.subprocess.call(  # noqa: F841
-            [
-                "ait-tlm-csv",
-                "--time_field",
-                time_field,
-                "--fields",
-                _fields_file_path,
-                "--stime",
-                start_time,
-                "--etime",
-                end_time,
-                "--packet",
-                packet,
-                "--csv",
-                os.path.join(HTMLRoot.static_dir, "query_out.csv"),
-            ]
-            + ["{}".format(p) for p in pcaps]  # noqa: W503
+    if len(pcaps) == 0:
+        msg = "Unable to locate PCAP files for query given data directory {}".format(
+            data_dir
         )
-    finally:
-        if _fields_file_path and os.path.exists(_fields_file_path):
-            os.remove(_fields_file_path)
+        log.error(msg)
+        bottle.abort(400, msg)
+
+    tlm_query_proc = gevent.subprocess.call(  # noqa: F841
+        [
+            "ait-tlm-csv",
+            "--time_field",
+            time_field,
+            "--fields",
+            _fields_file_path,
+            "--stime",
+            start_time,
+            "--etime",
+            end_time,
+            "--packet",
+            packet,
+            "--csv",
+            os.path.join(HTMLRoot.static_dir, "query_out.csv"),
+        ]
+        + ["{}".format(p) for p in pcaps]  # noqa: W503
+    )
+
+    os.remove(_fields_file_path)
 
     return bottle.static_file(
         "query_out.csv", root=HTMLRoot.static_dir, mimetype="application/octet-stream"
@@ -1057,7 +1084,14 @@ def handle_seq_abort():
 
 
 def bg_exec_seq(bn_seqfile):
-    seqfile = os.path.join(SEQRoot, bn_seqfile)
+    safe_root = pathlib.Path(SEQRoot).resolve()
+    seqpath = (safe_root / pathlib.Path(urllib.parse.unquote(bn_seqfile))).resolve()
+
+    if not seqpath.is_relative_to(safe_root):
+        log.error("Invalid sequence path.")
+        return
+
+    seqfile = str(seqpath)
     if not os.path.isfile(seqfile):
         msg = "Sequence file not found.  "
         msg += "Reload page to see updated list of files."
@@ -1139,11 +1173,11 @@ def handle_script_run_post():
     if _RUNNING_SCRIPT is None:
         with Sessions.current() as session:  # noqa: F841
             script_name = bottle.request.forms.get("scriptPath")
-            if not script_name:
-                bottle.abort(400, "Script cannot be located")
 
             safe_root = pathlib.Path(ScriptRoot).resolve()
-            script_path = (safe_root / pathlib.Path(script_name)).resolve()
+            script_path = (
+                safe_root / pathlib.Path(urllib.parse.unquote(script_name))
+            ).resolve()
 
             if not script_path.is_relative_to(safe_root):
                 bottle.abort(400, "Invalid script path")
