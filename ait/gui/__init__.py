@@ -315,8 +315,9 @@ def _enforce_same_origin():
     source_host = urllib.parse.urlsplit(source).netloc
     if source_host and host and source_host != host:
         bottle.abort(403, "Cross-origin request rejected")
-Greenlets = []  # type: ignore[var-annotated]
 
+
+Greenlets = []  # type: ignore[var-annotated]
 
 try:
     with open(os.path.join(HTMLRoot.static_dir, "package.json")) as infile:
