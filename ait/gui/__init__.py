@@ -8,6 +8,7 @@ gevent.monkey.patch_all()
 import geventwebsocket
 
 import bdb
+import pickle
 import importlib
 import json
 import os
@@ -390,6 +391,7 @@ class AITGUIPlugin(Plugin):
             )
 
     def process_telem_msg(self, msg):
+        msg = pickle.loads(msg)
         if playback.on is False:
             Sessions.add_telemetry(msg[0], msg[1])
 
