@@ -173,7 +173,16 @@ class SessionStore(dict):
         """Creates and returns a new Session for this HTTP connection."""
         session = Session(self)
         self[session.id] = session
-        bottle.response.set_cookie("sid", session.id)
+        # Fix for GHSA-4pv4-jmfm-phrw: Set secure cookie attributes for defense-in-depth  # noqa: B950
+        # - httponly: Prevents JavaScript access, mitigating XSS-based session theft
+        # - samesite=strict: Prevents cross-site delivery, mitigating CSRF
+        # Note: 'secure' should be set to True when served over HTTPS
+        bottle.response.set_cookie(
+            "sid",
+            session.id,
+            httponly=True,
+            samesite="strict"
+        )
         return session
 
     def remove(self, session):
@@ -313,8 +322,21 @@ def _enforce_same_origin():
     if not source:
         return
 
-    source_host = urllib.parse.urlsplit(source).netloc
-    if source_host and host and source_host != host:
+    parsed = urllib.parse.urlsplit(source)
+    source_host = parsed.netloc
+    source_scheme = parsed.scheme
+
+    # Fix for GHSA-4pv4-jmfm-phrw: Reject "null" origin and non-HTTP(S) schemes
+    # Browsers send Origin: null for sandboxed iframes, data: URIs, and certain
+    # cross-origin redirects. These bypass the previous check because
+    # urllib.parse.urlsplit("null").netloc returns empty string.
+    if source == "null":
+        bottle.abort(403, "Cross-origin request rejected (null origin)")
+    if not source_host:
+        bottle.abort(403, "Cross-origin request rejected (missing host)")
+    if source_scheme not in ("http", "https"):
+        bottle.abort(403, "Cross-origin request rejected (invalid scheme)")
+    if host and source_host != host:
         bottle.abort(403, "Cross-origin request rejected")
 
 
@@ -979,6 +1001,30 @@ def handle_tlm_query_post():
     if not (time_field and packet and fields_raw and start_time):
         bottle.abort(400, "Malformed parameters")
 
+    # Fix for SonarCloud issue AaCM6P3dCXLoCr1tbrgt: Path traversal via dataDir  # noqa: B950
+    # Validate that dataDir is in the configured data paths to prevent  # noqa: B950
+    # directory traversal.
+    # Only allow access to directories explicitly configured in ait.config._datapaths.
+    if not data_dir:
+        bottle.abort(400, "dataDir parameter is required")
+
+    allowed_paths = (
+        list(ait.config._datapaths.values())
+        if hasattr(ait.config, '_datapaths')
+        else []
+    )
+    # Canonicalize paths for comparison
+    data_dir_real = os.path.realpath(data_dir)
+    allowed_paths_real = [os.path.realpath(p) for p in allowed_paths]
+
+    if data_dir_real not in allowed_paths_real:
+        log.warn(f"Rejected unauthorized dataDir access attempt: {data_dir}")
+        bottle.abort(
+            400,
+            f"dataDir must be one of the configured data paths. "
+            f"Provided: {data_dir}"
+        )
+
     try:
         with tempfile.NamedTemporaryFile(
             mode="w",
@@ -991,7 +1037,7 @@ def handle_tlm_query_post():
                 fields_file.write(f + "\n")
 
         pcaps = []
-        for d, _dirs, files in os.walk(data_dir):
+        for d, _dirs, files in os.walk(data_dir_real):
             for f in files:
                 if f.endswith(".pcap"):
                     pcaps.append(os.path.join(d, f))
@@ -1356,6 +1402,11 @@ def handle_playback_range_get():
         ranges.append([packet_name])
 
         # Add start time and end time
+        # Note: packet_name here comes from database (SHOW MEASUREMENTS),  # noqa: B950
+        # not user input,
+        # so it's not directly exploitable. However, this pattern was
+        # identified in GHSA-x8ww-97rj-cx44 as systemic. Future refactoring
+        # should use parameterized queries.
         point_query = 'SELECT * FROM "{}"'.format(packet_name)
         points = list(playback.dbconn.query(point_query).get_points())
 
@@ -1403,11 +1454,31 @@ def handle_playback_query_post():
     end_time = bottle.request.forms.get("endTime")
     uid = tlm_dict[packet].uid
 
-    # Query packet and time range from database
-    point_query = "SELECT * FROM \"{}\" WHERE time >= '{}' AND time <= '{}'".format(
-        packet, start_time, end_time
+    # Fix for GHSA-x8ww-97rj-cx44: Validate timestamp format to prevent  # noqa: B950
+    # InfluxQL injection. Timestamps must be valid RFC3339/ISO8601 format.  # noqa: B950
+    # Reject anything that doesn't match.
+    import re
+    timestamp_pattern = re.compile(
+        r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?$'
     )
-    points = list(playback.dbconn.query(point_query).get_points())
+
+    if not start_time or not timestamp_pattern.match(start_time):
+        bottle.abort(
+            400, "Invalid startTime format. Must be ISO8601 timestamp."
+        )
+    if not end_time or not timestamp_pattern.match(end_time):
+        bottle.abort(400, "Invalid endTime format. Must be ISO8601 timestamp.")
+
+    # Query packet and time range from database using parameterized query
+    # Note: InfluxDB Python client uses bind_params for parameter binding
+    point_query = (
+        'SELECT * FROM "{}" WHERE time >= $start_time '
+        'AND time <= $end_time'
+    ).format(packet)
+    points = list(playback.dbconn.query(
+        point_query,
+        bind_params={'start_time': start_time, 'end_time': end_time}
+    ).get_points())
 
     pkt = tlm_dict[packet]
     fields = pkt.fields
