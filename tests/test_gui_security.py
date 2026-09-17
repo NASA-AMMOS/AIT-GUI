@@ -182,22 +182,6 @@ def test_csrf_data_scheme_blocked(valid_session, block_spawn):
     )
     assert status == 403
 
-
-# --------------------------------------------------------------------------
-# 1c. Session cookie security attributes
-# --------------------------------------------------------------------------
-def test_session_cookie_has_httponly():
-    """Session cookie must have HttpOnly flag"""
-    status, _ = call("GET", "/")
-    # Check that a session was created and cookie has proper attributes
-    # Note: This test verifies the cookie is set with httponly in the actual code
-
-
-def test_session_cookie_has_samesite_strict():
-    """Session cookie must have SameSite=Strict"""
-    # Verified by checking bottle.response.set_cookie call in code
-
-
 # --------------------------------------------------------------------------
 # 2a. Path traversal: /script/run confines scriptPath to ScriptRoot
 # --------------------------------------------------------------------------
