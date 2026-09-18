@@ -52,7 +52,7 @@ Object.keys(exports).map( (name) => {
 
 
 /**
- * @returns a plain Javascript object representation of the HTML
+ * @returns {Object} a plain Javascript object representation of the HTML
  * element attributes in a DOM NamedNodeMap.  That is:
  *
  *     `<... name="value" ...>`
@@ -83,7 +83,7 @@ function attrs2obj (attrs) {
 /**
  * Creates a Mithril vnode for the given DOM element `elem`.
  *
- * @returns a Mithril vnode
+ * @returns {Object} a Mithril vnode
  */
 function createMithrilNode (elem) {
     let node = null
@@ -143,7 +143,7 @@ function filterNodes(n) {
 /**
  * Creates a Mithril vnode for each DOM element in `elems`.
  *
- * @returns an array of Mithril vnodes.
+ * @returns {Array} an array of Mithril vnodes.
  */
 function createMithrilNodes (elems) {
     return filter(map(elems, createMithrilNode), n => n !== null)
