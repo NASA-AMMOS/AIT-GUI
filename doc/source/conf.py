@@ -23,6 +23,11 @@ if os.environ.get('AIT_CONFIG', None) is None:
 
 if os.getenv('READTHEDOCS'):
     root_for_relative_js_paths = '../../ait/gui/static'
+    js_source_path = [
+        '../../ait/gui/static/js/ait',
+        '../../ait/gui/static/js/ait/gui'
+    ]
+    jsdoc_config_path = '../../ait/gui/static/jsdoc.json'
 else:
     import ait.gui
     import os as _os
@@ -32,6 +37,7 @@ else:
         _os.path.join(_static, 'js/ait'),
         _os.path.join(_static, 'js/ait/gui')
     ]
+    jsdoc_config_path = _os.path.join(_static, 'jsdoc.json')
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -86,7 +92,7 @@ release = u'2.5.2'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -310,4 +316,4 @@ texinfo_documents = [
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
+intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}

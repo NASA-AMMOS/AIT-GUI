@@ -128,7 +128,10 @@ class EVRDefinition
             'x' : 'MSB_U%u',
         }
 
-        let formatRegex = new RegExp("%(?:\d+\$)?([cdiefgGosuxXhlL]+)", "g")
+        // Fix for SonarCloud issues AaCM6PyHCXLoCr1tbrgr & AaCM6PyHCXLoCr1tbrgs:
+        // Use regex literal instead of RegExp constructor to preserve \d and \$ escapes.
+        // This enables positional format specifiers like %1$d to work correctly.
+        let formatRegex = /%(?:\d+\$)?([cdiefgGosuxXhlL]+)/g
         let match
         let cur_byte_index = 0
         let data_chunks = []
