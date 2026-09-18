@@ -4,15 +4,16 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.11"
+    nodejs: "20"
+  commands:
+    - cd ait/gui/static && npm install && cd ../../..
+    - export PATH="$PWD/ait/gui/static/node_modules/.bin:$PATH" && which jsdoc
+    - export PATH="$PWD/ait/gui/static/node_modules/.bin:$PATH" && jsdoc --version
+    - pip install -r doc/requirements.txt
+    - pip install -e .[tests]
+    - export PATH="$PWD/ait/gui/static/node_modules/.bin:$PATH" && sphinx-build -b html doc/source $READTHEDOCS_OUTPUT/html
 
 sphinx:
   configuration: doc/source/conf.py
+  fail_on_warning: false
 
-python:
-  install:
-    - requirements: doc/requirements.txt
-    - method: pip
-      path: .
-      extra_requirements:
-        - docs
-        - tests
