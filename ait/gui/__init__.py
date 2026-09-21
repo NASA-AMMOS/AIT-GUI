@@ -1454,31 +1454,30 @@ def handle_playback_query_post():
     end_time = bottle.request.forms.get("endTime")
     uid = tlm_dict[packet].uid
 
-    # Fix for GHSA-x8ww-97rj-cx44: Validate timestamp format to prevent  # noqa: B950
-    # InfluxQL injection. Timestamps must be valid RFC3339/ISO8601 format.  # noqa: B950
-    # Reject anything that doesn't match.
-    import re
-    timestamp_pattern = re.compile(
-        r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?$'
-    )
-
-    if not start_time or not timestamp_pattern.match(start_time):
+    # Fix for GHSA-x8ww-97rj-cx44: Validate timestamp format using ait.core.dmc
+    # to prevent InfluxQL injection. Timestamps must be valid RFC3339/ISO8601 format.
+    # Parse and validate both timestamps before interpolation into query string.
+    try:
+        dmc.rfc3339_str_to_datetime(start_time)
+    except (ValueError, AttributeError) as e:
         bottle.abort(
-            400, "Invalid startTime format. Must be ISO8601 timestamp."
+            400, f"Invalid startTime format. Must be valid RFC3339 timestamp: {e}"
         )
-    if not end_time or not timestamp_pattern.match(end_time):
-        bottle.abort(400, "Invalid endTime format. Must be ISO8601 timestamp.")
 
-    # Query packet and time range from database using parameterized query
-    # Note: InfluxDB Python client uses bind_params for parameter binding
+    try:
+        dmc.rfc3339_str_to_datetime(end_time)
+    except (ValueError, AttributeError) as e:
+        bottle.abort(
+            400, f"Invalid endTime format. Must be valid RFC3339 timestamp: {e}"
+        )
+
+    # Query packet and time range from database
+    # Timestamps are validated above using ait.core.dmc.rfc3339_str_to_datetime
     point_query = (
-        'SELECT * FROM "{}" WHERE time >= $start_time '
-        'AND time <= $end_time'
-    ).format(packet)
-    points = list(playback.dbconn.query(
-        point_query,
-        bind_params={'start_time': start_time, 'end_time': end_time}
-    ).get_points())
+        'SELECT * FROM "{}" WHERE time >= \'{}\' '
+        'AND time <= \'{}\''
+    ).format(packet, start_time, end_time)
+    points = list(playback.dbconn.query(point_query).results.get_points())
 
     pkt = tlm_dict[packet]
     fields = pkt.fields
