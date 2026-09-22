@@ -92,4 +92,25 @@ describe('EVRDefinition', function() {
         //evr._msg = '%llu'
         //assert(evr.formatMessage([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]) === '72623859790382856')
     })
+
+    it('should format message strings with positional format specifiers', function() {
+        let evrdict = {'desc': 'desc', 'name': 'name', 'code': 1}
+        let evr = new ait.evr.EVRDefinition(evrdict)
+
+        // Test positional integer format specifier %1$d
+        evr._msg = 'Value: %1$d'
+        assert(evr.formatMessage([0x01, 0x02, 0x03, 0x04]) === 'Value: 16909060')
+
+        // Test positional unsigned format specifier %1$u
+        evr._msg = 'Count: %1$u'
+        assert(evr.formatMessage([0xff, 0x11, 0x33, 0x44]) === 'Count: 4279317316')
+
+        // Test positional string format specifier %1$s
+        evr._msg = 'Name: %1$s'
+        assert(evr.formatMessage([0x54, 0x65, 0x73, 0x74, 0x00]) === 'Name: Test')
+
+        // Test positional hex format specifier %1$x
+        evr._msg = 'Hex: %1$x'
+        assert(evr.formatMessage([0x00, 0x00, 0x00, 0x0f]) === 'Hex: f')
+    })
 })
