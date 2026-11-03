@@ -5,6 +5,12 @@
 AMMOS Instrument Toolkit (AIT) GUI
 ==================================
 
+**Project status: no longer maintained.** This repository is archived and
+AIT-GUI is no longer actively maintained. No further releases, bug fixes, or
+security patches are planned. Before any new use, review the open
+`issues <https://github.com/NASA-AMMOS/AIT-GUI/issues>`__ and `security advisories
+<https://github.com/NASA-AMMOS/AIT-GUI/security/advisories>`__ and assess them against your deployment.
+
 AIT GUI provides a framework for building a custom website for realtime
 telemetry monitoring, commanding, and other MOS operations with only
 minimal HTML and configuration file changes. Built on top of the AIT
