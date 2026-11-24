@@ -1,0 +1,49 @@
+name: "CodeQL Security Scan Configuration"
+
+# Keep the default query suite and add the extended security queries.
+disable-default-queries: false
+
+queries:
+  - uses: security-extended
+
+# Scope note: AIT-GUI is a bottle web server (ait/gui/__init__.py, plus the
+# ait/gui/bin entry point) serving a Mithril single-page front end from
+# ait/gui/static/js. Both halves are worth analyzing -- the server exposes the
+# command, telemetry, sequence and script endpoints over HTTP and websockets,
+# and the front end renders telemetry into the DOM. Everything below is either
+# generated, not ours, not code, or not shipped.
+paths-ignore:
+  # Dependencies, caches and build output.
+  - '**/node_modules/**'
+  - '**/__pycache__/**'
+  - '**/*.pyc'
+  - '**/.tox/**'
+  - '**/.venv/**'
+  - '**/dist/**'
+  - '**/*.egg-info/**'
+
+  # ait/gui/static/build/ait.bundle.js is the webpack output -- the same
+  # front-end source as js/, concatenated with its npm dependencies. Scanning
+  # it would double-report every finding in js/ and add a pile of findings in
+  # vendored library code that Dependabot already covers.
+  - 'ait/gui/static/build/**'
+  - '**/*.min.js'
+  - '**/*.min.css'
+
+  # Documentation and static assets. Not code.
+  - 'doc/**'
+  - 'ait/gui/static/css/**'
+  - 'ait/gui/static/fonts/**'
+  - '**/*.svg'
+  - '**/*.png'
+
+  # Tests: the Python suite in tests/ and the mocha suite in
+  # ait/gui/static/test/.
+  - 'tests/**'
+  - 'ait/gui/static/test/**'
+
+query-filters:
+  # Style and maintainability suggestions add volume without adding security
+  # signal; SonarQube already covers that ground.
+  - exclude:
+      problem.severity: recommendation
